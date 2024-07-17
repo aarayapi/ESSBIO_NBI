@@ -43,7 +43,8 @@ DECLARE
 	--longitud_tramo2 numeric(38,8);
 	--longitud_total2 numeric(38,8);
 	assetid2 character varying(100);
-	ownedby2 smallint;	
+	ownedby2 smallint;
+	rut2 character varying(20); 
 	
   	gdb_from_date timestamp;
 	gdb_from_date2 timestamp;
@@ -75,11 +76,11 @@ SELECT count(sl.gdb_archive_oid) into cantidad from owd.vmt_1705_1151_sewerline 
 if cantidad > 0 then
 raise notice 'cuenta';
 	FOR punto IN SELECT sl.proyecto_informado_siss,  sl.codigo_obra , sl.id_tramo_conectado,  sl.creationdate, 
-sl.ownedby, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_is_delete, sl.gdb_archive_oid, sl.lifecyclestatus, sl.codigo_sistema_siss
+sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl.lifecyclestatus, sl.codigo_sistema_siss
 	from owd.vmt_1705_1151_sewerline sl WHERE 
 	(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
 	AND sl.gdb_from_date <= fecha_fin 
-	ORDER BY sl.ownedby, sl.codigo_obra, sl.gdb_from_date ASC	
+	ORDER BY sl.rut, sl.codigo_obra, sl.gdb_from_date ASC	
 	LOOP
 		correlativo := correlativo + 1;
 		
@@ -89,7 +90,7 @@ sl.ownedby, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_is_delete, 
 			codigo_obra := punto.codigo_obra;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			codigo_sistema_siss := punto.codigo_sistema_siss;
-			ownedby := punto.ownedby;
+			rut := punto.rut;
 			longitud_total = longitud_total + punto.measuredlength;	
 			
 			IF punto.gdb_from_date < fecha_inicio  THEN
