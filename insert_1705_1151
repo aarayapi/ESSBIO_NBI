@@ -100,10 +100,7 @@ sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl
 				
 			ELSIF punto.measuredlength is not null AND longitud_total > 0  THEN
 			--raise notice 'cuenta';
-				IF ownedby = 103 THEN rut = '76833300';
-				ELSIF ownedby = 104 THEN rut = '96963440';
-				ELSE rut = NULL;
-				END IF;				
+				rut := punto.rut;		
 				
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1151, punto.codigo_obra, punto.id_tramo_conectado, 9, round(longitud_total,2)::text, round(longitud_total + punto.measuredlength,2)::text, punto.gdb_from_date, punto.objectid::integer);
@@ -112,7 +109,7 @@ sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl
 			
 		ELSIF correlativo >= 2 THEN			
 			codigo_obra2 := punto.codigo_obra;	
-			ownedby2 := punto.ownedby;
+			rut2 := punto.rut;
 			IF codigo_obra = codigo_obra2  THEN
 				IF punto.gdb_from_date < fecha_inicio THEN
 					IF punto.measuredlength is not null THEN
@@ -120,10 +117,7 @@ sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl
 					END IF;
 				ELSIF punto.measuredlength is not null AND longitud_total > 0 THEN
 				--raise notice 'cuenta';
-					IF ownedby2 = 103 THEN rut = '76833300';
-					ELSIF ownedby2 = 104 THEN rut = '96963440';
-					ELSE rut = NULL;
-					END IF;					
+					rut2 = punto.rut;				
 				
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1151, punto.codigo_obra, punto.id_tramo_conectado, 9, round(longitud_total,2)::text, round(longitud_total + punto.measuredlength, 2)::text, punto.gdb_from_date, punto.objectid::integer);
@@ -133,7 +127,7 @@ sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl
 				codigo_obra := punto.codigo_obra;
 				proyecto_informado_siss := punto.proyecto_informado_siss;
 				codigo_sistema_siss := punto.codigo_sistema_siss;					
-				ownedby := punto.ownedby;
+				rut := punto.rut;
 				correlativo := 1;
 				
 				IF punto.gdb_from_date < fecha_inicio  THEN
