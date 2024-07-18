@@ -69,24 +69,91 @@ cantidad := 0;
 cuenta2 := 0;
 longitud_total := 0;
 
-SELECT count(sl.gdb_archive_oid) into cantidad from owd.vmt_1705_1151_sewerline sl WHERE --sl.proyecto_informado_siss is not null AND 
+TRUNCATE TABLE owd.tbl_tmp_1705;
+
+FOR punto IN 
+SELECT sl.proyecto_informado_siss,  sl.codigo_obra , sl.id_tramo_conectado,  sl.creationdate, 
+	   sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl.lifecyclestatus, sl.codigo_sistema_siss
+FROM owd.vmt_1705_1151_sewerline sl WHERE 
 	(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
-	AND sl.gdb_from_date <= fecha_fin ;
- 
-if cantidad > 0 then
-raise notice 'cuenta';
-	FOR punto IN SELECT sl.proyecto_informado_siss,  sl.codigo_obra , sl.id_tramo_conectado,  sl.creationdate, 
-sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl.lifecyclestatus, sl.codigo_sistema_siss
-	from owd.vmt_1705_1151_sewerline sl WHERE 
-	(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
-	AND sl.gdb_from_date <= fecha_fin 
+	AND sl.creationdate >= fecha_inicio AND sl.creationdate <= fecha_fin
+	AND sl.proyecto_informado_siss IS NOT null
 	ORDER BY sl.rut, sl.codigo_obra, sl.gdb_from_date ASC	
+
 	LOOP
 		correlativo := correlativo + 1;
-		
-			
-		
+
+
 		IF correlativo = 1 THEN
+			codigo_obra := punto.codigo_obra;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			codigo_sistema_siss := punto.codigo_sistema_siss;
+			rut := punto.rut;
+			--longitud_total = longitud_total + punto.measuredlength;	
+			SELECT longitud into longitud_total FROM owd.tbl_1151_hist WHERE codigo_conduccion = codigo_obra AND rut_empresa = rut;
+			
+			IF longitud_total IS NOT NULL THEN
+			
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1151, punto.codigo_obra, punto.id_tramo_conectado, 9, round(longitud_total,2)::text, round(longitud_total + punto.measuredlength,2)::text, punto.gdb_from_date, punto.objectid::integer);
+			
+				longitud_total = longitud_total + punto.measuredlength;			
+			
+			END IF;
+			
+		ELSIF correlativo >= 2 THEN			
+			codigo_obra2 := punto.codigo_obra;	
+			rut2 := punto.rut;
+			
+			IF codigo_obra = codigo_obra2 AND rut = rut2 THEN		
+				
+				IF longitud_total IS NOT NULL THEN
+
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1151, punto.codigo_obra, punto.id_tramo_conectado, 9, round(longitud_total,2)::text, round(longitud_total + punto.measuredlength, 2)::text, punto.gdb_from_date, punto.objectid::integer);
+
+					longitud_total = longitud_total + punto.measuredlength;
+
+				END IF;
+
+			ELSE
+				IF longitud_total IS NOT NULL THEN
+					INSERT INTO owd.tbl_tmp_1705(codigo_conduccion, longitud) VALUES (codigo_obra, longitud_total);
+				END IF;
+				
+				codigo_obra := punto.codigo_obra;
+				proyecto_informado_siss := punto.proyecto_informado_siss;
+				codigo_sistema_siss := punto.codigo_sistema_siss;					
+				rut := punto.rut;
+				correlativo := 1;
+				
+				SELECT longitud into longitud_total FROM owd.tbl_1151_hist WHERE codigo_conduccion = codigo_obra AND rut_empresa = rut;
+				
+				IF longitud_total IS NOT NULL THEN
+
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1151, punto.codigo_obra, punto.id_tramo_conectado, 9, round(longitud_total,2)::text, round(longitud_total + punto.measuredlength,2)::text, punto.gdb_from_date, punto.objectid::integer);
+
+					longitud_total := longitud_total + punto.measuredlength;
+					
+				END IF;
+									
+			END IF;
+		END IF;				
+	END LOOP;
+	
+	FOR punto IN 
+	SELECT sl.proyecto_informado_siss,  sl.codigo_obra , sl.id_tramo_conectado,  sl.creationdate, 
+		   sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl.lifecyclestatus, sl.codigo_sistema_siss
+	FROM owd.vmt_1705_1151_sewerline sl WHERE 
+		(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
+		AND sl.creationdate <= fecha_inicio AND sl.creationdate <= fecha_fin
+		AND sl.proyecto_informado_siss IS NOT null
+		ORDER BY sl.rut, sl.codigo_obra, sl.gdb_from_date ASC	
+
+		LOOP	
+		
+		/*IF correlativo = 1 THEN
 			codigo_obra := punto.codigo_obra;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			codigo_sistema_siss := punto.codigo_sistema_siss;
@@ -353,7 +420,7 @@ if cantidad > 0 then
 				END IF;	
 		END IF;
 	END LOOP;
-END IF;	
+END IF;	*/
 
  resultado := cantidad::text;
  RETURN resultado;
