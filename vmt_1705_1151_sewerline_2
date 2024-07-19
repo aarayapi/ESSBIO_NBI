@@ -1,0 +1,41 @@
+-- View: owd.vmt_1705_1151_sewerline_2
+
+DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_1151_sewerline_2;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_1151_sewerline_2
+TABLESPACE pg_default
+AS
+ SELECT sl.codigo_obra,
+    sl.objectid,
+    sl.ownedby,
+    sl.codigo_sistema_siss,
+    sl.etapa,
+    sl.nombre_conduccion,
+    sl.tipo_obra_origen,
+    sl.codigo_obra_origen,
+    sl.tipo_obra_destino,
+    sl.codigo_obra_destino,
+    sl.gdb_from_date,
+    sl.gdb_archive_oid,
+    sl.proyecto_informado_siss,
+    sl.assetid,
+    sl.assetgroup,
+    sl.assettype,
+    sl.id_tramo_conectado,
+	sl.creationdate
+   FROM sewerline sl
+  WHERE (sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND (sl.objectid IN ( SELECT mb_.objectid
+           FROM ( SELECT sewerline.objectid,
+                    row_number() OVER (PARTITION BY sewerline.codigo_obra ORDER BY sewerline.gdb_from_date DESC) AS rn,
+                    sewerline.gdb_is_delete
+                   FROM sewerline
+                  WHERE sewerline.gdb_branch_id = 0 AND sewerline.gdb_from_date <= '9999-12-31 23:59:59'::timestamp without time zone) mb_
+          WHERE mb_.rn = 1))
+  ORDER BY sl.codigo_obra, sl.gdb_from_date
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_1705_1151_sewerline_2
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_1705_1151_sewerline_2 TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_1151_sewerline_2 TO bd_consulta;
