@@ -118,9 +118,12 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 
 			ELSE
 				IF longitud_total IS NOT NULL THEN
-					INSERT INTO owd.tbl_tmp_1705(codigo_conduccion, longitud) VALUES (codigo_obra, longitud_total);
+					INSERT INTO owd.tbl_tmp_1705(rut, codigo_conduccion, longitud) VALUES (rut, codigo_obra, longitud_total);
 				END IF;
-				
+
+
+
+
 				codigo_obra := punto.codigo_obra;
 				proyecto_informado_siss := punto.proyecto_informado_siss;
 				codigo_sistema_siss := punto.codigo_sistema_siss;					
@@ -142,17 +145,85 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 		END IF;				
 	END LOOP;
 	
+
+	
 	FOR punto IN 
-	SELECT sl.proyecto_informado_siss,  sl.codigo_obra , sl.id_tramo_conectado,  sl.creationdate, 
-		   sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl.lifecyclestatus, sl.codigo_sistema_siss
-	FROM owd.vmt_1705_1151_sewerline sl WHERE 
+	SELECT *
+	FROM owd.vmt_1705_1151_sewerline_2 sl WHERE 
 		(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
-		AND sl.creationdate <= fecha_inicio AND sl.creationdate <= fecha_fin
+		AND sl.creationdate <= fecha_inicio AND sl.lastupdate BETWEEN fecha_inicio AND fecha_fin
 		AND sl.proyecto_informado_siss IS NOT null
 		ORDER BY sl.rut, sl.codigo_obra, sl.gdb_from_date ASC	
-
+		
 		LOOP	
 		
+			correlativo := correlativo +1;
+			IF correlativo = 1 THEN
+				correlativo := correlativo + 1;
+				codigo_sistema_siss := punto.codigo_sistema_siss;
+				codigo_obra := punto.codigo_obra;
+				etapa := punto.etapa;
+				name := punto.nombre_conduccion;
+				tipo_obra_origen:= punto.tipo_obra_origen;
+				codigo_obra_origen := punto.codigo_obra_origen;
+				tipo_obra_destino:= punto.tipo_obra_destino;
+				codigo_obra_destino	:=	punto.codigo_obra_destino;	
+				rut := punto.rut;
+
+				gdb_archive_oid := punto.gdb_archive_oid;
+				gdb_from_date := punto.gdb_from_date;
+				proyecto_informado_siss := punto.proyecto_informado_siss;
+				assetid := punto.assetid;
+				gdb_from_date = punto.gdb_from_date;	
+				
+			ELSE
+				codigo_sistema_siss2 := punto.codigo_sistema_siss;
+				codigo_obra2 := punto.codigo_obra;
+				etapa2 := punto.etapa;
+				name2 := punto.nombre_conduccion;
+				tipo_obra_origen2:= punto.tipo_obra_origen;
+				codigo_obra_origen2 := punto.codigo_obra_origen;
+				tipo_obra_destino2 := punto.tipo_obra_destino;
+				codigo_obra_destino2 :=	punto.codigo_obra_destino;	
+				rut2 := punto.rut;
+
+				gdb_archive_oid2 := punto.gdb_archive_oid;
+				gdb_from_date2 := punto.gdb_from_date;
+				proyecto_informado_siss2 := punto.proyecto_informado_siss;
+				assetid2 := punto.assetid;	
+				gdb_from_date2 = punto.gdb_from_date;		
+				
+				IF codigo_obra = codigo_obra2 AND rut = rut2 THEN		
+					correlativo = 1;
+				ELSE
+				
+					SELECT TH.nombre_obra, TH.etapa, TH.tipo_obra_origen, TH.codigo_obra_origen, TH.tipo_obra_destino, TH.codigo_obra_destino, TH.longitud, TH.vigencia, TH.sistema INTO
+					punto2 FROM owd.tbl_1151_hist TH WHERE TH.codigo_conduccion = codigo_conduccion AND TH.rut_empresa = rut;
+
+					IF punto2.nombre_obra is not null AND name <> punto2.nombre_obra THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss, 1151, codigo_obra, punto.id_tramo_conectado, 4, name::text, punto2.nombre_obra::text, gdb_from_date, gdb_archive_oid);
+					END IF;		
+				
+					codigo_sistema_siss := punto.codigo_sistema_siss;
+					codigo_obra := punto.codigo_obra;
+					etapa := punto.etapa;
+					name := punto.nombre_conduccion;
+					tipo_obra_origen:= punto.tipo_obra_origen;
+					codigo_obra_origen := punto.codigo_obra_origen;
+					tipo_obra_destino:= punto.tipo_obra_destino;
+					codigo_obra_destino	:=	punto.codigo_obra_destino;	
+					rut := punto.rut;
+
+					gdb_archive_oid := punto.gdb_archive_oid;
+					gdb_from_date := punto.gdb_from_date;
+					proyecto_informado_siss := punto.proyecto_informado_siss;
+					assetid := punto.assetid;
+					gdb_from_date = punto.gdb_from_date;	
+				END IF;
+			END IF;
+			
+		END LOOP;
 		/*IF correlativo = 1 THEN
 			codigo_obra := punto.codigo_obra;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
@@ -422,7 +493,7 @@ if cantidad > 0 then
 	END LOOP;
 END IF;	*/
 
- resultado := cantidad::text;
+ resultado := correlativo::text;
  RETURN resultado;
 END;
 $BODY$;

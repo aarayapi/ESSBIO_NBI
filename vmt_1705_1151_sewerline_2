@@ -7,7 +7,11 @@ TABLESPACE pg_default
 AS
  SELECT sl.codigo_obra,
     sl.objectid,
-    sl.ownedby,
+        CASE sl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
     sl.codigo_sistema_siss,
     sl.etapa,
     sl.nombre_conduccion,
@@ -22,7 +26,8 @@ AS
     sl.assetgroup,
     sl.assettype,
     sl.id_tramo_conectado,
-	sl.creationdate
+    sl.creationdate,
+	sl.lastupdate
    FROM sewerline sl
   WHERE (sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND (sl.objectid IN ( SELECT mb_.objectid
            FROM ( SELECT sewerline.objectid,

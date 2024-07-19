@@ -1,56 +1,50 @@
 -- View: owd.vmt_1705_1151_sewerline
-
 DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_1151_sewerline;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_1151_sewerline
 TABLESPACE pg_default
 AS
- SELECT 
-sd.proyecto_informado_siss,  
-sd.codigo_obra , 
-sd.id_tramo_conectado,  
-sd.creationdate, 
-CASE sd.ownedby
-	WHEN 103 THEN '76833300'::text
-	WHEN 104 THEN '96963440'::text
-	ELSE NULL::text
-END AS rut,
-sd.measuredlength, 
-sd.objectid, 
-sd.gdb_from_date,  
-sd.gdb_archive_oid, 
-sd.lifecyclestatus, 
-sd.codigo_sistema_siss,
-sd.assetgroup,
-sd.assettype
-  FROM sewerline sd
-          WHERE (sd.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
-                   FROM ( SELECT sewerline.gdb_archive_oid,
-                            row_number() OVER (PARTITION BY sewerline.objectid ORDER BY sewerline.gdb_from_date DESC) AS rn,
-                            sewerline.gdb_is_delete
-                           FROM sewerline
-                          WHERE sewerline.gdb_branch_id = 0 AND sewerline.gdb_from_date <= '9999-12-31 23:59:59'::timestamp without time zone) mb_
-                  WHERE mb_.rn = 1))
+ SELECT sd.proyecto_informado_siss,
+    sd.codigo_obra,
+    sd.id_tramo_conectado,
+    sd.creationdate,
+        CASE sd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    sd.measuredlength,
+    sd.objectid,
+    sd.gdb_from_date,
+    sd.gdb_archive_oid,
+    sd.lifecyclestatus,
+    sd.codigo_sistema_siss,
+    sd.assetgroup,
+    sd.assettype
+   FROM sewerline sd
+  WHERE (sd.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+           FROM ( SELECT sewerline.gdb_archive_oid,
+                    row_number() OVER (PARTITION BY sewerline.objectid ORDER BY sewerline.gdb_from_date DESC) AS rn,
+                    sewerline.gdb_is_delete
+                   FROM sewerline
+                  WHERE sewerline.gdb_branch_id = 0 AND sewerline.gdb_from_date <= '9999-12-31 23:59:59'::timestamp without time zone) mb_
+          WHERE mb_.rn = 1))
 UNION
-
-SELECT 
-'conduccion histórica' AS proyecto_informado_siss,
-ch.codigo_conduccion AS codigo_obra,
-'0' id_tramo_conectado,
-to_date('YYYYMMDD', '20000101') AS creationdate,
-ch.rut_empresa::text AS rut,
-ch.longitud AS measuredlength,
-0 AS objectid,
-to_date('YYYYMMDD', '20000711') AS gdb_from_date,
-0 AS gdb_archive_oid,
-32 AS lifecyclestatus,
-ch.sistema AS codigo_sistema_siss,
-1 AS assetgroup,
-1 AS assettype
- from owd.cunduccion_elim_hist AS ch
-
-
-
+ SELECT 'conduccion histórica'::character varying AS proyecto_informado_siss,
+    ch.codigo_conduccion AS codigo_obra,
+    '0'::character varying AS id_tramo_conectado,
+    to_date('YYYYMMDD'::text, '20000101'::text) AS creationdate,
+    ch.rut_empresa::text AS rut,
+    ch.longitud AS measuredlength,
+    0 AS objectid,
+    to_date('YYYYMMDD'::text, '20000711'::text) AS gdb_from_date,
+    0 AS gdb_archive_oid,
+    32 AS lifecyclestatus,
+    ch.sistema AS codigo_sistema_siss,
+    1 AS assetgroup,
+    1 AS assettype,
+	to_date('YYYYMMDD'::text, '20000101'::text) AS lastupdate
+   FROM cunduccion_elim_hist ch
 WITH DATA;
 
 ALTER TABLE IF EXISTS owd.vmt_1705_1151_sewerline
