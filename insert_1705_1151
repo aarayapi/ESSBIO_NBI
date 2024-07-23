@@ -157,7 +157,7 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 		
 		LOOP	
 		
-			correlativo := correlativo +1;
+			correlativo := correlativo + 1;
 			IF correlativo = 1 THEN
 				correlativo := correlativo + 1;
 				codigo_sistema_siss := punto.codigo_sistema_siss;
