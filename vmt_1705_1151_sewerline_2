@@ -27,7 +27,8 @@ AS
     sl.assettype,
     sl.id_tramo_conectado,
     sl.creationdate,
-	sl.lastupdate
+	sl.lastupdate,
+	sl.measuredlength
    FROM sewerline sl
   WHERE (sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND (sl.objectid IN ( SELECT mb_.objectid
            FROM ( SELECT sewerline.objectid,
