@@ -92,7 +92,7 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 			--longitud_total = longitud_total + punto.measuredlength;	
 			SELECT longitud into longitud_total FROM owd.tbl_1151_hist WHERE codigo_conduccion = codigo_obra AND rut_empresa = rut;
 			
-			IF longitud_total IS NOT NULL THEN
+			IF longitud_total IS NOT NULL AND punto.measuredlength IS NOT NULL THEN
 			
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1151, punto.codigo_obra, punto.id_tramo_conectado, 9, round(longitud_total,2)::text, round(longitud_total + punto.measuredlength,2)::text, punto.gdb_from_date, punto.objectid::integer);
@@ -199,12 +199,31 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 				
 					SELECT TH.nombre_obra, TH.etapa, TH.tipo_obra_origen, TH.codigo_obra_origen, TH.tipo_obra_destino, TH.codigo_obra_destino, TH.longitud, TH.vigencia, TH.sistema INTO
 					punto2 FROM owd.tbl_1151_hist TH WHERE TH.codigo_conduccion = codigo_conduccion AND TH.rut_empresa = rut;
-
+					
+					IF punto2.etapa is not null AND punto2.etapa <> etapa THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss, 1151, codigo_obra,  punto.id_tramo_conectado, 3, etapa::text, punto2.etapa::text, gdb_from_date, gdb_archive_oid);
+					END IF;	
 					IF punto2.nombre_obra is not null AND name <> punto2.nombre_obra THEN
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss, 1151, codigo_obra, punto.id_tramo_conectado, 4, name::text, punto2.nombre_obra::text, gdb_from_date, gdb_archive_oid);
 					END IF;		
-				
+					IF punto2.tipo_obra_origen is not null AND  punto2.tipo_obra_origen <> tipo_obra_origen THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss2, 1151, codigo_obra, punto.id_tramo_conectado, 5, tipo_obra_origen::text, punto2.tipo_obra_origen::text, gdb_from_date, gdb_archive_oid);
+					END IF;	
+					IF punto2.codigo_obra_origen is not null AND  punto2.codigo_obra_origen <> codigo_obra_origen THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss2, 1151, codigo_obra, punto.id_tramo_conectado, 6, codigo_obra_origen::text, punto2.codigo_obra_origen::text, gdb_from_date, gdb_archive_oid);
+					END IF;						
+					IF punto2.tipo_obra_destino is not null AND  punto2.tipo_obra_destino <> tipo_obra_destino THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss2, 1151, codigo_obra, punto.id_tramo_conectado, 7, tipo_obra_destino::text, punto2.tipo_obra_destino::text, gdb_from_date, gdb_archive_oid);
+					END IF;	
+					IF punto2.codigo_obra_destino is not null AND  punto2.codigo_obra_destino <> codigo_obra_destino THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss2, 1151, codigo_obra, punto.id_tramo_conectado, 8, codigo_obra_destino::text, punto2.codigo_obra_destino::text, gdb_from_date, gdb_archive_oid);
+					END IF;					
 					codigo_sistema_siss := punto.codigo_sistema_siss;
 					codigo_obra := punto.codigo_obra;
 					etapa := punto.etapa;
