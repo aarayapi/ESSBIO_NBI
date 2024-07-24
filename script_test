@@ -1,0 +1,15 @@
+truncate table tabla_1705;
+
+select * FROM owd.insert_1705_1151(to_date('20240101', 'YYYYMMDD'), to_date('20240801', 'YYYYMMDD'));
+
+select * from tabla_1705 WHERE "codigoObra" = '010-CONDDISP-03' AND "codigoTramo" = '3';
+
+
+SELECT  sl.codigo_obra , sl.id_tramo_conectado,  sl.creationdate, 
+sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, codigo_obra_destino, tipo_obra_destino
+	from owd.vmt_1705_1151_sewerline_2 sl WHERE sl.codigo_obra = '010-CONDDISP-03' AND sl.id_tramo_conectado = '3';
+	--AND sl.gdb_from_date <= fecha_fin 
+	--ORDER BY sl.rut, sl.codigo_obra, sl.gdb_from_date ASC	
+	
+SELECT longitud, sl.codigo_obra_destino, sl.tipo_obra_destino from owd.tbl_1151_hist sl WHERE sl.codigo_conduccion = '010-CONDDISP-03' AND sl. = '3'
+	

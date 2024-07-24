@@ -30,9 +30,9 @@ AS
 	sl.lastupdate,
 	sl.measuredlength
    FROM sewerline sl
-  WHERE (sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND (sl.objectid IN ( SELECT mb_.objectid
-           FROM ( SELECT sewerline.objectid,
-                    row_number() OVER (PARTITION BY sewerline.codigo_obra ORDER BY sewerline.gdb_from_date DESC) AS rn,
+  WHERE (sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND (sl.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+           FROM ( SELECT sewerline.gdb_archive_oid,
+                    row_number() OVER (PARTITION BY sewerline.objectid ORDER BY sewerline.gdb_from_date DESC) AS rn,
                     sewerline.gdb_is_delete
                    FROM sewerline
                   WHERE sewerline.gdb_branch_id = 0 AND sewerline.gdb_from_date <= '9999-12-31 23:59:59'::timestamp without time zone) mb_
