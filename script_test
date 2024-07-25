@@ -2,14 +2,44 @@ truncate table tabla_1705;
 
 select * FROM owd.insert_1705_1151(to_date('20240101', 'YYYYMMDD'), to_date('20240801', 'YYYYMMDD'));
 
-select * from tabla_1705 WHERE "codigoObra" = '010-CONDDISP-03' AND "codigoTramo" = '3';
+select * from tabla_1705 WHERE "codigoObra" = '010-CONDDISP-15'
 
 
-SELECT  sl.codigo_obra , sl.id_tramo_conectado,  sl.creationdate, 
-sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, codigo_obra_destino, tipo_obra_destino
-	from owd.vmt_1705_1151_sewerline_2 sl WHERE sl.codigo_obra = '010-CONDDISP-03' AND sl.id_tramo_conectado = '3';
-	--AND sl.gdb_from_date <= fecha_fin 
-	--ORDER BY sl.rut, sl.codigo_obra, sl.gdb_from_date ASC	
+
+SELECT sl.rut, sl.codigo_obra, SUM(sl.measuredlength) FROM owd.vmt_1705_1151_sewerline sl  WHERE
+(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND sl.proyecto_informado_siss IS NOT null
+AND sl.creationdate< to_date('20240801', 'YYYYMMDD') group by sl.rut, sl.codigo_obra
+
+
+SELECT sl.rut, sl.codigo_obra, SUM(sl.measuredlength)
+FROM owd.vmt_1705_1151_sewerline sl WHERE 
+	(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
+	--AND sl.creationdate >= fecha_inicio 
+	AND sl.creationdate <= to_date('20240801', 'YYYYMMDD')
+	AND sl.codigo_obra = '010-CONDDISP-15' GROUP BY sl.rut, sl.codigo_obra
+	ORDER BY sl.rut, sl.codigo_obra ASC	
 	
-SELECT longitud, sl.codigo_obra_destino, sl.tipo_obra_destino from owd.tbl_1151_hist sl WHERE sl.codigo_conduccion = '010-CONDDISP-03' AND sl. = '3'
+SELECT longitud, sl.codigo_obra_destino, sl.tipo_obra_destino from owd.tbl_1151_hist sl WHERE sl.codigo_conduccion = '010-CONDDISP-15' 
+	
+select * FROM owd.cunduccion_elim_hist	CH where CH.codigo_conduccion = '010-CONDDISP-15'
+	
+SELECT sl.ownedby, sl.codigo_obra, sl.measuredlength, sl.proyecto_informado_siss
+FROM owd.vmt_sewerline_sb sl WHERE 
+	(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
+	--AND sl.creationdate >= fecha_inicio 
+	AND sl.creationdate <= to_date('20240801', 'YYYYMMDD')
+	 AND sl.codigo_obra = '110-CONDREC-07' GROUP BY sl.ownedby, sl.codigo_obra
+	ORDER BY sl.ownedby, sl.codigo_obra ASC	
+	
+	
+	select sl.ownedby, sl.codigo_obra, sl.proyecto_informado_siss, sl.measuredlength, sl.gdb_from_date FROM sewerline sl WHERE sl.codigo_obra = '460-CONDREC-122'
+	group by sl.ownedby, sl.codigo_obra
+	
+SELECT sl.rut, sl.codigo_obra, sl.measuredlength, sl.proyecto_informado_siss
+FROM owd.vmt_1705_1151_sewerline sl WHERE 
+	(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
+	--AND sl.creationdate >= fecha_inicio 
+	AND sl.creationdate <= to_date('20240801', 'YYYYMMDD')
+	AND sl.codigo_obra = '110-CONDREC-07' 
+	ORDER BY sl.rut, sl.codigo_obra ASC
 	
