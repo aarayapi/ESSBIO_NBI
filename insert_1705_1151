@@ -32,7 +32,6 @@ DECLARE
 	codigo_obra_origen  character varying(255);
 	tipo_obra_destino integer;
 	codigo_obra_destino character varying(255);
-	--longitud_tramo numeric(38,8);
 	assetid character varying(100);
 	id_tramo_conectado character varying(20);
 	ownedby smallint;
@@ -40,30 +39,24 @@ DECLARE
 	
     codigo_sistema_siss2 integer;
     codigo_obra2 character varying(255);	
-    etapa2 integer;	
 	rut2 character varying(20); 
 	
 	
-
-	gdb_from_date2 timestamp;
+  	gdb_from_date timestamp;
 	gdb_archive_oid integer;
-
 	proyecto_informado_siss character varying(100);
-	proyecto_informado_siss2 character varying(100);
 	resultado text;
 	cantidad integer;
 	correlativo integer;
-	cuenta2 integer;
 BEGIN
 codigoproceso :=  5;
 codigoarchivo := 1705; 
---rut := '96963440';
 periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
 
 resultado   := '';
 correlativo := 0;
 cantidad := 0;
-cuenta2 := 0;
+
 largo_total := 0;
 
 TRUNCATE TABLE owd.tbl_tmp_1705;
@@ -74,13 +67,15 @@ SELECT sl.proyecto_informado_siss,  sl.codigo_obra , sl.id_tramo_conectado,  sl.
 FROM owd.vmt_1705_1151_sewerline sl WHERE 
 	(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
 	--AND sl.creationdate >= fecha_inicio 
-	AND sl.creationdate <= fecha_fin
-	--AND sl.proyecto_informado_siss IS NOT null
-	ORDER BY sl.rut, sl.codigo_obra, sl.gdb_from_date ASC	
+	AND sl.creationdate <= fecha_fin 
+	AND sl.codigo_obra IN (SELECT T1.codigo_obra 
+							   FROM owd.vmt_1705_1151_sewerline T1 
+							   WHERE (T1.creationdate <= fecha_inicio AND T1.lastupdate BETWEEN fecha_inicio AND fecha_fin)
+						  OR( T1.creationdate >fecha_inicio AND T1.creationdate < fecha_fin))
+	ORDER BY sl.rut, sl.codigo_obra, sl.gdb_from_date ASC
 
 	LOOP
 		correlativo := correlativo + 1;
-
 
 		IF correlativo = 1 THEN
 			codigo_obra := punto.codigo_obra;
@@ -89,16 +84,8 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 			END IF;
 			codigo_sistema_siss := punto.codigo_sistema_siss;
 			rut := punto.rut;
-	
-			--SELECT longitud into largo_cond_hist FROM owd.tbl_1151_hist WHERE codigo_conduccion = codigo_obra AND rut_empresa = rut;
-			
+				
 			largo_total = COALESCE(punto.measuredlength, 0);	
-			
-			/*IF largo_cond_hist IS NOT NULL THEN
-
-				largo_total = largo_cond_hist + COALESCE(punto.measuredlength,0);			
-			
-			END IF;*/
 			
 		ELSIF correlativo >= 2 THEN			
 			codigo_obra2 := punto.codigo_obra;	
@@ -117,16 +104,12 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 				END IF;
 			ELSE
 
-				--correlativo := 1;
-				
 				SELECT longitud into largo_cond_hist FROM owd.tbl_1151_hist WHERE codigo_conduccion = codigo_obra AND rut_empresa = rut;
 				
 				IF largo_total <> largo_cond_hist AND largo_total IS NOT NULL  THEN
 
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss, 1151, codigo_obra, 0, 9, round(largo_cond_hist,2)::text, round(largo_total,2)::text, gdb_from_date, objectid::integer);
-
-					--longitud_total := longitud_total + punto.measuredlength;
 					
 				END IF;			
 				
@@ -182,7 +165,6 @@ FOR punto IN
 
 				IF codigo_obra = codigo_obra2 AND rut = rut2 THEN		
 
-
 				ELSE
 					SELECT TH.nombre_obra, TH.etapa, TH.tipo_obra_origen, TH.codigo_obra_origen, TH.tipo_obra_destino, TH.codigo_obra_destino, TH.longitud, TH.vigencia, TH.sistema INTO
 					punto2 FROM owd.tbl_1151_hist TH WHERE TH.codigo_conduccion = codigo_obra AND TH.rut_empresa = rut;
@@ -228,7 +210,6 @@ FOR punto IN
 				gdb_from_date = punto.gdb_from_date;					
 			END IF;		
 		END LOOP;
-
 
  RETURN resultado;
 END;

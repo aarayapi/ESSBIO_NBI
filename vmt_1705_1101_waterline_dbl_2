@@ -1,0 +1,59 @@
+-- View: owd.vmt_1705_1101_waterline_dbl_2
+
+-- DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_1101_waterline_dbl_2;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_1101_waterline_dbl_2
+TABLESPACE pg_default
+AS
+ SELECT cm.codigo_obra,
+    cm.objectid,
+    cm.ownedby,
+    cm.codigo_sistema_siss,
+    cm.etapa,
+    cm.nombre_conduccion,
+    cm.tipo_obra_origen,
+    cm.codigo_obra_origen,
+    cm.tipo_obra_destino,
+    cm.codigo_obra_destino,
+    cm.gdb_from_date,
+    cm.gdb_archive_oid,
+    cm.proyecto_informado_siss,
+    cm.assetid,
+    cm.assetgroup,
+    cm.assettype,
+    cm.id_tramo_conectado,
+    cm.creationdate
+   FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' 
+ SELECT sl.codigo_obra,
+    sl.objectid,
+    sl.ownedby,
+    sl.codigo_sistema_siss,
+    sl.etapa,
+    sl.nombre_conduccion,
+    sl.tipo_obra_origen,
+    sl.codigo_obra_origen,
+    sl.tipo_obra_destino,
+    sl.codigo_obra_destino,
+    sl.gdb_from_date,
+    sl.gdb_archive_oid,
+    sl.proyecto_informado_siss,
+    sl.assetid,
+    sl.assetgroup,
+    sl.assettype,
+    sl.id_tramo_conectado,
+    sl.creationdate
+   FROM waterline sl
+  WHERE (sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND (sl.objectid IN ( SELECT mb_.objectid
+           FROM ( SELECT waterline.objectid,
+                    row_number() OVER (PARTITION BY waterline.codigo_obra ORDER BY waterline.gdb_from_date DESC) AS rn,
+                    waterline.gdb_is_delete
+                   FROM waterline
+                  WHERE waterline.gdb_branch_id = 0 AND waterline.gdb_from_date <= ''9999-12-31 23:59:59''::timestamp without time zone) mb_
+          WHERE mb_.rn = 1 AND mb_.gdb_is_delete = ''0''::smallint))'::text) cm(codigo_obra character varying(255), objectid integer, ownedby smallint, codigo_sistema_siss integer, etapa integer, nombre_conduccion character varying(60), tipo_obra_origen integer, codigo_obra_origen character varying(255), tipo_obra_destino integer, codigo_obra_destino character varying(255), gdb_from_date timestamp without time zone, gdb_archive_oid integer, proyecto_informado_siss character varying(255), assetid character varying(64), assetgroup integer, assettype smallint, id_tramo_conectado character varying(255), creationdate timestamp without time zone)
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_1705_1101_waterline_dbl_2
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_1705_1101_waterline_dbl_2 TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_1101_waterline_dbl_2 TO bd_consulta;

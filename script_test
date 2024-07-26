@@ -1,6 +1,6 @@
 truncate table tabla_1705;
 
-select * FROM owd.insert_1705_1151(to_date('20240101', 'YYYYMMDD'), to_date('20240801', 'YYYYMMDD'));
+select * FROM owd.insert_1705_1151(to_date('20240401', 'YYYYMMDD'), to_date('20240801', 'YYYYMMDD'));
 
 select * from tabla_1705 WHERE "codigoObra" = '010-CONDDISP-15'
 
@@ -32,7 +32,7 @@ FROM owd.vmt_sewerline_sb sl WHERE
 	ORDER BY sl.ownedby, sl.codigo_obra ASC	
 	
 	
-	select sl.ownedby, sl.codigo_obra, sl.proyecto_informado_siss, sl.measuredlength, sl.gdb_from_date FROM sewerline sl WHERE sl.codigo_obra = '460-CONDREC-122'
+	select sl.ownedby, sl.codigo_obra, sl.proyecto_informado_siss, sl.measuredlength, sl.gdb_from_date FROM sewerline sl WHERE sl.codigo_obra = '180-CONDREC-08'
 	group by sl.ownedby, sl.codigo_obra
 	
 SELECT sl.rut, sl.codigo_obra, sl.measuredlength, sl.proyecto_informado_siss
