@@ -2,7 +2,7 @@ truncate table tabla_1705;
 
 select * FROM owd.insert_1705_1151(to_date('20240401', 'YYYYMMDD'), to_date('20240801', 'YYYYMMDD'));
 
-select * from tabla_1705 WHERE "codigoObra" = '010-CONDDISP-15'
+select * from tabla_1705 --WHERE "codigoObra" = '010-CONDDISP-15'
 
 
 
@@ -43,3 +43,23 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 	AND sl.codigo_obra = '110-CONDREC-07' 
 	ORDER BY sl.rut, sl.codigo_obra ASC
 	
+	
+SELECT * FROM owd.cunduccion_elim_hist
+
+
+
+SELECT wl.proyecto_informado_siss,  wl.codigo_obra , wl.id_tramo_conectado,  wl.creationdate, 
+	   wl.rut, wl.measuredlength, wl.objectid, wl.gdb_from_date, wl.gdb_archive_oid, wl.lifecyclestatus, wl.codigo_sistema_siss
+FROM owd.vmt_1705_1101_waterline_dbl wl WHERE 
+	wl.assetgroup = 1 AND (wl.assettype = 1 OR wl.assettype = 3)
+	--AND sl.creationdate >= fecha_inicio 
+	AND wl.creationdate <= to_date('20240801', 'YYYYMMDD') 
+	AND wl.codigo_obra IN (SELECT T1.codigo_obra 
+							   FROM owd.vmt_1705_1101_waterline_dbl T1 
+							   WHERE (T1.creationdate <= to_date('20240401', 'YYYYMMDD')  AND T1.lastupdate BETWEEN to_date('20240401', 'YYYYMMDD') AND to_date('20240801', 'YYYYMMDD'))
+						  OR( T1.creationdate >to_date('20240401', 'YYYYMMDD') AND T1.creationdate < to_date('20240801', 'YYYYMMDD')))
+	ORDER BY wl.rut, wl.codigo_obra, wl.gdb_from_date ASC
+	
+	
+	
+	TRUNCATE TABLE owd.cunduccion_elim_hist;

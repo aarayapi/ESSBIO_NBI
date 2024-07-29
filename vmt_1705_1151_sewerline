@@ -20,7 +20,8 @@ AS
     sd.lifecyclestatus,
     sd.codigo_sistema_siss,
     sd.assetgroup,
-    sd.assettype
+    sd.assettype,
+	sd.lastupdate
    FROM sewerline sd
   WHERE (sd.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
            FROM ( SELECT sewerline.gdb_archive_oid,
@@ -44,7 +45,7 @@ UNION
     1 AS assetgroup,
     1 AS assettype,
 	to_date('YYYYMMDD'::text, '20000101'::text) AS lastupdate
-   FROM cunduccion_elim_hist ch
+   FROM cunduccion_elim_hist ch WHERE ch.tabla = 1152
 WITH DATA;
 
 ALTER TABLE IF EXISTS owd.vmt_1705_1151_sewerline
