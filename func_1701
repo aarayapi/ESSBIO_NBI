@@ -1,0 +1,101 @@
+-- FUNCTION: owd.func_1701(date, date)
+
+-- DROP FUNCTION IF EXISTS owd.func_1701(date, date);
+
+CREATE OR REPLACE FUNCTION owd.func_1701(
+	fecha_inicio date,
+	fecha_fin date)
+    RETURNS TABLE("codigoProceso" text, "codigoArchivo" text, rut integer, periodo text, "codigoProyecto" character varying, "NombreProyecto" text, "Descripcion" text, "TipoDocumentoRecepcion" integer, "OtroTipoDocumentoRecepcion" character varying, "Numero" character varying, "Fecha" date, created_date timestamp without time zone, created_user character varying) 
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
+
+AS $BODY$
+
+BEGIN
+	RETURN QUERY  SELECT * FROM ( SELECT '5'::text AS "codigoProceso",
+    '1701'::text AS "codigoArchivo",
+    cm.rut_empresa AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+    bpn.codigo_nbi_informado AS "codigoProyecto",
+    UPPER(bi.nombre_proyecto) AS "NombreProyecto",
+    UPPER(bpn.observacion) AS "Descripcion",
+    bc.tipo_docto_recepcion AS "TipoDocumentoRecepcion",
+    bc.otro_docto_recepcion AS "OtroTipoDocumentoRecepcion",
+    bc.numero_docto_recepcion AS "Numero",
+    bc.fecha_docto_recepcion::date AS "Fecha",
+    bpn.created_date,
+    bpn.created_user
+   FROM owd.btd_proyecto_nbi bpn
+     LEFT JOIN owd.btd_inventario bi ON bi.id_inventario = bpn.id_inventario
+     LEFT JOIN owd.btd_construccion bc ON bi.codigo_proyecto::text = bc.codigo_proyecto::text
+     LEFT JOIN owd.btd_proyecto_localidad bpl ON bpl.id_inventario = bc.id_inventario
+     LEFT JOIN owd.concesionmetro cm ON cm.codigo_localidad = bpl.codigo_localidad
+  --WHERE bpn.anio_informado_nbi = 2023
+   WHERE bpn.created_date >= fecha_inicio AND bpn.created_date <= fecha_fin
+UNION
+ SELECT '5'::text AS "codigoProceso",
+    '1701'::text AS "codigoArchivo",
+    cm.rut_empresa AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+        CASE
+            WHEN cr.numproyecto IS NULL THEN cr.cro_id::text
+            ELSE concat(cr.cro_id, '_', cr.numproyecto)
+        END AS "codigoProyecto",
+    --UPPER((('Rectastrastro en '::text || initcap(cr.localidad::text)) || ' generado por hallazgo '::text) || cr.cro_id::text) AS "NombreProyecto",
+	UPPER(cr.descripcion) AS "NombreProyecto",
+    UPPER(cr.observacion) AS "Descripcion",
+    4 AS "TipoDocumentoRecepcion",
+    'CROQUIS'::character varying AS "OtroTipoDocumentoRecepcion",
+    cr.cro_id AS "Numero",
+    cr.fecha_resolucion::date AS "Fecha",
+    cr.created_date,
+    cr.created_user
+   FROM owd.croquis cr
+     LEFT JOIN owd.concesionmetro cm ON cm.codigo_localidad = cr.cod_localidad
+  --WHERE date_part('year'::text, cr.fecha_resolucion) >= 2023::double precision ) t1 
+	WHERE cr.fecha_resolucion >= fecha_inicio AND cr.fecha_resolucion <= fecha_fin ) t1 	
+  	WHERE t1."codigoProyecto" in ( SELECT DISTINCT cp."codigoProyecto"
+   FROM ( SELECT cm."codigoProyecto"
+           FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' 
+	SELECT  "codigoProyecto" FROM owd.func_1702(
+			to_date('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS''), 
+			to_date('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+	)'::text) cm("codigoProyecto" character varying(200))
+        UNION
+         SELECT cm."codigoProyecto"
+           FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' 
+	SELECT  "codigoProyecto" FROM owd.func_1703(
+			to_date('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS''), 
+			to_date('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+	)'::text) cm("codigoProyecto" character varying(200))
+        UNION
+         SELECT cm."codigoProyecto"
+           FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' 
+	SELECT  "codigoProyecto" FROM owd.func_1704(
+			to_date('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS''), 
+			to_date('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+	)'::text) cm("codigoProyecto" character varying(200))
+        UNION
+         SELECT cm."codigoProyecto"
+           FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' 
+	SELECT  "codigoProyecto" FROM owd.func_1705(
+			to_date('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS''), 
+			to_date('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+	)'::text) cm("codigoProyecto" character varying(200))) cp								 
+								 
+								 );
+
+END;
+$BODY$;
+
+ALTER FUNCTION owd.func_1701(date, date)
+    OWNER TO owd;
+
+GRANT EXECUTE ON FUNCTION owd.func_1701(date, date) TO PUBLIC;
+
+GRANT EXECUTE ON FUNCTION owd.func_1701(date, date) TO bd_consulta;
+
+GRANT EXECUTE ON FUNCTION owd.func_1701(date, date) TO owd;
+
