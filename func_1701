@@ -20,7 +20,10 @@ BEGIN
     (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
     bpn.codigo_nbi_informado AS "codigoProyecto",
     UPPER(bi.nombre_proyecto) AS "NombreProyecto",
-    UPPER(bpn.observacion) AS "Descripcion",
+    CASE 
+		 WHEN bpn.observacion IS NULL THEN UPPER(bi.descripcion_proyecto)
+		 ELSE UPPER(bpn.observacion) 
+	END AS "Descripcion",
     bc.tipo_docto_recepcion AS "TipoDocumentoRecepcion",
     bc.otro_docto_recepcion AS "OtroTipoDocumentoRecepcion",
     bc.numero_docto_recepcion AS "Numero",
