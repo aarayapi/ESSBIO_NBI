@@ -4,7 +4,7 @@ select * FROM owd.insert_1705_1151(to_date('20240401', 'YYYYMMDD'), to_date('202
 
 select * from tabla_1705 --WHERE "codigoObra" = '010-CONDDISP-15'
 
-
+select * FROM owd.func_1701(to_date('20240401', 'YYYYMMDD'), to_date('20240801', 'YYYYMMDD'));
 
 SELECT sl.rut, sl.codigo_obra, SUM(sl.measuredlength) FROM owd.vmt_1705_1151_sewerline sl  WHERE
 (sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND sl.proyecto_informado_siss IS NOT null
