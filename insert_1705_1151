@@ -63,7 +63,7 @@ TRUNCATE TABLE owd.tbl_tmp_1705;
 
 FOR punto IN 
 SELECT sl.proyecto_informado_siss,  sl.codigo_obra , sl.id_tramo_conectado,  sl.creationdate, 
-	   sl.rut, sl.measuredlength, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl.lifecyclestatus, sl.codigo_sistema_siss
+	   sl.rut, sl.largo, sl.objectid, sl.gdb_from_date, sl.gdb_archive_oid, sl.lifecyclestatus, sl.codigo_sistema_siss
 FROM owd.vmt_1705_1151_sewerline sl WHERE 
 	(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
 	--AND sl.creationdate >= fecha_inicio 
@@ -85,7 +85,7 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 			codigo_sistema_siss := punto.codigo_sistema_siss;
 			rut := punto.rut;
 				
-			largo_total = COALESCE(punto.measuredlength, 0);	
+			largo_total = COALESCE(punto.largo, 0);	
 			
 		ELSIF correlativo >= 2 THEN			
 			codigo_obra2 := punto.codigo_obra;	
@@ -99,17 +99,20 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 				
 				IF largo_total IS NOT NULL THEN
 
-					largo_total = largo_total + COALESCE(punto.measuredlength,0);
+					largo_total = largo_total + COALESCE(punto.largo,0);
 
 				END IF;
 			ELSE
 
 				SELECT longitud into largo_cond_hist FROM owd.tbl_1151_hist WHERE codigo_conduccion = codigo_obra AND rut_empresa = rut;
 				
+				largo_cond_hist = round(largo_cond_hist, 2);
+				largo_total = round(largo_total, 2);
+				
 				IF largo_total <> largo_cond_hist AND largo_total IS NOT NULL  THEN
 
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss, 1151, codigo_obra, 0, 9, round(largo_cond_hist,2)::text, round(largo_total,2)::text, gdb_from_date, objectid::integer);
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss, 1151, codigo_obra, 0, 9, largo_cond_hist::text, largo_total::text, gdb_from_date, objectid::integer);
 					
 				END IF;			
 				
@@ -118,7 +121,7 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 				codigo_sistema_siss := punto.codigo_sistema_siss;					
 				rut := punto.rut;
 				
-				largo_total = COALESCE(punto.measuredlength,0);
+				largo_total = COALESCE(punto.largo,0);
 				
 			END IF;
 		END IF;				

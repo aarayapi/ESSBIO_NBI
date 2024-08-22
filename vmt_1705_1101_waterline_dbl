@@ -14,7 +14,7 @@ AS
             WHEN 104 THEN '96963440'::text
             ELSE NULL::text
         END AS rut,
-    cm.measuredlength,
+    cm.measuredlength AS largo,
     cm.objectid,
     cm.gdb_from_date,
     cm.gdb_archive_oid,
@@ -30,7 +30,7 @@ AS
     wl.id_tramo_conectado,
     wl.creationdate,
     wl.ownedby,
-    wl.measuredlength,
+    st_length(wl.shape) AS measuredlength,
     wl.objectid,
     wl.gdb_from_date,
     wl.gdb_archive_oid,
@@ -56,7 +56,7 @@ AS
     '0'::character varying AS id_tramo_conectado,
     to_date('YYYYMMDD'::text, '20000101'::text) AS creationdate,
     ch.rut_empresa::text AS rut,
-    ch.longitud AS measuredlength,
+    ch.longitud AS largo,
     0 AS objectid,
     to_date('YYYYMMDD'::text, '20000711'::text) AS gdb_from_date,
     0 AS gdb_archive_oid,

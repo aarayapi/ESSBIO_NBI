@@ -13,7 +13,7 @@ AS
             WHEN 104 THEN '96963440'::text
             ELSE NULL::text
         END AS rut,
-    sd.measuredlength,
+    --sd.measuredlength,
     sd.objectid,
     sd.gdb_from_date,
     sd.gdb_archive_oid,
@@ -21,7 +21,8 @@ AS
     sd.codigo_sistema_siss,
     sd.assetgroup,
     sd.assettype,
-	sd.lastupdate
+	sd.lastupdate,
+	sde.st_length(sd.shape) as largo
    FROM sewerline sd
   WHERE (sd.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
            FROM ( SELECT sewerline.gdb_archive_oid,
@@ -36,7 +37,7 @@ UNION
     '0'::character varying AS id_tramo_conectado,
     to_date('YYYYMMDD'::text, '20000101'::text) AS creationdate,
     ch.rut_empresa::text AS rut,
-    ch.longitud AS measuredlength,
+    --ch.longitud AS measuredlength,
     0 AS objectid,
     to_date('YYYYMMDD'::text, '20000711'::text) AS gdb_from_date,
     0 AS gdb_archive_oid,
@@ -44,7 +45,8 @@ UNION
     ch.sistema AS codigo_sistema_siss,
     1 AS assetgroup,
     1 AS assettype,
-	to_date('YYYYMMDD'::text, '20000101'::text) AS lastupdate
+	to_date('YYYYMMDD'::text, '20000101'::text) AS lastupdate,
+	ch.longitud AS largo
    FROM cunduccion_elim_hist ch WHERE ch.tabla = 1152
 WITH DATA;
 
