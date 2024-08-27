@@ -1,0 +1,155 @@
+[33mcommit c54913caca957f25a01ea1fe0c943fd18544a491[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Thu Aug 22 15:08:20 2024 -0400
+
+    Agrega 1705_1102 y 1705_1152
+
+[33mcommit 87048155d19cb28f39356b5172bfa0d617b3be4d[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Thu Aug 22 10:51:10 2024 -0400
+
+    cambio en definición, ahora se toma la suma de las longitudes SIG
+
+[33mcommit 5e290d794c74b881e37bc21adaed33b9605a30e4[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Mon Aug 12 15:46:26 2024 -0400
+
+    función 1702
+
+[33mcommit 89dfa6d07c7494f4e825c0a10c1932e0bafc62a2[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Tue Aug 6 12:34:52 2024 -0400
+
+    CAmbia la 1701 solicitado por Julio
+
+[33mcommit 86d44f7d8442b4b015399af5a220c5cad73d5b10[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Tue Aug 6 12:34:03 2024 -0400
+
+    se agrega la 1701
+
+[33mcommit 8657a4af14dce587743b399da0d2473f0d465b19[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Mon Jul 29 13:11:11 2024 -0400
+
+    version 2.0 de la 1151 y 1101 para la 1705. Entregada a ESSBIO.
+
+[33mcommit b3554b9fbe756d78527bfff32de8fac1d9795c46[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Fri Jul 26 15:04:49 2024 -0400
+
+    versión 2.0
+
+[33mcommit 0b9135366824c1825011b43daec497837ffbb67c[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Thu Jul 25 17:22:47 2024 -0400
+
+    Versión 2.0 de la función insert_1705_1151
+
+[33mcommit 072db892a0b5f4125aac4a2b7daad3acb8abe341[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Wed Jul 24 18:15:08 2024 -0400
+
+    se agrega archvio test y se avanza en funcion 1705-1151
+
+[33mcommit 7f6ccbadf7d1fc4c4ec7c96fafc678dc224f903c[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Tue Jul 23 18:12:00 2024 -0400
+
+    Se modifica la función insert_1705_1151
+
+[33mcommit c9854b3c33262b0daf27ea238f048b8207cf1b16[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Tue Jul 23 10:31:13 2024 -0400
+
+    Se detectan los cambios en el resto de los campos
+
+[33mcommit 559056bbb87160ea0f81218f5ae55de0d0753af5[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Tue Jul 23 07:55:35 2024 -0400
+
+    modificaciones a funcion 1075_1151
+
+[33mcommit ca7d65c13746423b27df8b792f369b710fa870a8[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Fri Jul 19 16:49:06 2024 -0400
+
+    se agregan las diferencias en los nombres de la funcion 1705_1151
+
+[33mcommit 81852553086d5046fafaca84cfa0fd882fedcf3a[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Fri Jul 19 11:43:23 2024 -0400
+
+    Agrega la tabla vmt_1705_1151_sewerline_2
+
+[33mcommit ffe8b8d908b96f1a1e663647fd1990eaeed6f252[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Thu Jul 18 17:56:55 2024 -0400
+
+    Se modifica la función insert_1705_1151, detecta los nuevos tramos
+
+[33mcommit 5bc3a95163daef8062ac83dc17fcc6834868f0ad[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Wed Jul 17 16:13:17 2024 -0400
+
+    Se modifica la función
+
+[33mcommit 531987095e999bb7661ce612ed0616a9c8973143[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Wed Jul 17 15:23:15 2024 -0400
+
+    Se soluciona el rut
+
+[33mcommit 706656ad33d12509d8313c6deb4d29b30a433ca7[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Thu Jul 11 16:10:20 2024 -0400
+
+    se agrega la función 1705_1101
+
+[33mcommit efbc14bc06dcc2f882ffdfde79ae76ae05b555ce[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Thu Jul 11 16:01:42 2024 -0400
+
+    se agregan los abandonados históricos.
+
+[33mcommit e4f3004c56c074a7537bcc69f628b2d8a7e4928f[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Thu Jul 11 15:23:33 2024 -0400
+
+    se agrega la tabla 1151
+
+[33mcommit 2fca7c50f514dcc863a5480048824565df4d3488[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Thu Jul 11 11:51:09 2024 -0400
+
+    cambio de 1705-1102 a 1705-1101
+
+[33mcommit f3b6e5e2b6379e90fabafb97b8d42c8ea8e5978d[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Thu Jul 11 10:33:48 2024 -0400
+
+    vmt_1705_1101_waterline_dbl vesión 20240711
+
+[33mcommit 229272c1a0c346cad60811cfdffab579384f4234[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Mon Jul 8 13:01:05 2024 -0400
+
+    version que no considera la tabla de abandonados ni llos datos sinar
+
+[33mcommit 7bece073b229ad3c5257de634d72233f4d983660[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Mon Jul 8 12:56:53 2024 -0400
+
+    Borra archivo sin .sql
+
+[33mcommit 646f7bdad1706cb77b38bc7db35b42313ee70a20[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Mon Jul 8 12:45:42 2024 -0400
+
+    version que no considera la tabla de abandonados ni los datos sinar
+
+[33mcommit 17c62b1d26d08799fd1c870f90951a113839653b[m
+Author: Alberto Cristian Araya Pino <aarayapi@gmail.com>
+Date:   Mon Jul 8 12:38:14 2024 -0400
+
+    versión que  no considera tabla de abandonados ni datos sinar.

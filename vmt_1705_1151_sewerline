@@ -22,7 +22,18 @@ AS
     sd.assetgroup,
     sd.assettype,
 	sd.lastupdate,
-	sde.st_length(sd.shape) as largo
+	sde.st_length(sd.shape) as largo,
+	sd.anio_instalacion,
+	sd.tipo_tramo,
+	sd.tipo_operacion,
+	sd.diameter,
+	sd.material,
+	sd.presion_maxima_trabajo,
+	sd.profundidad_media_tramo,
+	sd.slope,
+	sd.tipo_terreno,
+	sd.porcentaje_napa,
+	sd.paralelo
    FROM sewerline sd
   WHERE (sd.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
            FROM ( SELECT sewerline.gdb_archive_oid,
@@ -46,7 +57,18 @@ UNION
     1 AS assetgroup,
     1 AS assettype,
 	to_date('YYYYMMDD'::text, '20000101'::text) AS lastupdate,
-	ch.longitud AS largo
+	longitud AS largo,
+	0 AS anio_instalacion,
+	0 AS tipo_tramo,
+	0 AS tipo_operacion,
+	0 AS diameter,
+	0 AS material,
+	0 AS presion_maxima_trabajo,
+	0 AS profundidad_media_tramo,
+	0 AS slope,
+	0 AS tipo_terreno,
+	0 AS porcentaje_napa,
+	0 AS paralelo
    FROM cunduccion_elim_hist ch WHERE ch.tabla = 1152
 WITH DATA;
 

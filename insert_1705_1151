@@ -81,11 +81,13 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 			codigo_obra := punto.codigo_obra;
 			IF punto.proyecto_informado_siss IS NOT NULL THEN
 				proyecto_informado_siss := punto.proyecto_informado_siss;
+			ELSE 
+				proyecto_informado_siss := '';
 			END IF;
 			codigo_sistema_siss := punto.codigo_sistema_siss;
 			rut := punto.rut;
 				
-			largo_total = COALESCE(punto.largo, 0);	
+			largo_total := COALESCE(punto.largo, 0);	
 			
 		ELSIF correlativo >= 2 THEN			
 			codigo_obra2 := punto.codigo_obra;	
@@ -93,23 +95,26 @@ FROM owd.vmt_1705_1151_sewerline sl WHERE
 			
 			IF punto.proyecto_informado_siss IS NOT NULL THEN
 				proyecto_informado_siss := punto.proyecto_informado_siss;
-			END IF;			
+			ELSE 
+				proyecto_informado_siss := '';
+			END IF;		
 			
 			IF codigo_obra = codigo_obra2 AND rut = rut2 THEN		
 				
 				IF largo_total IS NOT NULL THEN
 
-					largo_total = largo_total + COALESCE(punto.largo,0);
+					largo_total := largo_total + COALESCE(punto.largo,0);
 
 				END IF;
 			ELSE
-
+				largo_cond_hist := 0;
+				
 				SELECT longitud into largo_cond_hist FROM owd.tbl_1151_hist WHERE codigo_conduccion = codigo_obra AND rut_empresa = rut;
 				
 				largo_cond_hist = round(largo_cond_hist, 2);
 				largo_total = round(largo_total, 2);
 				
-				IF largo_total <> largo_cond_hist AND largo_total IS NOT NULL  THEN
+				IF largo_total <> largo_cond_hist AND largo_total IS NOT NULL AND largo_cond_hist <> 0 THEN
 
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss, 1151, codigo_obra, 0, 9, largo_cond_hist::text, largo_total::text, gdb_from_date, objectid::integer);
