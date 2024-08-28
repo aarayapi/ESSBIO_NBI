@@ -22,7 +22,19 @@ AS
     cm.codigo_sistema_siss,
     cm.assetgroup,
     cm.assettype,
-    cm.lastupdate	
+    cm.lastupdate,
+	cm.nombre_conduccion,
+	cm.anio_instalacion,
+
+	cm.tipo_operacion,
+	cm.diameter,
+	cm.material,
+	cm.presion_maxima_trabajo,
+	cm.profundidad_media_tramo,
+	cm.tipo_terreno,
+	cm.porcentaje_napa,
+	cm.paralelo	
+	
    FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' 
      SELECT
 	wl.proyecto_informado_siss,
@@ -38,7 +50,20 @@ AS
     wl.codigo_sistema_siss,
     wl.assetgroup,
     wl.assettype,
-    wl.lastupdate	
+    wl.lastupdate,
+			   
+    wl.nombre_conduccion,
+	wl.anio_instalacion,
+
+	wl.tipo_operacion,
+   wl.diameter,
+   wl.material,
+   wl.presion_maxima_trabajo,
+   wl.profundidad_media_tramo,
+	wl.tipo_terreno,
+   wl.porcentaje_napa,
+   wl.paralelo  
+			   
 	FROM waterline wl
   WHERE wl.measuredlength is not null AND (wl.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
            FROM ( SELECT waterline.gdb_archive_oid,
@@ -49,7 +74,17 @@ AS
           WHERE mb_.rn = 1))'::text) cm(proyecto_informado_siss character varying(100), codigo_obra character varying(100), id_tramo_conectado character varying(100), creationdate  timestamp without time zone, ownedby smallint, 
 										measuredlength numeric, objectid integer, gdb_from_date timestamp without time zone, gdb_archive_oid integer, 
 										lifecyclestatus smallint, codigo_sistema_siss integer, assetgroup integer, 
-										assettype smallint, lastupdate timestamp without time zone)
+										assettype smallint, lastupdate timestamp without time zone,  nombre_conduccion character varying(60),
+	anio_instalacion smallint,
+
+	tipo_operacion integer,
+	diameter numeric,
+	material smallint ,
+	presion_maxima_trabajo numeric,
+	profundidad_media_tramo numeric,
+	tipo_terreno integer,
+	porcentaje_napa numeric,
+	paralelo integer) 
 	UNION
  SELECT 'conduccion histórica'::character varying AS proyecto_informado_siss,
     ch.codigo_conduccion AS codigo_obra,
@@ -64,7 +99,18 @@ AS
     ch.sistema AS codigo_sistema_siss,
     1 AS assetgroup,
     1 AS assettype,
-    to_date('YYYYMMDD'::text, '20000101'::text) AS lastupdate
+    to_date('YYYYMMDD'::text, '20000101'::text) AS lastupdate,
+	'' AS nombre_conduccion,
+	0 AS anio_instalacion,
+
+	0 AS tipo_operacion,
+	0 AS diameter,
+	0 AS material,
+	0 AS presion_maxima_trabajo,
+	0 AS profundidad_media_tramo,
+	0 AS tipo_terreno,
+	0 AS porcentaje_napa,
+	0 AS paralelo	
    FROM cunduccion_elim_hist ch	WHERE ch.tabla = 1102
 	
 	

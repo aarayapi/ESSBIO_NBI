@@ -2,7 +2,15 @@ truncate table tabla_1705;
 
 select * FROM owd.insert_1705_1152(to_date('20240401', 'YYYYMMDD'), to_date('20240801', 'YYYYMMDD'));
 
-select * from tabla_1705 --WHERE "codigoObra" = '010-CONDDISP-15'
+select * from tabla_1705 WHERE "codigoAtributo" = 13; --WHERE "codigoObra" = '010-CONDDISP-15'
+
+SELECT profundidad_media_tramo from sewerline WHERE codigo_obra = '640-CONDREC-01' AND id_tramo_conectado = '2'
+
+SELECT * from 
+
+
+
+
 
 select * FROM owd.func_1701(to_date('20240401', 'YYYYMMDD'), to_date('20240801', 'YYYYMMDD'));
 
