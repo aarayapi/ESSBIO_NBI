@@ -22,7 +22,8 @@ DECLARE
 	profundidad_ant numeric;
 	porcentaje_napa_nue numeric;
 	porcentaje_napa_ant numeric;
-	
+	pto_presion_max numeric;
+	trm_presion_max numeric;	
 	codigoproceso smallint;
 	codigoarchivo smallint;
 	rut character varying(20);
@@ -138,9 +139,11 @@ FOR punto IN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1152, punto.codigo_obra, punto.id_tramo_conectado, 10, tramo.otro_materia::text, otromaterial::text, punto.gdb_from_date, punto.objectid::integer);
 			END IF;	
-			IF  COALESCE(punto.presion_maxima_trabajo,'0')  <>  COALESCE(tramo.presion_max_trabajo,'0') THEN
+			pto_presion_max = round(punto.presion_maxima_trabajo,2);
+			trm_presion_max = round(tramo.presion_max_trabajo,2);
+			IF  pto_presion_max  <>  trm_presion_max THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-				VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1152, punto.codigo_obra, punto.id_tramo_conectado, 11, tramo.presion_max_trabajo::text, punto.presion_maxima_trabajo::text, punto.gdb_from_date, punto.objectid::integer);
+				VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1152, punto.codigo_obra, punto.id_tramo_conectado, 11, trm_presion_max::text, pto_presion_max::text, punto.gdb_from_date, punto.objectid::integer);
 			END IF;	
 			profundidad_nue := round(punto.profundidad_media_tramo,2) ;
 			profundidad_ant := round(tramo.profundidad_media_tramo,2) ;

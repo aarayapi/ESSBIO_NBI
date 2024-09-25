@@ -1,0 +1,2398 @@
+-- FUNCTION: owd.func_1704(date, date)
+
+-- DROP FUNCTION IF EXISTS owd.func_1704(date, date);
+
+CREATE OR REPLACE FUNCTION owd.func_1704(
+	fecha_inicio date,
+	fecha_fin date)
+    RETURNS TABLE("codigoProceso" text, "codigoArchivo" text, rut text, periodo text, "codigoProyecto" character varying, "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying, "codigoTramo" text, "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text) 
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
+
+AS $BODY$
+
+BEGIN
+	RETURN QUERY   
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	101 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd 
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 567 AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+ 
+  UNION
+  
+   SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS codigoarchivo,
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	102 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd 
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 568  AND wd.codigo_obra is not null
+  AND  wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+
+ UNION
+ 
+    SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	103 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd  
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 561  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+  
+  UNION
+  
+      SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	104 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+		'' AS "OtroTipoAT",		
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+  WHERE wd.assetgroup = 20 AND wd.assettype = 569  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+  
+  UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	201 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+  WHERE wd.assetgroup = 15 AND wd.assettype = 605  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+    
+  UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	202 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+  WHERE wd.assetgroup = 15 AND wd.assettype = 604  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+  
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	203 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1			
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+  WHERE wd.assetgroup = 15 AND wd.assettype = 602  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+     
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	204 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+  WHERE wd.assetgroup = 15 AND wd.assettype = 606  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+     
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	301 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd 
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+  WHERE wd.assetgroup = 5 AND wd.assettype = 283  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+      
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	302 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+  WHERE wd.assetgroup = 5 AND wd.assettype = 284  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+      
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	303 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd 
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+  WHERE wd.assetgroup = 5 AND wd.assettype = 285  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+      
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	304 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+  WHERE wd.assetgroup = 5 AND wd.assettype = 286  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin  
+     
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	305 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+  WHERE wd.assetgroup = 5 AND wd.assettype = 281  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+
+   UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5''::text AS codigoproceso,
+    ''1704''::text AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''::text
+            WHEN 104 THEN ''96963440''::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year''::text, CURRENT_DATE) - 1::double precision) || ''12''::text AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	351 AS "codigoObraTipo",
+	sd.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+	FROM owd.vmt_sewerdevice_sb sd
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss		   
+  	WHERE sd.assettype = 61 AND sd.assetgroup = 5  AND sd.codigo_obra is not null
+			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+			   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo" character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+
+    UNION
+ 
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	401 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd 
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 564  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+      
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	402 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 563 AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+      
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	501 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 15 AND wd.assettype = 601 AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+  
+        
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	502 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 15 AND wd.assettype = 607 AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+
+        
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	601 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 19 AND wd.assettype = 401  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+  
+        
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	701 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 19 AND wd.assettype = 402 AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+  
+        
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wl.proyecto_informado_siss AS "codigoProyecto",
+    wl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1101 AS "codigoObraTipo",
+	wl.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterline_sb wl
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wl.proyecto_informado_siss
+  WHERE wl.assetgroup = 1 AND wl.assettype = 1 AND wl.codigo_obra is not null
+  AND   wl.creationdate >= fecha_inicio AND wl.creationdate <= fecha_fin 
+  
+        
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wl.proyecto_informado_siss AS "codigoProyecto",
+    wl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1102 AS "codigoObraTipo",
+	wl.codigo_obra AS "codigoObra",
+	wl.id_tramo_conectado AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterline_sb wl  
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wl.proyecto_informado_siss
+  WHERE wl.assetgroup = 1 AND wl.assettype = 3  AND wl.codigo_obra is not null
+  AND   wl.creationdate >= fecha_inicio AND wl.creationdate <= fecha_fin 
+  
+  
+  UNION
+  
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sl.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year''::text, CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1151 AS "codigoObraTipo",
+	sl.codigo_obra AS "codigoObra",
+	0 AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_sewerline_sb sl
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sl.proyecto_informado_siss
+  WHERE (sl.assetgroup = 1 OR sl.assetgroup = 2) AND (sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42)  AND sl.codigo_obra is not null
+			   AND sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)  
+  
+  
+UNION  
+  
+  SELECT cm.codigoproceso As "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sl.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1152 AS "codigoObraTipo",
+	sl.codigo_obra AS "codigoObra",
+	sl.id_tramo_conectado AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_sewerline_sb sl  
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sl.proyecto_informado_siss			   
+  WHERE (sl.assetgroup = 1 OR sl.assetgroup = 2) AND (sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND sl.codigo_obra is not null
+			    AND sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+	   
+ UNION
+	 
+	   SELECT cm.codigoproceso AS  "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1201 AS "codigoObraTipo",
+	sd.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_sewerdevice_sb sd
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss
+  WHERE  sd.assettype = 201 AND sd.assetgroup = 15  AND sd.codigo_obra is not null
+			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1202 AS "codigoObraTipo",
+	pt.codigo_obra AS "codigoObra",
+	round(pt.identificador_unidad,0) AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM owd.as_pretratamiento pt
+    LEFT JOIN vmt_sewerdevice_sb sd ON pt.assetguid::text = sd.globalid::text
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss
+  WHERE (pt.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+           FROM ( SELECT as_pretratamiento.gdb_archive_oid,
+                    row_number() OVER (PARTITION BY as_pretratamiento.objectid ORDER BY as_pretratamiento.gdb_from_date DESC) AS rn,
+                    as_pretratamiento.gdb_is_delete
+                   FROM as_pretratamiento
+                  WHERE as_pretratamiento.gdb_branch_id = 0 AND as_pretratamiento.gdb_from_date <= ''9999-12-31 23:59:59''::timestamp without time zone) mb_
+          WHERE mb_.rn = 1 AND mb_.gdb_is_delete = ''0''::smallint)) AND pt.codigo_obra is not null
+			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+	   
+	UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo,
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1203 AS "codigoObraTipo",
+	tp.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM as_tratamientoprimario tp
+     LEFT JOIN vmt_sewerdevice_sb sd ON tp.assetguid::text = sd.globalid::text
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss			   
+  WHERE (tp.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+           FROM ( SELECT as_tratamientoprimario.gdb_archive_oid,
+                    row_number() OVER (PARTITION BY as_tratamientoprimario.objectid ORDER BY as_tratamientoprimario.gdb_from_date DESC) AS rn,
+                    as_tratamientoprimario.gdb_is_delete
+                   FROM as_tratamientoprimario
+                  WHERE as_tratamientoprimario.gdb_branch_id = 0 AND as_tratamientoprimario.gdb_from_date <= ''9999-12-31 23:59:59''::timestamp without time zone) mb_
+          WHERE mb_.rn = 1 AND mb_.gdb_is_delete = ''0''::smallint)) AND tp.codigo_obra is not null
+			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+ UNION
+ 
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1204 AS "codigoObraTipo",
+	ts.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+FROM as_tratamientosecundario ts
+    LEFT JOIN vmt_sewerdevice_sb sd ON ts.assetguid::text = sd.globalid::text 
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss		   
+			   WHERE   ts.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ts.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			   AND ts.codigo_obra is not null'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+	   
+	   
+UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1205 AS "codigoObraTipo",
+	ds.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM as_desinfecciondecloracion ds
+     LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss		   
+			   
+			   WHERE   ds.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ds.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			   AND ds.codigo_obra is not null'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1206 AS "codigoObraTipo",
+	ds.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",			   
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM as_linea_lodos_ptas ds
+     LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss			   
+			   WHERE   ds.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ds.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			   AND ds.codigo_obra is not null'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+	   UNION
+	   
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sl.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1207 AS "codigoObraTipo",
+	sl.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   
+   FROM sewerline sl
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sl.proyecto_informado_siss			   
+          WHERE sl.assetgroup = 7 AND (sl.assettype = 401 OR sl.assettype = 402) AND sl.codigo_obra is not null
+			   AND    sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+   
+UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sl.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1208 AS "codigoObraTipo",
+	sl.codigo_obra AS "codigoObra",
+	sl.assetid AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1					
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM vmt_sewerline_sb sl
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sl.proyecto_informado_siss			   
+  WHERE sl.assetgroup = 7 AND sl.assettype = 402 AND sl.codigo_obra is not null
+			   AND    sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+
+'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1209 AS "codigoObraTipo",
+	sd.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'''' AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   
+FROM as_contrololores ds 
+			   LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text
+			   	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss
+  WHERE (ds.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+           FROM ( SELECT as_contrololores.gdb_archive_oid,
+                    row_number() OVER (PARTITION BY as_contrololores.objectid ORDER BY as_contrololores.gdb_from_date DESC) AS rn,
+                    as_contrololores.gdb_is_delete
+                   FROM as_contrololores
+                  WHERE as_contrololores.gdb_branch_id = 0 AND as_contrololores.gdb_from_date <= ''9999-12-31 23:59:59''::timestamp without time zone) mb_
+          WHERE mb_.rn = 1 AND mb_.gdb_is_delete = ''0''::smallint)) AND ds.codigo_obra is not null
+			   AND    ds.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ds.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'');
+
+'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+
+UNION
+ 
+	SELECT '5' AS "codigoProceso",
+    '1704' AS "codigoArchivo",
+        CASE sd.ownedby
+            WHEN 103 THEN '76833300'
+            WHEN 104 THEN '96963440'
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year', CURRENT_DATE) - 1::double precision) || '12' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1402 AS "codigoObraTipo",
+	sd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN sd.tipo_aporte = 0 THEN 1
+			WHEN sd.tipo_aporte = 1 THEN 1
+			WHEN sd.tipo_aporte = 2 THEN 1
+			WHEN sd.tipo_aporte = 3 THEN 1
+			WHEN sd.tipo_aporte = 4 THEN 1
+			WHEN sd.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN sd.tipo_aporte = 5 THEN 0
+			ELSE sd.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE sd.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE sd.tipo_aporte
+            WHEN 0 THEN sd.contratista_consultor
+            WHEN 1 THEN sd.contratista_consultor
+			WHEN 2 THEN sd.contratista_consultor
+			WHEN 3 THEN sd.contratista_consultor
+			WHEN 4 THEN sd.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   
+FROM ( SELECT wd.ownedby,
+  	wd.proyecto_informado_siss,
+    wd.codigo_sistema_siss,
+    wd.codigo_obra,
+	wd.tipo_financiamiento,
+    bi.tipo_aportante,
+    bi.tipo_aporte,
+   bi.contratista_consultor	  
+   FROM owd.vmt_waterdevice_sb wd
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss	  
+  WHERE wd.assetgroup = 13 AND wd.assettype = 41 AND wd.codigo_obra is not null AND wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin
+UNION
+ SELECT cm.ownedby,
+  	cm.proyecto_informado_siss,
+    cm.codigo_sistema_siss,
+    cm.codigo_obra,
+	cm.tipo_financiamiento,
+    cm.tipo_aportante,
+    cm.tipo_aporte,
+    cm.contratista_consultor	  
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'select 
+	sd.ownedby,
+    sd.proyecto_informado_siss,
+	sd.codigo_sistema_siss,
+    sd.codigo_obra,
+    sd.tipo_financiamiento,
+    bi.tipo_aportante,
+    bi.tipo_aporte,
+   bi.contratista_consultor
+   FROM owd.vmt_sewerdevice_sb  sd
+LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss	  		   
+WHERE sd.assetgroup = 10 AND sd.assettype = 161  AND sd.codigo_obra is not null AND    sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	  cm(ownedby integer, proyecto_informado_siss character varying(255), codigo_sistema_siss integer, 
+		 codigo_obra character varying(255), tipo_financiamiento integer, tipo_aportante smallint, tipo_aporte smallint,contratista_consultor  character varying(255))
+)sd 
+
+UNION 
+
+	SELECT '5' AS "codigoProceso",
+    '1704' AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'
+            WHEN 104 THEN '96963440'
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year', CURRENT_DATE) - 1::double precision) || '12' AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1403 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN bi.tipo_aporte = 0 THEN 1
+			WHEN bi.tipo_aporte = 1 THEN 1
+			WHEN bi.tipo_aporte = 2 THEN 1
+			WHEN bi.tipo_aporte = 3 THEN 1
+			WHEN bi.tipo_aporte = 4 THEN 1
+			WHEN bi.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN bi.tipo_aporte = 5 THEN 0
+			ELSE bi.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+         CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   
+FROM owd.vmt_waterdevice_sb wd
+LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss	
+  WHERE wd.assetgroup = 3 AND wd.assettype = 205 AND wd.codigo_obra is not null AND wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin
+
+  UNION
+
+	SELECT '5' AS "codigoProceso",
+    '1704' AS "codigoArchivo",
+        CASE cm.ownedby
+            WHEN 103 THEN '76833300'
+            WHEN 104 THEN '96963440'
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year', CURRENT_DATE) - 1::double precision) || '12' AS periodo,
+	cm.proyecto_informado_siss AS "codigoProyecto",
+    cm.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1404 AS "codigoObraTipo",
+	cm.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN cm.tipo_aporte = 0 THEN 1
+			WHEN cm.tipo_aporte = 1 THEN 1
+			WHEN cm.tipo_aporte = 2 THEN 1
+			WHEN cm.tipo_aporte = 3 THEN 1
+			WHEN cm.tipo_aporte = 4 THEN 1
+			WHEN cm.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN cm.tipo_aporte = 5 THEN 0
+			ELSE cm.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE cm.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE cm.tipo_aporte
+            WHEN 0 THEN cm.contratista_consultor
+            WHEN 1 THEN cm.contratista_consultor
+			WHEN 2 THEN cm.contratista_consultor
+			WHEN 3 THEN cm.contratista_consultor
+			WHEN 4 THEN cm.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   
+FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'select 
+	atr.ownedby,
+    atr.proyecto_informado_siss,
+	atr.codigo_sistema_siss,
+    atr.codigo_obra,
+    atr.tipo_financiamiento,
+    bi.tipo_aportante,
+    bi.tipo_aporte,
+    bi.contratista_consultor
+			
+	FROM owd.vmt_antigolpeariete_sb  atr
+LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = atr.proyecto_informado_siss		
+			WHERE atr.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND atr.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') AND atr.codigo_obra is not null
+			'::text) 
+	cm(ownedby integer, proyecto_informado_siss character varying(255), codigo_sistema_siss integer, 
+		 codigo_obra character varying(255), tipo_financiamiento integer, tipo_aportante smallint, 
+	   tipo_aporte smallint,contratista_consultor  character varying(255))
+
+UNION
+
+	SELECT '5' AS "codigoProceso",
+    '1704' AS "codigoArchivo",
+        CASE rq.ownedby
+            WHEN 103 THEN '76833300'
+            WHEN 104 THEN '96963440'
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year', CURRENT_DATE) - 1::double precision) || '12' AS periodo,
+	rq.proyecto_informado_siss AS "codigoProyecto",
+    rq.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1405 AS "codigoObraTipo",
+	rq.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN rq.tipo_aporte = 0 THEN 1
+			WHEN rq.tipo_aporte = 1 THEN 1
+			WHEN rq.tipo_aporte = 2 THEN 1
+			WHEN rq.tipo_aporte = 3 THEN 1
+			WHEN rq.tipo_aporte = 4 THEN 1
+			WHEN rq.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN rq.tipo_aporte = 5 THEN 0
+			ELSE rq.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE rq.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE rq.tipo_aporte
+            WHEN 0 THEN rq.contratista_consultor
+            WHEN 1 THEN rq.contratista_consultor
+			WHEN 2 THEN rq.contratista_consultor
+			WHEN 3 THEN rq.contratista_consultor
+			WHEN 4 THEN rq.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   
+FROM  (SELECT 
+	wl.ownedby,
+	wl.proyecto_informado_siss,
+	atr.codigo_sistema_siss,
+    atr.codigo_obra,
+    atr.tipo_financiamiento,
+    bi.tipo_aportante,
+    bi.tipo_aporte,
+    bi.contratista_consultor	   
+   FROM owd.ap_atraviesos atr 
+     LEFT JOIN owd.vmt_waterline_sb wl ON wl.globalid::text = atr.assetguid::text 
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wl.proyecto_informado_siss		   
+	   WHERE  atr.created_date >= fecha_inicio AND atr.created_date <= fecha_fin AND wl.codigo_obra is not null
+	  
+  UNION
+	   SELECT cm.ownedby,
+  	cm.proyecto_informado_siss,
+    cm.codigo_sistema_siss,
+    cm.codigo_obra,
+	cm.tipo_financiamiento,
+	cm.tipo_aportante,
+    cm.tipo_aporte,
+    cm.contratista_consultor   
+	   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text,'select 
+	sl.ownedby,
+    sl.proyecto_informado_siss,
+	atr.codigo_sistema_siss,
+    atr.codigo_obra,
+    atr.tipo_financiamiento,
+    bi.tipo_aportante,
+    bi.tipo_aporte,
+   bi.contratista_consultor
+   FROM owd.as_atravieso atr LEFT JOIN owd.vmt_sewerline_sb sl on sl.globalid = atr.assetguid 
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sl.proyecto_informado_siss					   
+   WHERE atr.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND atr.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') AND atr.codigo_obra is not null'
+	  )cm(ownedby integer, proyecto_informado_siss character varying(255), codigo_sistema_siss integer, 
+		 codigo_obra character varying(255), tipo_financiamiento integer, 
+		  tipo_aportante smallint, tipo_aporte smallint,contratista_consultor  character varying(255)))rq
+
+UNION
+
+	SELECT '5' AS "codigoProceso",
+    '1704' AS "codigoArchivo",
+        CASE cm.ownedby
+            WHEN 103 THEN '76833300'
+            WHEN 104 THEN '96963440'
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year', CURRENT_DATE) - 1::double precision) || '12' AS periodo,
+	cm.proyecto_informado_siss AS "codigoProyecto",
+    cm.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1601 AS "codigoObraTipo",
+	cm.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN cm.tipo_aporte = 0 THEN 1
+			WHEN cm.tipo_aporte = 1 THEN 1
+			WHEN cm.tipo_aporte = 2 THEN 1
+			WHEN cm.tipo_aporte = 3 THEN 1
+			WHEN cm.tipo_aporte = 4 THEN 1
+			WHEN cm.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN cm.tipo_aporte = 5 THEN 0
+			ELSE cm.tipo_aportante - 1					
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE cm.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE cm.tipo_aporte
+            WHEN 0 THEN cm.contratista_consultor
+            WHEN 1 THEN cm.contratista_consultor
+			WHEN 2 THEN cm.contratista_consultor
+			WHEN 3 THEN cm.contratista_consultor
+			WHEN 4 THEN cm.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   
+FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'select 
+	grp.ownedby,
+	grp.proyecto_informado_siss,
+	grp.codigo_sistema_siss ,
+    grp.codigo_obra,
+    grp.tipo_financiamiento,
+    bi.tipo_aportante,
+    bi.tipo_aporte,
+    bi.contratista_consultor
+	FROM owd.vmt_gruposelectrogenos_sb  grp 
+	LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = grp.proyecto_informado_siss			
+			WHERE grp.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND grp.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			AND grp.codigo_obra is not null'::text) 
+	cm(ownedby smallint, proyecto_informado_siss character varying(254), codigo_sistema_siss integer, codigo_obra character varying(254), 
+	   tipo_financiamiento integer, tipo_aportante smallint, tipo_aporte smallint,contratista_consultor  character varying(255))
+	
+UNION 
+
+	SELECT '5' AS "codigoProceso",
+    '1704' AS "codigoArchivo",
+        CASE cm.ownedby
+            WHEN 103 THEN '76833300'
+            WHEN 104 THEN '96963440'
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year', CURRENT_DATE) - 1::double precision) || '12' AS periodo,
+	cm.proyecto_informado_siss AS "codigoProyecto",
+    cm.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1602 AS "codigoObraTipo",
+	cm.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN cm.tipo_aporte = 0 THEN 1
+			WHEN cm.tipo_aporte = 1 THEN 1
+			WHEN cm.tipo_aporte = 2 THEN 1
+			WHEN cm.tipo_aporte = 3 THEN 1
+			WHEN cm.tipo_aporte = 4 THEN 1
+			WHEN cm.tipo_aporte = 5 THEN 2
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN cm.tipo_aporte = 5 THEN 0
+			ELSE cm.tipo_aportante - 1				
+		END AS "TipoAT",
+	'' AS "OtroTipoAT",
+        CASE cm.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE cm.tipo_aporte
+            WHEN 0 THEN cm.contratista_consultor
+            WHEN 1 THEN cm.contratista_consultor
+			WHEN 2 THEN cm.contratista_consultor
+			WHEN 3 THEN cm.contratista_consultor
+			WHEN 4 THEN cm.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   
+FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'select 
+	grp.ownedby,
+	grp.proyecto_informado_siss,
+	grp.codigo_sistema_siss ,
+    grp.codigo_obra,
+    grp.tipo_financiamiento,
+    bi.tipo_aportante,
+    bi.tipo_aporte,
+    bi.contratista_consultor
+	FROM owd.vmt_subestaciones_sb  grp 
+	LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = grp.proyecto_informado_siss				
+			WHERE grp.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND grp.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			AND grp.codigo_obra is not null'::text) 
+	cm(ownedby smallint, proyecto_informado_siss character varying(254), codigo_sistema_siss integer, codigo_obra character varying(254), 
+	   tipo_financiamiento integer, tipo_aportante smallint, tipo_aporte smallint,contratista_consultor  character varying(255));
+
+END;
+$BODY$;
+
+ALTER FUNCTION owd.func_1704(date, date)
+    OWNER TO owd;
+
+GRANT EXECUTE ON FUNCTION owd.func_1704(date, date) TO PUBLIC;
+
+GRANT EXECUTE ON FUNCTION owd.func_1704(date, date) TO bd_consulta;
+
+GRANT EXECUTE ON FUNCTION owd.func_1704(date, date) TO owd;
+
