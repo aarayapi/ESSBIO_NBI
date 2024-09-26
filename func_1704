@@ -60,7 +60,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd 
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 20 AND wd.assettype = 567 AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
  
@@ -111,7 +112,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd 
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 20 AND wd.assettype = 568  AND wd.codigo_obra is not null
   AND  wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
 
@@ -162,7 +164,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd  
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 20 AND wd.assettype = 561  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
   
@@ -213,7 +216,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 20 AND wd.assettype = 569  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
   
@@ -264,7 +268,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 15 AND wd.assettype = 605  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
     
@@ -315,7 +320,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 15 AND wd.assettype = 604  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
   
@@ -366,7 +372,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 15 AND wd.assettype = 602  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
      
@@ -417,7 +424,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto 
   WHERE wd.assetgroup = 15 AND wd.assettype = 606  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
      
@@ -468,7 +476,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd 
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto 
   WHERE wd.assetgroup = 5 AND wd.assettype = 283  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
       
@@ -519,7 +528,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 5 AND wd.assettype = 284  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
       
@@ -570,7 +580,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd 
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 5 AND wd.assettype = 285  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
       
@@ -621,7 +632,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 5 AND wd.assettype = 286  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin  
      
@@ -672,7 +684,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 5 AND wd.assettype = 281  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
 
@@ -737,8 +750,9 @@ BEGIN
 			WHEN 4 THEN bi.contratista_consultor	
             ELSE ''''::text
         END AS "NombreAportante"
-	FROM owd.vmt_sewerdevice_sb sd
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss		   
+	FROM owd.vmt_sewerdevice_sb sd	
+	LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto			   
   	WHERE sd.assettype = 61 AND sd.assetgroup = 5  AND sd.codigo_obra is not null
 			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 			   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
@@ -793,7 +807,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd 
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 20 AND wd.assettype = 564  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
       
@@ -844,7 +859,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 20 AND wd.assettype = 563 AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
       
@@ -895,7 +911,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 15 AND wd.assettype = 601 AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
   
@@ -947,7 +964,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 15 AND wd.assettype = 607 AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
 
@@ -999,7 +1017,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 19 AND wd.assettype = 401  AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
   
@@ -1051,7 +1070,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterdevice_sb wd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 19 AND wd.assettype = 402 AND wd.codigo_obra is not null
   AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
   
@@ -1103,7 +1123,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterline_sb wl
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wl.assetgroup = 1 AND wl.assettype = 1 AND wl.codigo_obra is not null
   AND   wl.creationdate >= fecha_inicio AND wl.creationdate <= fecha_fin 
   
@@ -1155,7 +1176,8 @@ BEGIN
             ELSE ''::text
         END AS "NombreAportante"
    FROM owd.vmt_waterline_sb wl  
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wl.assetgroup = 1 AND wl.assettype = 3  AND wl.codigo_obra is not null
   AND   wl.creationdate >= fecha_inicio AND wl.creationdate <= fecha_fin 
   
@@ -1222,7 +1244,8 @@ BEGIN
             ELSE ''''::text
         END AS "NombreAportante"
    FROM owd.vmt_sewerline_sb sl
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE (sl.assetgroup = 1 OR sl.assetgroup = 2) AND (sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42)  AND sl.codigo_obra is not null
 			   AND sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
@@ -1293,7 +1316,8 @@ UNION
             ELSE ''''::text
         END AS "NombreAportante"
    FROM owd.vmt_sewerline_sb sl  
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sl.proyecto_informado_siss			   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto		   
   WHERE (sl.assetgroup = 1 OR sl.assetgroup = 2) AND (sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND sl.codigo_obra is not null
 			    AND sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
@@ -1364,7 +1388,8 @@ UNION
             ELSE ''''::text
         END AS "NombreAportante"
    FROM owd.vmt_sewerdevice_sb sd
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE  sd.assettype = 201 AND sd.assetgroup = 15  AND sd.codigo_obra is not null
 			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
@@ -1434,8 +1459,10 @@ UNION
             ELSE ''''::text
         END AS "NombreAportante"
    FROM owd.as_pretratamiento pt
-    LEFT JOIN vmt_sewerdevice_sb sd ON pt.assetguid::text = sd.globalid::text
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss
+    LEFT JOIN vmt_sewerdevice_sb sd ON pt.assetguid::text = sd.globalid::text		   
+	LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto			   
+			   
   WHERE (pt.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
            FROM ( SELECT as_pretratamiento.gdb_archive_oid,
                     row_number() OVER (PARTITION BY as_pretratamiento.objectid ORDER BY as_pretratamiento.gdb_from_date DESC) AS rn,
@@ -1513,7 +1540,8 @@ UNION
         END AS "NombreAportante"
    FROM as_tratamientoprimario tp
      LEFT JOIN vmt_sewerdevice_sb sd ON tp.assetguid::text = sd.globalid::text
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss			   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto	   
   WHERE (tp.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
            FROM ( SELECT as_tratamientoprimario.gdb_archive_oid,
                     row_number() OVER (PARTITION BY as_tratamientoprimario.objectid ORDER BY as_tratamientoprimario.gdb_from_date DESC) AS rn,
@@ -1590,7 +1618,8 @@ UNION
         END AS "NombreAportante"
 FROM as_tratamientosecundario ts
     LEFT JOIN vmt_sewerdevice_sb sd ON ts.assetguid::text = sd.globalid::text 
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss		   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto	   
 			   WHERE   ts.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND ts.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
 			   AND ts.codigo_obra is not null'::text) 
@@ -1662,8 +1691,9 @@ UNION
             ELSE ''''::text
         END AS "NombreAportante"
    FROM as_desinfecciondecloracion ds
-     LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss		   
+    LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
+	LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto	   
 			   
 			   WHERE   ds.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND ds.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
@@ -1734,8 +1764,9 @@ UNION
             ELSE ''''::text
         END AS "NombreAportante"
    FROM as_linea_lodos_ptas ds
-     LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss			   
+   LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto	   
 			   WHERE   ds.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND ds.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
 			   AND ds.codigo_obra is not null'::text) 
@@ -1806,7 +1837,8 @@ UNION
         END AS "NombreAportante"
    
    FROM sewerline sl
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sl.proyecto_informado_siss			   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto		   
           WHERE sl.assetgroup = 7 AND (sl.assettype = 401 OR sl.assettype = 402) AND sl.codigo_obra is not null
 			   AND    sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
@@ -1878,7 +1910,8 @@ UNION
             ELSE ''''::text
         END AS "NombreAportante"
    FROM vmt_sewerline_sb sl
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sl.proyecto_informado_siss			   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto		   
   WHERE sl.assetgroup = 7 AND sl.assettype = 402 AND sl.codigo_obra is not null
 			   AND    sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
@@ -1951,8 +1984,9 @@ UNION
         END AS "NombreAportante"
    
 FROM as_contrololores ds 
-			   LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text
-			   	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss
+	   LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text
+	   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+	   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE (ds.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
            FROM ( SELECT as_contrololores.gdb_archive_oid,
                     row_number() OVER (PARTITION BY as_contrololores.objectid ORDER BY as_contrololores.gdb_from_date DESC) AS rn,
@@ -2045,7 +2079,8 @@ UNION
     bi.tipo_aporte,
    bi.contratista_consultor
    FROM owd.vmt_sewerdevice_sb  sd
-LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sd.proyecto_informado_siss	  		   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto		   
 WHERE sd.assetgroup = 10 AND sd.assettype = 161  AND sd.codigo_obra is not null AND    sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
 	  cm(ownedby integer, proyecto_informado_siss character varying(255), codigo_sistema_siss integer, 
@@ -2100,7 +2135,8 @@ UNION
         END AS "NombreAportante"
    
 FROM owd.vmt_waterdevice_sb wd
-LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wd.proyecto_informado_siss	
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
   WHERE wd.assetgroup = 3 AND wd.assettype = 205 AND wd.codigo_obra is not null AND wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin
 
   UNION
@@ -2161,7 +2197,8 @@ FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b
     bi.contratista_consultor
 			
 	FROM owd.vmt_antigolpeariete_sb  atr
-LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = atr.proyecto_informado_siss		
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  atr.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto	
 			WHERE atr.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 		    AND atr.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') AND atr.codigo_obra is not null
 			'::text) 
@@ -2227,7 +2264,8 @@ FROM  (SELECT
     bi.contratista_consultor	   
    FROM owd.ap_atraviesos atr 
      LEFT JOIN owd.vmt_waterline_sb wl ON wl.globalid::text = atr.assetguid::text 
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = wl.proyecto_informado_siss		   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto	   
 	   WHERE  atr.created_date >= fecha_inicio AND atr.created_date <= fecha_fin AND wl.codigo_obra is not null
 	  
   UNION
@@ -2249,7 +2287,8 @@ FROM  (SELECT
     bi.tipo_aporte,
    bi.contratista_consultor
    FROM owd.as_atravieso atr LEFT JOIN owd.vmt_sewerline_sb sl on sl.globalid = atr.assetguid 
-	LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = sl.proyecto_informado_siss					   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto				   
    WHERE atr.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 		    AND atr.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') AND atr.codigo_obra is not null'
 	  )cm(ownedby integer, proyecto_informado_siss character varying(255), codigo_sistema_siss integer, 
@@ -2313,7 +2352,8 @@ FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b
     bi.tipo_aporte,
     bi.contratista_consultor
 	FROM owd.vmt_gruposelectrogenos_sb  grp 
-	LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = grp.proyecto_informado_siss			
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  grp.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto		
 			WHERE grp.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 		    AND grp.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
 			AND grp.codigo_obra is not null'::text) 
@@ -2377,7 +2417,8 @@ FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b
     bi.tipo_aporte,
     bi.contratista_consultor
 	FROM owd.vmt_subestaciones_sb  grp 
-	LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = grp.proyecto_informado_siss				
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  grp.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto		
 			WHERE grp.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 		    AND grp.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
 			AND grp.codigo_obra is not null'::text) 
