@@ -2197,8 +2197,8 @@ FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b
     bi.contratista_consultor
 			
 	FROM owd.vmt_antigolpeariete_sb  atr
-   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  atr.proyecto_informado_siss
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto	
+   LEFT JOIN owd.btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  atr.proyecto_informado_siss
+   LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto	
 			WHERE atr.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 		    AND atr.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') AND atr.codigo_obra is not null
 			'::text) 
@@ -2352,8 +2352,8 @@ FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b
     bi.tipo_aporte,
     bi.contratista_consultor
 	FROM owd.vmt_gruposelectrogenos_sb  grp 
-   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  grp.proyecto_informado_siss
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto		
+   LEFT JOIN owd.btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  grp.proyecto_informado_siss
+   LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto		
 			WHERE grp.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 		    AND grp.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
 			AND grp.codigo_obra is not null'::text) 
@@ -2417,8 +2417,8 @@ FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b
     bi.tipo_aporte,
     bi.contratista_consultor
 	FROM owd.vmt_subestaciones_sb  grp 
-   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  grp.proyecto_informado_siss
-   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto		
+   LEFT JOIN owd.btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  grp.proyecto_informado_siss
+   LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto		
 			WHERE grp.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 		    AND grp.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
 			AND grp.codigo_obra is not null'::text) 

@@ -1,6 +1,6 @@
 truncate table tabla_1705;
 
-select * FROM owd.insert_1705_1102(to_date('20240401', 'YYYYMMDD'), to_date('20240801', 'YYYYMMDD'));
+select * FROM owd.func_1704(to_date('20240401', 'YYYYMMDD'), to_date('20241001', 'YYYYMMDD'));
 
 select * from tabla_1705 WHERE "codigoAtributo" = 9; --WHERE "codigoObra" = '010-CONDDISP-15'
 
