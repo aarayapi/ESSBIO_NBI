@@ -1,16 +1,4 @@
-SELECT 
-		CASE
-			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3)= 'CR-' AND wd.codigo_sistema_siss is not null  THEN 99
-			ELSE NULL	
-        END  AS "ATPropio",
-		wd.proyecto_informado_siss
- 
-   FROM owd.vmt_waterdevice_sb wd WHERE wd.proyecto_informado_siss IS NOT NULL
-   
-   select * from vmt_croquis WHERE cro_id = 'CR-49065'
-   
-   
-   
+  
 SELECT '5'::text AS "codigoProceso",
     '1704'::text AS "codigoArchivo",
         CASE wd.ownedby
