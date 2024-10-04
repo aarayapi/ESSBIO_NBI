@@ -139,7 +139,7 @@ FOR punto IN
 	SELECT * FROM owd.vmt_1705_1151_sewerline_2 sl WHERE 
 		(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
 		AND sl.creationdate <= fecha_inicio AND sl.lastupdate BETWEEN fecha_inicio AND fecha_fin
-		AND sl.proyecto_informado_siss IS NOT null
+		--AND sl.proyecto_informado_siss IS NOT null
 		ORDER BY sl.rut, sl.codigo_obra, sl.gdb_from_date ASC	
 		
 		LOOP	
