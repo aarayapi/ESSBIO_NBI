@@ -95,7 +95,7 @@ SELECT '5', '1705',         CASE wdsb.ownedby
         END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
 		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 204, wdsb.codigo_obra, '0', 16, round(wdsb.utm_norte_nbi,2), round(wdsb.utm_norte_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
 	FROM owd.vmt_waterdevice_sb_dbl wdsb WHERE wdsb.assettype = 606 AND wdsb.assetgroup = 15
-	AND wdsb.proyecto_informado_siss is not null AND round(wdsb.utm_norte_nbi,2) <> round(wdsb.utm_norte_sig,2) AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
+	AND round(wdsb.utm_norte_nbi,2) <> round(wdsb.utm_norte_sig,2) AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
 	
 INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 SELECT '5', '1705',         CASE wdsb.ownedby
@@ -105,7 +105,7 @@ SELECT '5', '1705',         CASE wdsb.ownedby
         END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
 		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 204, wdsb.codigo_obra, '0', 17, round(wdsb.utm_este_nbi,2), round(wdsb.utm_este_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
 	FROM owd.vmt_waterdevice_sb_dbl wdsb WHERE wdsb.assettype = 606 AND wdsb.assetgroup = 15
-	AND wdsb.proyecto_informado_siss is not null AND (round(wdsb.utm_este_nbi,2) <> round(wdsb.utm_este_sig,2)  AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio	);	
+	AND (round(wdsb.utm_este_nbi,2) <> round(wdsb.utm_este_sig,2)  AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio	);	
   -------------------------------------------------------------------------------------------------------------------
   
 SELECT count(*) into cantidad
