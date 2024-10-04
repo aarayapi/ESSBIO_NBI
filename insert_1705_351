@@ -1,0 +1,551 @@
+-- FUNCTION: owd.insert_1705_351(date, date)
+
+-- DROP FUNCTION IF EXISTS owd.insert_1705_351(date, date);
+
+CREATE OR REPLACE FUNCTION owd.insert_1705_351(
+	fecha_inicio date,
+	fecha_fin date)
+    RETURNS text
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE 
+	punto owd."vmt_1705_SEWER_DEVICE"%ROWTYPE;	
+
+	codigoproceso smallint;
+	codigoarchivo smallint;
+	rut character varying(20);
+    periodo integer;
+
+	
+    codigo_sistema_siss integer;
+    codigo_obra character varying(255);
+    nombre_obra character varying(255);
+    etapa integer;
+    anio_construccion integer;
+	lifecyclestatus integer; 
+    tipo_planta integer;
+    elevation numeric(38,2);
+    ratedflow numeric(38,2);
+    profundidad numeric(38,2);
+    altura_elevacion_geometrica numeric(38,2);
+    altura_elevacion_manometrica numeric(38,2);
+    weight numeric(38,2);
+    rebalse integer;
+    descarga_rebalse integer;
+    camara_rejas integer;
+    numero_total_bombas integer;
+    numero_bombas_reserva integer;
+    pressure numeric(38,2);
+    obras_mitigacion  integer;
+    tipo_obra_mitigacion character varying(255);
+    telemetria integer;
+    telecontrol integer;
+    utm_norte_descarga_nbi numeric(38,2);
+    utm_este_descarga_nbi numeric(38,2);
+	gdb_from_date  timestamp without time zone;
+	assetid character varying(100);
+	ownedby smallint;
+	
+	codigo_sistema_siss2 integer;
+    codigo_obra2 character varying(255);
+    nombre_obra2 character varying(255);
+    etapa2 integer;
+    anio_construccion2 integer;
+	lifecyclestatus2 integer; 
+    tipo_planta2 integer;
+    elevation2 numeric(38,2);
+    ratedflow2 numeric(38,2);
+    profundidad2 numeric(38,2);
+    altura_elevacion_geometrica2 numeric(38,2);
+    altura_elevacion_manometrica2 numeric(38,2);
+    weight2 numeric(38,2);
+    rebalse2 integer;
+    descarga_rebalse2 integer;
+    camara_rejas2 integer;
+    numero_total_bombas2 integer;
+    numero_bombas_reserva2 integer;
+    pressure2 numeric(38,2);
+    obras_mitigacion2  integer;
+    tipo_obra_mitigacion2 character varying(255);
+    telemetria2 integer;
+    telecontrol2 integer;
+    utm_norte_descarga_nbi2 numeric(38,2);
+    utm_este_descarga_nbi2 numeric(38,2);	
+	gdb_from_date2  timestamp without time zone;
+	assetid2 character varying(100);
+	ownedby2 smallint;
+	
+	gdb_archive_oid integer;
+	gdb_archive_oid2 integer;
+	proyecto_informado_siss character varying(100);
+	proyecto_informado_siss2 character varying(100);
+	cantidad integer;
+	correlativo smallint;
+	resultado character varying(100);
+	cuenta2 integer;	
+BEGIN
+codigoproceso :=  5;
+codigoarchivo := 1705; 
+--rut := '96963440';
+periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
+
+resultado   := '';
+correlativo := 1;
+cantidad := 0;
+cuenta2 := 0;
+
+-------------------------------------------------coordenadas------------------------------------------------------
+INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+SELECT '5', '1705',         CASE wdsb.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
+		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 351, wdsb.codigo_obra, '0', 24, round(wdsb.utm_norte_nbi,2), round(wdsb.utm_norte_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
+	FROM owd.vmt_sewerdevice_sb wdsb WHERE wdsb.assettype = 61 AND wdsb.assetgroup = 5
+	AND wdsb.proyecto_informado_siss is not null AND round(wdsb.utm_norte_nbi,2) <> round(wdsb.utm_norte_sig,2) AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
+	
+INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+SELECT '5', '1705',         CASE wdsb.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
+		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 351, wdsb.codigo_obra, '0', 25, round(wdsb.utm_este_nbi,2), round(wdsb.utm_este_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
+	FROM owd.vmt_sewerdevice_sb wdsb WHERE wdsb.assettype = 61 AND wdsb.assetgroup = 5
+	AND wdsb.proyecto_informado_siss is not null AND (round(wdsb.utm_este_nbi,2) <> round(wdsb.utm_este_sig,2)  AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio	);	
+-------------------------------------------------------------------------------------------------------------------
+  
+  
+SELECT count(*) into cantidad
+	FROM owd."vmt_1705_SEWER_DEVICE" vmt WHERE vmt.assettype = 61 AND vmt.assetgroup = 5 AND vmt.assetid  in 
+	(select distinct vmt_1.assetid from owd."vmt_1705_SEWER_DEVICE" vmt_1 WHERE vmt_1.creationdate < fecha_inicio);
+ 
+if cantidad > 0 then
+
+   	FOR punto IN SELECT * 
+	FROM owd."vmt_1705_SEWER_DEVICE" vmt WHERE vmt.assettype = 61 AND vmt.assetgroup = 5 AND vmt.assetid  in 
+	(select distinct vmt_1.assetid from owd."vmt_1705_SEWER_DEVICE" vmt_1 WHERE vmt_1.creationdate < fecha_inicio) 
+	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date LOOP
+
+		cuenta2 := cuenta2 + 1;	
+
+	 
+		IF correlativo = 1 then
+			correlativo := correlativo + 1;
+			codigo_sistema_siss := punto.codigo_sistema_siss;
+			codigo_obra := punto.codigo_obra;
+			nombre_obra := punto.nombre_obra;
+			etapa := punto.etapa;
+			anio_construccion := punto.anio_construccion;
+			lifecyclestatus := punto.lifecyclestatus;
+			tipo_planta := punto.tipo_planta;
+			elevation := punto.elevation;
+			ratedflow := punto.ratedflow;
+			profundidad:= punto.profundidad;
+			altura_elevacion_geometrica:= punto.altura_elevacion_geometrica;
+			altura_elevacion_manometrica:= punto.altura_elevacion_manometrica;
+			weight:= punto.weight;
+			rebalse := punto.rebalse;
+			descarga_rebalse := punto.descarga_rebalse;
+			camara_rejas := punto.camara_rejas;
+			numero_total_bombas := punto.numero_total_bombas;
+			numero_bombas_reserva := punto.numero_bombas_reserva;
+			pressure := punto.pressure;
+			obras_mitigacion  := punto.obras_mitigacion;
+			tipo_obra_mitigacion := punto.tipo_obra_mitigacion;
+			telemetria := punto.telemetria;
+			telecontrol := punto.telecontrol;
+			utm_norte_descarga_nbi := punto.utm_norte_descarga_nbi;
+			utm_este_descarga_nbi := punto.utm_este_descarga_nbi;
+			ownedby := punto.ownedby;
+			
+			assetid = punto.assetid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+
+			
+		ELSIF correlativo > 1 THEN
+			IF correlativo = 2 THEN
+				codigo_sistema_siss2 := punto.codigo_sistema_siss;
+				codigo_obra2 := punto.codigo_obra;
+				nombre_obra2 := punto.nombre_obra;
+				etapa2 := punto.etapa;
+				anio_construccion2 := punto.anio_construccion;
+				lifecyclestatus2 := punto.lifecyclestatus;
+				tipo_planta2 := punto.tipo_planta;
+				elevation2 := punto.elevation;
+				ratedflow2 := punto.ratedflow;
+				profundidad2:= punto.profundidad;
+				altura_elevacion_geometrica2:= punto.altura_elevacion_geometrica;
+				altura_elevacion_manometrica2:= punto.altura_elevacion_manometrica;
+				weight2:= punto.weight;
+				rebalse2 := punto.rebalse;
+				descarga_rebalse2 := punto.descarga_rebalse;
+				camara_rejas2 := punto.camara_rejas;
+				numero_total_bombas2 := punto.numero_total_bombas;
+				numero_bombas_reserva2 := punto.numero_bombas_reserva;
+				pressure2 := punto.pressure;
+				obras_mitigacion2  := punto.obras_mitigacion;
+				tipo_obra_mitigacion2 := punto.tipo_obra_mitigacion;
+				telemetria2 := punto.telemetria;
+				telecontrol2 := punto.telecontrol;
+				utm_norte_descarga_nbi2 := punto.utm_norte_descarga_nbi;
+				utm_este_descarga_nbi2 := punto.utm_este_descarga_nbi;
+				ownedby2 := punto.ownedby;
+
+				assetid2 = punto.assetid;			
+				gdb_archive_oid2 := punto.gdb_archive_oid;
+				gdb_from_date2 := punto.gdb_from_date;
+				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+			END IF;			
+			
+			IF assetid = assetid2 THEN
+				IF COALESCE(proyecto_informado_siss,'Unknown') <> COALESCE(proyecto_informado_siss2,'Unknown') AND correlativo = 2 THEN
+					correlativo := correlativo + 1;
+				
+				ELSIF (COALESCE(proyecto_informado_siss2,'Unknown') <> COALESCE(punto.proyecto_informado_siss,'Unknown') AND correlativo = 3) OR assetid <> punto.assetid THEN
+					correlativo := correlativo + 1;
+				END IF;				
+				IF correlativo = 4  AND gdb_from_date2 >= fecha_inicio AND gdb_from_date2 <= fecha_fin AND proyecto_informado_siss2 is not null  THEN			
+					IF ownedby = 103 THEN rut = '76833300';
+					ELSIF ownedby = 104 THEN rut = '96963440';
+					ELSE rut = NULL;
+					END IF;
+						
+					IF  COALESCE(nombre_obra,'0')  <>  COALESCE(nombre_obra2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 3, nombre_obra::text, nombre_obra2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(etapa,'0')  <>  COALESCE(etapa2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 4, etapa::text, etapa2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(anio_construccion,'0')  <>   COALESCE(anio_construccion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 5, anio_construccion::text, anio_construccion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(lifecyclestatus,'0')  <>   COALESCE(lifecyclestatus2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 6, lifecyclestatus::text, lifecyclestatus2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(tipo_planta,'0')  <>   COALESCE(tipo_planta2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 7, tipo_planta::text, tipo_planta2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(elevation,'0')  <>  COALESCE(elevation2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 8, round(elevation,2)::text, round(elevation2,2)::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;					
+					IF  COALESCE(ratedflow,'0')  <>  COALESCE(ratedflow2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 9, round(ratedflow,2)::text, round(ratedflow2,2)::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;					
+					IF  COALESCE(profundidad,'0')  <>  COALESCE(profundidad2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 10, round(profundidad,2)::text, round(profundidad2,2)::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;					
+					IF  COALESCE(altura_elevacion_geometrica,'0')  <>  COALESCE(altura_elevacion_geometrica2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 11, round(altura_elevacion_geometrica,2)::text, round(altura_elevacion_geometrica2,2)::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;					
+					IF  COALESCE(altura_elevacion_manometrica,'0')  <>  COALESCE(altura_elevacion_manometrica2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 12, round(altura_elevacion_manometrica,2)::text, round(altura_elevacion_manometrica2,2)::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;							
+					IF  COALESCE(weight,'0')  <>  COALESCE(weight2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 13, round(weight,2)::text, round(weight2,2)::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(rebalse,'0')  <>  COALESCE(rebalse2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 14, rebalse::text, rebalse2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(descarga_rebalse,'0')  <>  COALESCE(descarga_rebalse2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 15, descarga_rebalse::text, descarga_rebalse2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(camara_rejas,'0')  <>  COALESCE(camara_rejas2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 16, camara_rejas::text, camara_rejas2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(numero_total_bombas,'0')  <>  COALESCE(numero_total_bombas2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 17, numero_total_bombas::text, numero_total_bombas2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(numero_bombas_reserva,'0')  <>  COALESCE(numero_bombas_reserva2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 18, numero_bombas_reserva::text, numero_bombas_reserva2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(pressure,'0')  <>  COALESCE(pressure2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 19, ROUND(pressure,2)::text, round(pressure2,2)::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(obras_mitigacion,'0')  <>  COALESCE(obras_mitigacion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 20, obras_mitigacion::text, obras_mitigacion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;						
+					IF  COALESCE(tipo_obra_mitigacion,'0')  <>  COALESCE(tipo_obra_mitigacion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 21, tipo_obra_mitigacion::text, tipo_obra_mitigacion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;		
+					IF  COALESCE(telemetria,'0')  <>  COALESCE(telemetria2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 22, telemetria::text, telemetria2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(telecontrol,'0')  <>  COALESCE(telecontrol2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 23, telecontrol::text, telecontrol2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					/*IF  COALESCE(utm_norte_descarga_nbi,'0')  <>  COALESCE(utm_norte_descarga_nbi2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 24, utm_norte_descarga_nbi::text, utm_norte_descarga_nbi2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(utm_este_descarga_nbi,'0')  <>  COALESCE(utm_este_descarga_nbi2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 351, codigo_obra2, '0', 25, utm_este_descarga_nbi::text, utm_este_descarga_nbi2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	*/
+					correlativo := 3;
+					
+					codigo_sistema_siss := codigo_sistema_siss2;
+					codigo_obra := codigo_obra2;
+					nombre_obra := nombre_obra2;
+					etapa := etapa2;
+					anio_construccion := anio_construccion2;
+					lifecyclestatus := lifecyclestatus2; 
+					tipo_planta := tipo_planta2;
+					elevation := elevation2;
+					ratedflow := ratedflow2;
+					profundidad:= profundidad2;
+					altura_elevacion_geometrica:= altura_elevacion_geometrica2;
+					altura_elevacion_manometrica:= altura_elevacion_manometrica2;
+					weight:= weight2;
+					rebalse := rebalse2;
+					descarga_rebalse := descarga_rebalse2;
+					camara_rejas := camara_rejas2;
+					numero_total_bombas := numero_total_bombas2;
+					numero_bombas_reserva := numero_bombas_reserva2;
+					pressure := pressure2;
+					obras_mitigacion  := obras_mitigacion2;
+					tipo_obra_mitigacion := tipo_obra_mitigacion2;
+					telemetria := telemetria2;
+					telecontrol := telecontrol2;
+					utm_norte_descarga_nbi := utm_norte_descarga_nbi2;
+					utm_este_descarga_nbi := utm_este_descarga_nbi2;	
+					proyecto_informado_siss = proyecto_informado_siss2;							
+					ownedby := ownedby2;					
+				END IF;
+				IF correlativo = 3 THEN
+				
+					codigo_sistema_siss2 := punto.codigo_sistema_siss;
+					codigo_obra2 := punto.codigo_obra;
+					nombre_obra2 := punto.nombre_obra;
+					etapa2 := punto.etapa;
+					anio_construccion2 := punto.anio_construccion;
+					lifecyclestatus2 := punto.lifecyclestatus;
+					tipo_planta2 := punto.tipo_planta;
+					elevation2 := punto.elevation;
+					ratedflow2 := punto.ratedflow;
+					profundidad2:= punto.profundidad;
+					altura_elevacion_geometrica2:= punto.altura_elevacion_geometrica;
+					altura_elevacion_manometrica2:= punto.altura_elevacion_manometrica;
+					weight2:= punto.weight;
+					rebalse2 := punto.rebalse;
+					descarga_rebalse2 := punto.descarga_rebalse;
+					camara_rejas2 := punto.camara_rejas;
+					numero_total_bombas2 := punto.numero_total_bombas;
+					numero_bombas_reserva2 := punto.numero_bombas_reserva;
+					pressure2 := punto.pressure;
+					obras_mitigacion2  := punto.obras_mitigacion;
+					tipo_obra_mitigacion2 := punto.tipo_obra_mitigacion;
+					telemetria2 := punto.telemetria;
+					telecontrol2 := punto.telecontrol;
+					utm_norte_descarga_nbi2 := punto.utm_norte_descarga_nbi;
+					utm_este_descarga_nbi2 := punto.utm_este_descarga_nbi;
+					ownedby2 := punto.ownedby;
+
+					assetid2 = punto.assetid;			
+					gdb_archive_oid2 := punto.gdb_archive_oid;
+					gdb_from_date2 := punto.gdb_from_date;
+					proyecto_informado_siss2 := punto.proyecto_informado_siss;							
+				END IF;	
+			END IF;
+			IF correlativo = 2 THEN			
+				codigo_sistema_siss := codigo_sistema_siss2;
+				codigo_obra := codigo_obra2;
+				nombre_obra := nombre_obra2;
+				etapa := etapa2;
+				anio_construccion := anio_construccion2;
+				lifecyclestatus := lifecyclestatus2;
+				tipo_planta := tipo_planta2;
+				elevation := elevation2;
+				ratedflow := ratedflow2;
+				profundidad:= profundidad2;
+				altura_elevacion_geometrica:= altura_elevacion_geometrica2;
+				altura_elevacion_manometrica:= altura_elevacion_manometrica2;
+				weight:= weight2;
+				rebalse := rebalse2;
+				descarga_rebalse := descarga_rebalse2;
+				camara_rejas := camara_rejas2;
+				numero_total_bombas := numero_total_bombas2;
+				numero_bombas_reserva := numero_bombas_reserva2;
+				pressure := pressure2;
+				obras_mitigacion  := obras_mitigacion2;
+				tipo_obra_mitigacion := tipo_obra_mitigacion2;
+				telemetria := telemetria2;
+				telecontrol := telecontrol2;
+				utm_norte_descarga_nbi := utm_norte_descarga_nbi2;
+				utm_este_descarga_nbi := utm_este_descarga_nbi2;	
+				proyecto_informado_siss = proyecto_informado_siss2;	
+				ownedby := ownedby2;
+			END IF;				
+
+			IF assetid <> punto.assetid THEN
+				correlativo := 2;
+				codigo_sistema_siss := punto.codigo_sistema_siss;
+				codigo_obra := punto.codigo_obra;
+				nombre_obra := punto.nombre_obra;
+				etapa := punto.etapa;
+				anio_construccion := punto.anio_construccion;
+				lifecyclestatus := punto.lifecyclestatus;
+				tipo_planta := punto.tipo_planta;
+				elevation := punto.elevation;
+				ratedflow := punto.ratedflow;
+				profundidad:= punto.profundidad;
+				altura_elevacion_geometrica:= punto.altura_elevacion_geometrica;
+				altura_elevacion_manometrica:= punto.altura_elevacion_manometrica;
+				weight:= punto.weight;
+				rebalse := punto.rebalse;
+				descarga_rebalse := punto.descarga_rebalse;
+				camara_rejas := punto.camara_rejas;
+				numero_total_bombas := punto.numero_total_bombas;
+				numero_bombas_reserva := punto.numero_bombas_reserva;
+				pressure := punto.pressure;
+				obras_mitigacion  := punto.obras_mitigacion;
+				tipo_obra_mitigacion := punto.tipo_obra_mitigacion;
+				telemetria := punto.telemetria;
+				telecontrol := punto.telecontrol;
+				utm_norte_descarga_nbi := punto.utm_norte_descarga_nbi;
+				utm_este_descarga_nbi := punto.utm_este_descarga_nbi;
+				ownedby := punto.ownedby;
+
+				assetid = punto.assetid;
+				gdb_archive_oid = punto.gdb_archive_oid;			
+				gdb_from_date := punto.gdb_from_date;
+				proyecto_informado_siss := punto.proyecto_informado_siss;		
+			END IF;
+			IF  cuenta2 = cantidad AND punto.gdb_from_date >= fecha_inicio AND punto.gdb_from_date <= fecha_fin AND punto.proyecto_informado_siss is not null THEN
+				IF ownedby = 103 THEN rut = '76833300';
+				ELSIF ownedby = 104 THEN rut = '96963440';
+				ELSE rut = NULL;
+				END IF;			
+				
+				IF  COALESCE(nombre_obra,'0')  <>  COALESCE(punto.nombre_obra,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 3, nombre_obra::text, punto.nombre_obraa::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(etapa,'0')  <>  COALESCE(punto.etapa,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 4, etapa::text, punto.etapa::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(anio_construccion,'0')  <>  COALESCE(punto.anio_construccion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 5, anio_construccion::text, punto.anio_construccion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(lifecyclestatus,'0')  <>  COALESCE(punto.lifecyclestatus,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 6, lifecyclestatus::text, punto.lifecyclestatus::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(tipo_planta,'0')  <>   COALESCE(punto.tipo_planta,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 7, tipo_planta::text, punto.tipo_planta::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(elevation,'0')  <>  COALESCE(punto.elevation,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 8, elevation::text, round(punto.elevation,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;					
+				IF  COALESCE(ratedflow,'0')  <>  COALESCE(punto.ratedflow,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 9, ratedflow::text, round(punto.ratedflow,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;					
+				IF  COALESCE(profundidad,'0')  <>  COALESCE(punto.profundidad,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 10, profundidad::text, round(punto.profundidad,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;					
+				IF  COALESCE(altura_elevacion_geometrica,'0')  <>  COALESCE(punto.altura_elevacion_geometrica,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 11, altura_elevacion_geometrica::text, round(punto.altura_elevacion_geometrica, 2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;					
+				IF  COALESCE(altura_elevacion_manometrica,'0')  <>  COALESCE(punto.altura_elevacion_manometrica,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 12, altura_elevacion_manometrica::text, round(punto.altura_elevacion_manometrica, 2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;							
+				IF  COALESCE(weight,'0')  <>  COALESCE(punto.weight,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 13, weight::text, round(punto.weight, 2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(rebalse,'0')  <>  COALESCE(punto.rebalse,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 14, rebalse::text, punto.rebalse::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(descarga_rebalse,'0')  <>  COALESCE(punto.descarga_rebalse,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 15, descarga_rebalse::text, punto.descarga_rebalse::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(camara_rejas,'0')  <>  COALESCE(punto.camara_rejas,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 16, camara_rejas::text, punto.camara_rejas::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(numero_total_bombas,'0')  <>  COALESCE(punto.numero_total_bombas,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 17, numero_total_bombas::text, punto.numero_total_bombas::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(numero_bombas_reserva,'0')  <>  COALESCE(punto.numero_bombas_reserva,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 18, numero_bombas_reserva::text, punto.numero_bombas_reserva::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(pressure,'0')  <>  COALESCE(punto.pressure,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 19, pressure::text, round(punto.pressure, 2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(obras_mitigacion,'0')  <>  COALESCE(punto.obras_mitigacion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 20, obras_mitigacion::text, punto.obras_mitigacion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;						
+				IF  COALESCE(tipo_obra_mitigacion,'0')  <>  COALESCE(punto.tipo_obra_mitigacion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 21, tipo_obra_mitigacion::text, punto.tipo_obra_mitigacion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;		
+				IF  COALESCE(telemetria,'0')  <>  COALESCE(punto.telemetria,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 22, telemetria::text, punto.telemetria::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(telecontrol,'0')  <>  COALESCE(punto.telecontrol,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo,punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 23, telecontrol::text, punto.telecontrol::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				/*IF  COALESCE(utm_norte_descarga_nbi,'0')  <>  COALESCE(punto.utm_norte_descarga_nbi,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 24, utm_norte_descarga_nbi::text, round(punto.utm_norte_descarga_nbi,2 )::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(utm_este_descarga_nbi,'0')  <>  COALESCE(punto.utm_este_descarga_nbi,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (punto.proyecto_informado_siss, punto.codigo_sistema_siss, 351, punto.codigo_obra, '0', 25, utm_este_descarga_nbi::text,round( punto.utm_este_descarga_nbi,2 )::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	*/						
+			END IF;
+		END IF;
+	END LOOP;
+	raise notice 'END LOOP';
+END IF;			
+
+ --resultado := 'correlativo='||assetid||' '||assetid2;
+ resultado :='cantidad= ' ||cantidad;
+ RETURN resultado;
+END;
+$BODY$;
+
+ALTER FUNCTION owd.insert_1705_351(date, date)
+    OWNER TO owd;
