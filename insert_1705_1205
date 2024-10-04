@@ -1,0 +1,238 @@
+-- FUNCTION: owd.insert_1705_1205(date, date)
+
+-- DROP FUNCTION IF EXISTS owd.insert_1705_1205(date, date);
+
+CREATE OR REPLACE FUNCTION owd.insert_1705_1205(
+	fecha_inicio date,
+	fecha_fin date)
+    RETURNS text
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE 
+	punto record;	
+
+	codigoproceso smallint;
+	codigoarchivo smallint;
+	rut character varying(20);
+    periodo integer;
+	
+    codigo_obra character varying(255); --1	
+    desinfeccion integer; --2
+	tipo_desinfeccion integer; --3
+	otro_tipo_desinfeccion character varying(255); --4
+	decloracion integer; --5
+	ownedby smallint;
+	
+	gdb_from_date  timestamp without time zone;
+	objectid integer;
+	
+    codigo_obra2 character varying(255); --1	
+    desinfeccion2 integer; --2
+	tipo_desinfeccion2 integer; --3
+	otro_tipo_desinfeccion2 character varying(255); --4
+	decloracion2 integer; --5
+	ownedby2 smallint;	
+	
+	gdb_from_date2  timestamp without time zone;
+	objectid2 integer;
+
+	gdb_archive_oid integer;
+	gdb_archive_oid2 integer;
+	proyecto_informado_siss character varying(100);
+	proyecto_informado_siss2 character varying(100);
+	cantidad integer;
+	correlativo smallint;
+	resultado character varying(100);
+	cuenta2 integer;	
+BEGIN
+
+codigoproceso :=  5;
+codigoarchivo := 1705; 
+--rut := '96963440';
+periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
+
+resultado   := '';
+correlativo := 1;
+cantidad := 0;
+cuenta2 := 0;
+
+--REFRESH MATERIALIZED VIEW owd."vmt_1705_SEWER_DEVICE";
+--DELETE FROM owd.tabla_1705 where fecha >= fecha_inicio AND fecha <= fecha_fin;
+
+-----------------------------------------1205-------------------------------------------------
+
+SELECT count(*) into cantidad
+	FROM owd.vmt_1705_as_desinfecciondecloracion vmt WHERE vmt.objectid  in 
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_desinfecciondecloracion vmt_1 WHERE vmt_1.created_date < fecha_inicio);
+	 
+if cantidad > 0 then
+   	FOR punto IN SELECT * 
+	FROM owd.vmt_1705_as_desinfecciondecloracion vmt WHERE vmt.objectid  in 
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_desinfecciondecloracion vmt_1 WHERE vmt_1.created_date < fecha_inicio) 
+	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date LOOP
+	
+		cuenta2 := cuenta2 + 1;	 
+
+	 
+		IF correlativo = 1 then
+			correlativo := correlativo + 1;
+			
+			codigo_obra := punto.codigo_obra; --1	
+			desinfeccion := punto.desinfeccion; --2
+			tipo_desinfeccion := punto.tipo_desinfeccion; --3
+			otro_tipo_desinfeccion := punto.otro_tipo_desinfeccion; --4
+			decloracion := punto.decloracion; --5
+			
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby  := punto.ownedby;
+			
+		ELSIF correlativo > 1 THEN
+			IF correlativo = 2 THEN
+			
+				codigo_obra2 := punto.codigo_obra; --1	
+				desinfeccion2 := punto.desinfeccion; --2
+				tipo_desinfeccion2 := punto.tipo_desinfeccion; --3
+				otro_tipo_desinfeccion2 := punto.otro_tipo_desinfeccion; --4
+				decloracion2 := punto.decloracion; --5
+
+				objectid2 = punto.objectid;			
+				gdb_archive_oid2 := punto.gdb_archive_oid;
+				gdb_from_date2 := punto.gdb_from_date;
+				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+				ownedby2  := punto.ownedby;
+			END IF;			
+			
+			IF objectid = objectid2 THEN
+				IF COALESCE(proyecto_informado_siss,'Unknown')  <> COALESCE(proyecto_informado_siss2,'Unknown')  AND correlativo = 2 THEN
+					correlativo := correlativo + 1;
+				
+				ELSIF (COALESCE(proyecto_informado_siss2,'Unknown')  <> COALESCE(punto.proyecto_informado_siss,'Unknown')  AND correlativo = 3) OR objectid <> punto.objectid THEN
+					correlativo := correlativo + 1;
+				END IF;	
+				IF correlativo = 4  AND gdb_from_date2 >= fecha_inicio AND gdb_from_date2 <= fecha_fin AND proyecto_informado_siss2 is not null  THEN		
+					IF ownedby = 103 THEN rut = '76833300';
+					ELSIF ownedby = 104 THEN rut = '96963440';
+					ELSE rut = NULL;
+					END IF;
+					
+					/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(codigo_obra2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1205, codigo_obra2, '0', 1, codigo_obra::text, codigo_obra2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	*/
+					IF  COALESCE(desinfeccion,'0')  <>  COALESCE(desinfeccion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1205, codigo_obra2, '0', 2, desinfeccion::text, desinfeccion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(tipo_desinfeccion,'0')  <>   COALESCE(tipo_desinfeccion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1205, codigo_obra2, '0', 3, tipo_desinfeccion::text, tipo_desinfeccion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(otro_tipo_desinfeccion,'0')  <>   COALESCE(otro_tipo_desinfeccion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1205, codigo_obra2, '0', 4, otro_tipo_desinfeccion::text, otro_tipo_desinfeccion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;		
+					IF  COALESCE(decloracion,'0')  <>   COALESCE(decloracion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1205, codigo_obra2, '0', 5, decloracion::text, decloracion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					
+					correlativo := 3;
+					
+					codigo_obra := codigo_obra2; --1	
+					desinfeccion := desinfeccion2; --2
+					tipo_desinfeccion := tipo_desinfeccion2; --3
+					otro_tipo_desinfeccion := otro_tipo_desinfeccion2; --4
+					decloracion := decloracion2; --5
+	
+					proyecto_informado_siss = proyecto_informado_siss2;	
+					ownedby  := ownedby2;
+										
+				END IF;
+				IF correlativo = 3 THEN
+				
+					codigo_obra2 := punto.codigo_obra; --1	
+					desinfeccion2 := punto.desinfeccion; --2
+					tipo_desinfeccion2 := punto.tipo_desinfeccion; --3
+					otro_tipo_desinfeccion2 := punto.otro_tipo_desinfeccion; --4
+					decloracion2 := punto.decloracion; --5
+
+					objectid2 = punto.objectid;			
+					gdb_archive_oid2 := punto.gdb_archive_oid;
+					gdb_from_date2 := punto.gdb_from_date;
+					proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+					ownedby2  := punto.ownedby;
+				END IF;	
+			END IF;
+			IF correlativo = 2 THEN	
+			
+				codigo_obra := codigo_obra2; --1	
+				desinfeccion := desinfeccion2; --2
+				tipo_desinfeccion := tipo_desinfeccion2; --3
+				otro_tipo_desinfeccion := otro_tipo_desinfeccion2; --4
+				decloracion := decloracion2; --5
+				
+				proyecto_informado_siss = proyecto_informado_siss2;	
+				ownedby  := ownedby2;
+				
+			END IF;				
+
+			IF objectid <> punto.objectid THEN
+				correlativo := 2;
+				
+				codigo_obra := punto.codigo_obra; --1	
+				desinfeccion := punto.desinfeccion; --2
+				tipo_desinfeccion := punto.tipo_desinfeccion; --3
+				otro_tipo_desinfeccion := punto.otro_tipo_desinfeccion; --4
+				decloracion := punto.decloracion; --5
+
+				objectid = punto.objectid;
+				gdb_archive_oid = punto.gdb_archive_oid;			
+				gdb_from_date := punto.gdb_from_date;
+				proyecto_informado_siss := punto.proyecto_informado_siss;
+				ownedby  := punto.ownedby;
+				
+			END IF;
+			IF  cuenta2 = cantidad AND punto.gdb_from_date >= fecha_inicio AND punto.gdb_from_date <= fecha_fin AND punto.proyecto_informado_siss is not null THEN
+
+				IF ownedby = 103 THEN rut = '76833300';
+				ELSIF ownedby = 104 THEN rut = '96963440';
+				ELSE rut = NULL;
+				END IF;			
+				
+				/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(punto.codigo_obra,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1205, punto.codigo_obra, '0', 1, codigo_obra::text, punto.codigo_obra::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	*/
+				IF  COALESCE(desinfeccion,'0')  <>  COALESCE(punto.desinfeccion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1205, punto.codigo_obra, '0', 2, desinfeccion::text, punto.desinfeccion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(tipo_desinfeccion,'0')  <>  COALESCE(punto.tipo_desinfeccion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1205, punto.codigo_obra, '0', 3, tipo_desinfeccion::text, punto.tipo_desinfeccion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(otro_tipo_desinfeccion,'0')  <>  COALESCE(punto.otro_tipo_desinfeccion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1205, punto.codigo_obra, '0', 4, otro_tipo_desinfeccion::text, punto.otro_tipo_desinfeccion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(decloracion,'0')  <>  COALESCE(punto.decloracion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1205, punto.codigo_obra, '0', 5, decloracion::text, punto.decloracion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;		
+			END IF;
+		END IF;
+	END LOOP;
+END IF;			
+
+ resultado := cantidad::text;
+ RETURN resultado;
+END;
+$BODY$;
+
+ALTER FUNCTION owd.insert_1705_1205(date, date)
+    OWNER TO owd;

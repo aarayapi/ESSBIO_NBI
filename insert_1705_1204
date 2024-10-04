@@ -1,0 +1,409 @@
+-- FUNCTION: owd.insert_1705_1204(date, date)
+
+-- DROP FUNCTION IF EXISTS owd.insert_1705_1204(date, date);
+
+CREATE OR REPLACE FUNCTION owd.insert_1705_1204(
+	fecha_inicio date,
+	fecha_fin date)
+    RETURNS text
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE 
+	punto record;	
+	codigoproceso smallint;
+	codigoarchivo smallint;
+	rut character varying(20);
+    periodo integer;
+
+    codigo_obra character varying(255); --1	
+    tecnologia_lodos_activados integer; --2
+	otra_tecnologia_lodos_activados character varying(255); --3
+	tipo_carga_lodos_activados integer; --4
+	numero_lagunas integer; --5
+	area_lagunas numeric(38,2); --6
+	profundidad_media_lagunas numeric(38,2); --7
+	n_aireadores_superficiales integer; --8
+	numero_unidades_aireacion integer; --9
+	tipo_aireacion integer; --10
+	otro_tipo_aireacion character varying(255); --11
+	potencia_aireacion numeric(38,2); --12
+	numero_sedim_primarios integer; --13
+	area_sedim_secundario numeric(38,2); --14
+	profundidad_prom_sedim_secund numeric(38,2); --15
+	potencia_inst_sedim_secund numeric(38,2); --16
+	ownedby smallint;
+	
+	
+	gdb_from_date  timestamp without time zone;
+	objectid character varying(100);
+	
+    codigo_obra2 character varying(255); --1	
+    tecnologia_lodos_activados2 integer; --2
+	otra_tecnologia_lodos_activados2 character varying(255); --3
+	tipo_carga_lodos_activados2 integer; --4
+	numero_lagunas2 integer; --5
+	area_lagunas2 numeric(38,2); --6
+	profundidad_media_lagunas2 numeric(38,2); --7
+	n_aireadores_superficiales2 integer; --8
+	numero_unidades_aireacion2 integer; --9
+	tipo_aireacion2 integer; --10
+	otro_tipo_aireacion2 character varying(255); --11
+	potencia_aireacion2 numeric(38,2); --12
+	numero_sedim_primarios2 integer; --13
+	area_sedim_secundario2 numeric(38,2); --14
+	profundidad_prom_sedim_secund2 numeric(38,2); --15
+	potencia_inst_sedim_secund2 numeric(38,2); --16
+	ownedby2 smallint;	
+	
+	gdb_from_date2  timestamp without time zone;
+	objectid2 character varying(100);
+
+	gdb_archive_oid integer;
+	gdb_archive_oid2 integer;
+	proyecto_informado_siss character varying(100);
+	proyecto_informado_siss2 character varying(100);
+	cantidad integer;
+	correlativo smallint;
+	resultado character varying(100);
+	cuenta2 integer;	
+BEGIN
+
+codigoproceso :=  5;
+codigoarchivo := 1705; 
+--rut := '96963440';
+periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
+
+resultado   := '';
+correlativo := 1;
+cantidad := 0;
+cuenta2 := 0;
+
+--REFRESH MATERIALIZED VIEW owd."vmt_1705_SEWER_DEVICE";
+--DELETE FROM owd.tabla_1705 where fecha >= fecha_inicio AND fecha <= fecha_fin;
+
+-----------------------------------------1203--------------------------------------------------
+
+SELECT count(*) into cantidad
+	FROM owd.vmt_1705_as_tratamientosecundario vmt WHERE vmt.objectid  in 
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_tratamientosecundario vmt_1 WHERE vmt_1.created_date < fecha_inicio);
+	 
+if cantidad > 0 then
+   	FOR punto IN SELECT * 
+	FROM owd.vmt_1705_as_tratamientosecundario vmt WHERE vmt.objectid  in 
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_tratamientosecundario vmt_1 WHERE vmt_1.created_date < fecha_inicio) 
+	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date LOOP
+	
+		cuenta2 := cuenta2 + 1;	 
+
+		
+		IF correlativo = 1 then
+			correlativo := correlativo + 1;
+			
+			codigo_obra := punto.codigo_obra; --1	
+			tecnologia_lodos_activados := punto.tecnologia_lodos_activados; --2
+			otra_tecnologia_lodos_activados := punto.otra_tecnologia_lodos_activados; --3
+			tipo_carga_lodos_activados := punto.tipo_carga_lodos_activados; --4
+			numero_lagunas := punto.numero_lagunas; --5
+			area_lagunas := punto.area_lagunas; --6
+			profundidad_media_lagunas := punto.profundidad_media_lagunas; --7
+			n_aireadores_superficiales := punto.n_aireadores_superficiales; --9
+			tipo_aireacion := punto.tipo_aireacion; --10
+			otro_tipo_aireacion := punto.otro_tipo_aireacion; --11
+			potencia_aireacion := punto.potencia_aireacion; --12
+			numero_sedim_primarios := punto.numero_sedim_primarios; --13
+			area_sedim_secundario := punto.area_sedim_secundario; --14
+			profundidad_prom_sedim_secund := punto.profundidad_prom_sedim_secund; --15
+			potencia_inst_sedim_secund := punto.potencia_inst_sedim_secund; --16
+			
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby  := punto.ownedby;
+
+			
+		ELSIF correlativo > 1 THEN
+			IF correlativo = 2 THEN
+			
+				codigo_obra2 := punto.codigo_obra; --1	
+				tecnologia_lodos_activados2 := punto.tecnologia_lodos_activados; --2
+				otra_tecnologia_lodos_activados2 := punto.otra_tecnologia_lodos_activados; --3
+				tipo_carga_lodos_activados2 := punto.tipo_carga_lodos_activados; --4
+				numero_lagunas2 := punto.numero_lagunas; --5
+				area_lagunas2 := punto.area_lagunas; --6
+				profundidad_media_lagunas2 := punto.profundidad_media_lagunas; --7
+				n_aireadores_superficiales2 := punto.n_aireadores_superficiales; --9
+				tipo_aireacion2 := punto.tipo_aireacion; --10
+				otro_tipo_aireacion2 := punto.otro_tipo_aireacion; --11
+				potencia_aireacion2 := punto.potencia_aireacion; --12
+				numero_sedim_primarios2 := punto.numero_sedim_primarios; --13
+				area_sedim_secundario2 := punto.area_sedim_secundario; --14
+				profundidad_prom_sedim_secund2 := punto.profundidad_prom_sedim_secund; --15
+				potencia_inst_sedim_secund2 := punto.potencia_inst_sedim_secund; --16
+
+				objectid2 = punto.objectid;			
+				gdb_archive_oid2 := punto.gdb_archive_oid;
+				gdb_from_date2 := punto.gdb_from_date;
+				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+				ownedby2  := punto.ownedby;
+			END IF;			
+			
+			IF objectid = objectid2 THEN
+				IF COALESCE(proyecto_informado_siss,'Unknown')  <> COALESCE(proyecto_informado_siss2,'Unknown')  AND correlativo = 2 THEN
+					correlativo := correlativo + 1;
+				
+				ELSIF (COALESCE(proyecto_informado_siss2,'Unknown')  <> COALESCE(punto.proyecto_informado_siss,'Unknown')  AND correlativo = 3) OR objectid::integer <> punto.objectid THEN
+					correlativo := correlativo + 1;
+				END IF;	
+				IF correlativo = 4  AND gdb_from_date2 >= fecha_inicio AND gdb_from_date2 <= fecha_fin AND proyecto_informado_siss2 is not null  THEN	
+					
+					IF ownedby = 103 THEN rut = '76833300';
+					ELSIF ownedby = 104 THEN rut = '96963440';
+					ELSE rut = NULL;
+					END IF;
+					
+					/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(codigo_obra2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 1, codigo_obra::text, codigo_obra2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	*/
+					IF  COALESCE(tecnologia_lodos_activados,'0')  <>  COALESCE(tecnologia_lodos_activados2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 2, tecnologia_lodos_activados::text, tecnologia_lodos_activados2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(otra_tecnologia_lodos_activados,'0')  <>   COALESCE(otra_tecnologia_lodos_activados2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 3, otra_tecnologia_lodos_activados::text, otra_tecnologia_lodos_activados2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(tipo_carga_lodos_activados,'0')  <>   COALESCE(tipo_carga_lodos_activados2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 4, tipo_carga_lodos_activados::text, tipo_carga_lodos_activados2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;			
+					IF  COALESCE(numero_lagunas,'0')  <>   COALESCE(numero_lagunas2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 5, numero_lagunas::text, numero_lagunas2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(area_lagunas,'0')  <>   COALESCE(area_lagunas2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 6, area_lagunas::text, area_lagunas2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(profundidad_media_lagunas,'0')  <>   COALESCE(profundidad_media_lagunas2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 7, profundidad_media_lagunas::text, profundidad_media_lagunas2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(n_aireadores_superficiales,'0')  <>   COALESCE(n_aireadores_superficiales2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 8, n_aireadores_superficiales::text, n_aireadores_superficiales2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(numero_unidades_aireacion,'0')  <>   COALESCE(numero_unidades_aireacion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 9, numero_unidades_aireacion::text, numero_unidades_aireacion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(tipo_aireacion,'0')  <>   COALESCE(tipo_aireacion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 10, tipo_aireacion::text, tipo_aireacion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(otro_tipo_aireacion,'0')  <>   COALESCE(otro_tipo_aireacion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 11, otro_tipo_aireacion::text, otro_tipo_aireacion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(potencia_aireacion,'0')  <>   COALESCE(potencia_aireacion2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 12, potencia_aireacion::text, potencia_aireacion2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(numero_sedim_primarios,'0')  <>   COALESCE(numero_sedim_primarios2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 13, numero_sedim_primarios::text, numero_sedim_primarios2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(area_sedim_secundario,'0')  <>   COALESCE(area_sedim_secundario2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 14, area_sedim_secundario::text, area_sedim_secundario2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(profundidad_prom_sedim_secund,'0')  <>   COALESCE(profundidad_prom_sedim_secund2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 15, profundidad_prom_sedim_secund::text, profundidad_prom_sedim_secund2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					IF  COALESCE(potencia_inst_sedim_secund,'0')  <>   COALESCE(potencia_inst_sedim_secund2,'0') THEN
+						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 16, potencia_inst_sedim_secund::text, potencia_inst_sedim_secund2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;	
+					
+					correlativo := 3;
+					
+					tecnologia_lodos_activados := tecnologia_lodos_activados2; --2
+					otra_tecnologia_lodos_activados := otra_tecnologia_lodos_activados2; --3
+					tipo_carga_lodos_activados := tipo_carga_lodos_activados2; --4
+					numero_lagunas := numero_lagunas2; --5
+					area_lagunas := area_lagunas2; --6
+					profundidad_media_lagunas := profundidad_media_lagunas2; --7
+					n_aireadores_superficiales := n_aireadores_superficiales2; --9
+					tipo_aireacion := tipo_aireacion2; --10
+					otro_tipo_aireacion := otro_tipo_aireacion2; --11
+					potencia_aireacion := potencia_aireacion2; --12
+					numero_sedim_primarios := numero_sedim_primarios2; --13
+					area_sedim_secundario := area_sedim_secundario2; --14
+					profundidad_prom_sedim_secund := profundidad_prom_sedim_secund2; --15
+					potencia_inst_sedim_secund := potencia_inst_sedim_secund2; --16
+	
+					proyecto_informado_siss = proyecto_informado_siss2;		
+					ownedby  := ownedby2;
+										
+				END IF;
+				IF correlativo = 3 THEN
+				
+					codigo_obra2 := punto.codigo_obra; --1	
+					tecnologia_lodos_activados2 := punto.tecnologia_lodos_activados; --2
+					otra_tecnologia_lodos_activados2 := punto.otra_tecnologia_lodos_activados; --3
+					tipo_carga_lodos_activados2 := punto.tipo_carga_lodos_activados; --4
+					numero_lagunas2 := punto.numero_lagunas; --5
+					area_lagunas2 := punto.area_lagunas; --6
+					profundidad_media_lagunas2 := punto.profundidad_media_lagunas; --7
+					n_aireadores_superficiales2 := punto.n_aireadores_superficiales; --9
+					tipo_aireacion2 := punto.tipo_aireacion; --10
+					otro_tipo_aireacion2 := punto.otro_tipo_aireacion; --11
+					potencia_aireacion2 := punto.potencia_aireacion; --12
+					numero_sedim_primarios2 := punto.numero_sedim_primarios; --13
+					area_sedim_secundario2 := punto.area_sedim_secundario; --14
+					profundidad_prom_sedim_secund2 := punto.profundidad_prom_sedim_secund; --15
+					potencia_inst_sedim_secund2 := punto.potencia_inst_sedim_secund; --16
+
+					objectid2 = punto.objectid;			
+					gdb_archive_oid2 := punto.gdb_archive_oid;
+					gdb_from_date2 := punto.gdb_from_date;
+					proyecto_informado_siss2 := punto.proyecto_informado_siss;
+					ownedby2  := punto.ownedby;
+					
+				END IF;	
+			END IF;
+			IF correlativo = 2 THEN	
+			
+				tecnologia_lodos_activados := tecnologia_lodos_activados2; --2
+				otra_tecnologia_lodos_activados := otra_tecnologia_lodos_activados2; --3
+				tipo_carga_lodos_activados := tipo_carga_lodos_activados2; --4
+				numero_lagunas := numero_lagunas2; --5
+				area_lagunas := area_lagunas2; --6
+				profundidad_media_lagunas := profundidad_media_lagunas2; --7
+				n_aireadores_superficiales := n_aireadores_superficiales2; --9
+				tipo_aireacion := tipo_aireacion2; --10
+				otro_tipo_aireacion := otro_tipo_aireacion2; --11
+				potencia_aireacion := potencia_aireacion2; --12
+				numero_sedim_primarios := numero_sedim_primarios2; --13
+				area_sedim_secundario := area_sedim_secundario2; --14
+				profundidad_prom_sedim_secund := profundidad_prom_sedim_secund2; --15
+				potencia_inst_sedim_secund := potencia_inst_sedim_secund2; --16
+				
+				proyecto_informado_siss = proyecto_informado_siss2;
+				ownedby  := ownedby2;
+				
+			END IF;				
+
+			IF objectid::integer <> punto.objectid::integer THEN
+				correlativo := 2;
+				
+				codigo_obra := punto.codigo_obra; --1	
+				tecnologia_lodos_activados := punto.tecnologia_lodos_activados; --2
+				otra_tecnologia_lodos_activados := punto.otra_tecnologia_lodos_activados; --3
+				tipo_carga_lodos_activados := punto.tipo_carga_lodos_activados; --4
+				numero_lagunas := punto.numero_lagunas; --5
+				area_lagunas := punto.area_lagunas; --6
+				profundidad_media_lagunas := punto.profundidad_media_lagunas; --7
+				n_aireadores_superficiales := punto.n_aireadores_superficiales; --9
+				tipo_aireacion := punto.tipo_aireacion; --10
+				otro_tipo_aireacion := punto.otro_tipo_aireacion; --11
+				potencia_aireacion := punto.potencia_aireacion; --12
+				numero_sedim_primarios := punto.numero_sedim_primarios; --13
+				area_sedim_secundario := punto.area_sedim_secundario; --14
+				profundidad_prom_sedim_secund := punto.profundidad_prom_sedim_secund; --15
+				potencia_inst_sedim_secund := punto.potencia_inst_sedim_secund; --16
+
+				objectid = punto.objectid;
+				gdb_archive_oid = punto.gdb_archive_oid;			
+				gdb_from_date := punto.gdb_from_date;
+				proyecto_informado_siss := punto.proyecto_informado_siss;	
+				ownedby  := punto.ownedby;
+				
+			END IF;
+			IF  cuenta2 = cantidad AND punto.gdb_from_date >= fecha_inicio AND punto.gdb_from_date <= fecha_fin AND punto.proyecto_informado_siss is not null THEN
+
+				IF ownedby = 103 THEN rut = '76833300';
+				ELSIF ownedby = 104 THEN rut = '96963440';
+				ELSE rut = NULL;
+				END IF;			
+				
+				/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(punto.codigo_obra,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 1, codigo_obra::text, punto.codigo_obra::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	*/
+				IF  COALESCE(tecnologia_lodos_activados,'0')  <>  COALESCE(punto.tecnologia_lodos_activados,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 2, tecnologia_lodos_activados::text, punto.tecnologia_lodos_activados::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(otra_tecnologia_lodos_activados,'0')  <>  COALESCE(punto.otra_tecnologia_lodos_activados,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 3, otra_tecnologia_lodos_activados::text, punto.otra_tecnologia_lodos_activados::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(tipo_carga_lodos_activados,'0')  <>  COALESCE(punto.tipo_carga_lodos_activados,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 4, tipo_carga_lodos_activados::text, punto.tipo_carga_lodos_activados::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;			
+				IF  COALESCE(numero_lagunas,'0')  <>  COALESCE(punto.numero_lagunas,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 5, numero_lagunas::text, punto.numero_lagunas::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(area_lagunas,'0')  <>  COALESCE(punto.area_lagunas,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 6, area_lagunas::text, round(punto.area_lagunas,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(profundidad_media_lagunas,'0')  <>  COALESCE(punto.profundidad_media_lagunas,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 7, profundidad_media_lagunas::text, round(punto.profundidad_media_lagunas,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(n_aireadores_superficiales,'0')  <>  COALESCE(punto.n_aireadores_superficiales,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 8, n_aireadores_superficiales::text, punto.n_aireadores_superficiales::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(numero_unidades_aireacion,'0')  <>  COALESCE(punto.numero_unidades_aireacion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 9, numero_unidades_aireacion::text, punto.numero_unidades_aireacion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(tipo_aireacion,'0')  <>  COALESCE(punto.tipo_aireacion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 10, tipo_aireacion::text, punto.tipo_aireacion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;
+				IF  COALESCE(otro_tipo_aireacion,'0')  <>  COALESCE(punto.otro_tipo_aireacion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 11, otro_tipo_aireacion::text, punto.otro_tipo_aireacion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;
+				IF  COALESCE(potencia_aireacion,'0')  <>  COALESCE(punto.potencia_aireacion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 12, potencia_aireacion::text, punto.potencia_aireacion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;
+				IF  COALESCE(numero_sedim_primarios,'0')  <>  COALESCE(punto.numero_sedim_primarios,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 13, numero_sedim_primarios::text, punto.numero_sedim_primarios::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;
+				IF  COALESCE(area_sedim_secundario,'0')  <>  COALESCE(punto.area_sedim_secundario,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 14, area_sedim_secundario::text, round(punto.area_sedim_secundario,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;
+				IF  COALESCE(profundidad_prom_sedim_secund,'0')  <>  COALESCE(punto.profundidad_prom_sedim_secund,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 15, profundidad_prom_sedim_secund::text, round(punto.profundidad_prom_sedim_secund,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;
+				IF  COALESCE(potencia_inst_sedim_secund,'0')  <>  COALESCE(punto.potencia_inst_sedim_secund,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 16, potencia_inst_sedim_secund::text, round(punto.potencia_inst_sedim_secund,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;
+			END IF;
+		END IF;
+	END LOOP;
+END IF;			
+
+ resultado := cantidad::text;
+ RETURN resultado;
+END;
+$BODY$;
+
+ALTER FUNCTION owd.insert_1705_1204(date, date)
+    OWNER TO owd;
