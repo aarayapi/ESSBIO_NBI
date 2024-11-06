@@ -1,6 +1,6 @@
 truncate table tabla_1705;
 
-select * FROM owd.func_1704(to_date('20240401', 'YYYYMMDD'), to_date('20241001', 'YYYYMMDD'));
+select * FROM owd.func_1704(to_date('20240401', 'YYYYMMDD'), to_date('20241001', 'YYYYMMDD')) where "codigoObraTipo" = 1101 order by "codigoProyecto";
 
 select * from tabla_1705 WHERE "codigoAtributo" = 9; --WHERE "codigoObra" = '010-CONDDISP-15'
 
@@ -67,7 +67,3 @@ FROM owd.vmt_1705_1101_waterline_dbl wl WHERE
 							   WHERE (T1.creationdate <= to_date('20240401', 'YYYYMMDD')  AND T1.lastupdate BETWEEN to_date('20240401', 'YYYYMMDD') AND to_date('20240801', 'YYYYMMDD'))
 						  OR( T1.creationdate >to_date('20240401', 'YYYYMMDD') AND T1.creationdate < to_date('20240801', 'YYYYMMDD')))
 	ORDER BY wl.rut, wl.codigo_obra, wl.gdb_from_date ASC
-	
-	
-	
-	TRUNCATE TABLE owd.cunduccion_elim_hist;

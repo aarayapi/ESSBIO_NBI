@@ -41,7 +41,8 @@ DECLARE
 	
     --slope numeric;--14
     tipo_terreno integer; --15
-    porcentaje_napa numeric; --16
+    porcentaje_napa_nue numeric; --16
+    porcentaje_napa_ant numeric; --16	
     paralelo integer; --17
 	ownedby smallint;
 	
@@ -105,7 +106,7 @@ FOR punto IN
 			th.tipo_terreno, th.porcentaje_napa, th.paralelo, th.descripcion_paralelo, th.vigencia  
 			INTO tramo FROM owd.tbl_1102_hist th WHERE th.codigo_conduccion = punto.codigo_obra AND th.rut_empresa = punto.rut AND th.codigo_tramo = punto.id_tramo_conectado;
 			
-			IF punto.proyecto_informado_siss IS NOT NULL THEN
+
 			
 				longitud_ant = round(tramo.longitud, 2);
 				longitud_nue = round(punto.largo::numeric, 2);	
@@ -119,10 +120,7 @@ FOR punto IN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1102, punto.codigo_obra, tramo.id_tramo_conectado, 3, tramo.id_tramo_conectado::text, punto.id_tramo_conectado::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;					
-				IF  COALESCE(tramo.ano_construccion,'0')  <>  COALESCE(punto.anio_instalacion,'0') THEN
-					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1102, punto.codigo_obra, punto.id_tramo_conectado, 4, tramo.ano_construccion::text, punto.anio_instalacion::text, punto.gdb_from_date, punto.gdb_archive_oid);
-				END IF;		
+	
 
 				IF punto.lifecyclestatus = 8 THEN estado := 1;
 				ELSIF punto.lifecyclestatus = 256 THEN estado := 2;
@@ -198,16 +196,19 @@ FOR punto IN
 				IF  COALESCE(tramo.tipo_terreno,'0')  <>  COALESCE(punto.tipo_terreno,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1102, punto.codigo_obra, punto.id_tramo_conectado, 13, tramo.tipo_terreno::text, punto.tipo_terreno::text, punto.gdb_from_date, punto.gdb_archive_oid);
-				END IF;						
+				END IF;	
+				
+				porcentaje_napa_nue := round(punto.porcentaje_napa,2) ;
+				porcentaje_napa_ant := round(tramo.porcentaje_napa,2) ;				
 				IF  COALESCE(tramo.porcentaje_napa,'0')  <>  COALESCE(punto.porcentaje_napa,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1102, punto.codigo_obra, punto.id_tramo_conectado, 14, tramo.porcentaje_napa::text, punto.porcentaje_napa::text, punto.gdb_from_date, punto.gdb_archive_oid);
+					VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1102, punto.codigo_obra, punto.id_tramo_conectado, 14, porcentaje_napa_ant::text, porcentaje_napa_nue::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;		
 				IF  COALESCE(tramo.paralelo,'0')  <>  COALESCE(punto.paralelo,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1102, punto.codigo_obra, punto.id_tramo_conectado, 15, tramo.paralelo::text, punto.paralelo::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;				
-			END IF;
+
 		END IF;
 	END LOOP;		
 

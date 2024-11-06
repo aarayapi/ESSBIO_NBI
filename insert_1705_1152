@@ -65,6 +65,7 @@ FOR punto IN
 			SELECT th.periodo_informado, th.rut_empresa, th.sistema, th.codigo_conduccion, th.codigo_tramo, th.ano_construccion, th.estado_uso, th.tipo_tramo, th.tipo_operacion, th.diametro, th.material, 
 			th.otro_materia, th.presion_max_trabajo, th.longitud, th.profundidad_media_tramo, th.pendiente, th.tipo_terreno, th.porcentaje_napa, th.paralelo, th.descripcion_paralelo, th.vigencia  
 			INTO tramo FROM owd.tbl_1152_hist th WHERE th.codigo_conduccion = punto.codigo_obra AND th.rut_empresa = punto.rut AND th.codigo_tramo = punto.id_tramo_conectado;
+			
 
 			longitud_ant = round(tramo.longitud, 2);
 			longitud_nue = round(punto.largo::numeric, 2);
@@ -170,7 +171,8 @@ FOR punto IN
 			IF  COALESCE(punto.paralelo,'0')  <>  COALESCE(tramo.paralelo,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1152, punto.codigo_obra, punto.id_tramo_conectado, 17, tramo.telemetria::text, punto.telemetria::text, punto.gdb_from_date, punto.objectid::integer);
-			END IF;		
+	
+			END IF;
 		END IF;
 	END LOOP;
 	
