@@ -1631,12 +1631,17 @@ BEGIN
    LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sl.proyecto_informado_siss
-  WHERE (sl.assetgroup = 1 OR sl.assetgroup = 2) AND (sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42)  AND sl.codigo_obra is not null
-			   AND sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+  WHERE (sl.objectid IN (SELECT mb.objectid  
+			   FROM (SELECT vss.objectid, ROW_NUMBER() OVER (PARTITION BY vss.codigo_obra ORDER BY vss.creationdate ASC) as rn, vss.creationdate,
+			   vss.assetgroup, vss.assettype, vss.codigo_obra FROM owd.vmt_sewerline_sb vss) mb
+			   WHERE (mb.assetgroup = 1 OR mb.assetgroup = 2) 
+			   AND (mb.assettype = 2 OR mb.assettype = 41 OR mb.assettype = 42)  
+			   AND mb.codigo_obra is not null)) AND sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+
 	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
 	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
-	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)  
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)   
   
   
 UNION  
