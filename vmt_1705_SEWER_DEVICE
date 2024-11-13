@@ -1,0 +1,157 @@
+-- View: owd.vmt_1705_SEWER_DEVICE
+
+-- DROP MATERIALIZED VIEW IF EXISTS owd."vmt_1705_SEWER_DEVICE";
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd."vmt_1705_SEWER_DEVICE"
+TABLESPACE pg_default
+AS
+ SELECT wd.objectid,
+    wd.creationdate,
+    wd.assetgroup,
+    wd.assettype,
+    wd.associationstatus,
+    wd.issubnetworkcontroller,
+    wd.isconnected,
+    wd.subnetworkcontrollername,
+    wd.tiername,
+    wd.tierrank,
+    wd.terminalconfiguration,
+    wd.cpsubnetworkname,
+    wd.supportedsubnetworkname,
+    wd.systemsubnetworkname,
+    wd.sewershedsubnetworkname,
+    wd.supportingsubnetworkname,
+    wd.presentstatus,
+    wd.activevol,
+    wd.designtype,
+    wd.diameter,
+    wd.secondarydiameter,
+    wd.pressure,
+    wd.normalstatus,
+    wd.operable,
+    wd.name,
+        CASE
+            WHEN wd.lifecyclestatus = 8 THEN 1
+            WHEN wd.lifecyclestatus = 256 THEN 2
+            WHEN wd.lifecyclestatus = 32 THEN 3
+            WHEN wd.lifecyclestatus = 260 THEN 4
+            WHEN wd.lifecyclestatus = 259 THEN 5
+            WHEN wd.lifecyclestatus = 261 THEN 6
+            ELSE NULL::integer
+        END AS lifecyclestatus,
+    wd.installdate,
+    wd.assetid,
+    wd.ownedby,
+    wd.maintby,
+    wd.symbolrotation,
+    wd.notes,
+    wd.accountid,
+    wd.material,
+    wd.spatialsource,
+    wd.spatialconfidence,
+    wd.cptraceability,
+    wd.cpoverride,
+    wd.inspectiondate,
+    wd.model,
+    wd.elevation,
+    wd.bondedinsulated,
+    wd.clocktoclose,
+    wd.location,
+    wd.manufacturer,
+    wd.depth,
+    wd.coolingmethod,
+    wd.bypassvalve,
+    wd.ratedflow,
+    wd.turnstoclose,
+    wd.weight,
+    wd.testwirecount,
+    wd.altura_elevacion_geometrica,
+    wd.altura_elevacion_manometrica,
+    wd.descarga_rebalse,
+    wd.tipo_obra_mitigacion,
+    wd.codigo_financiamiento,
+    wd.numero_total_bombas,
+    wd.numero_bombas_reserva,
+    wd.telemetria,
+    wd.telecontrol,
+    wd.tipo_tratamiento,
+    wd.carga_dbo5_diseno,
+    wd.cuerpo_receptor,
+    wd.codigo_obra,
+    wd.cantidad_cliente,
+    wd.codigo_grilla,
+    wd.proyecto_informado_siss,
+    wd.proyecto_ultima_edicion,
+    wd.tipo_financiamiento,
+    wd.etapa,
+    wd.tipo_planta,
+    wd.nombre_cuerpo_receptor,
+    wd.nombre_obra,
+    wd.otro_tipo_cuerpo_receptor,
+    wd.otro_tipo_tratamiento,
+    wd.ptas_con_peas,
+    wd.tipo_cuerpo_receptor,
+    wd.utm_este_sig,
+    wd.utm_norte_sig,
+    wd.codigo_localidad,
+    wd.codigo_comuna,
+    wd.codigo_subcuenca,
+    wd.codigo_area_tributaria,
+    wd.periodo_informado_siss,
+    wd.anio_construccion,
+    wd.rebalse,
+    wd.camara_rejas,
+    wd.obras_mitigacion,
+    wd.tipo_obra_asociada,
+    wd.codigo_obra_asociada,
+    wd.etapa_obra_asociada,
+    wd.otra_etapa_obra_asociada,
+    wd.tipo_macromedidor,
+    wd.otro_tipo_macromedidor,
+    wd.tipo_ventosa,
+    wd.tipo_valvula,
+    wd.caudal_diseno_max_dia,
+    wd.caudal_diseno_medio_mensual,
+    wd.caudal_diseno_max_puntual,
+    wd.carga_sst_diseno,
+    wd.carga_nkt_diseno,
+    wd.carga_pt_diseno,
+    wd.profundidad,
+    wd.utm_este_descarga_nbi,
+    wd.utm_norte_descarga_nbi,
+    wd.codigo_sistema_siss,
+    wd.id_troncal,
+    wd.id_inventario,
+    wd.id_inventario_ultima_edicion,
+    wd.codigo_recinto,
+    wd.fecha_ultima_edicion,
+    wd.codigo_obra_diseno,
+    wd.cota_terreno_sig,
+    wd.utm_este_nbi,
+    wd.utm_norte_nbi,
+    wd.shape,
+    wd.gdb_from_date,
+    wd.gdb_is_delete,
+    wd.gdb_deleted_at,
+    wd.gdb_archive_oid,
+    row_number() OVER (PARTITION BY wd.objectid ORDER BY wd.objectid, wd.gdb_from_date) AS rn,
+    cnt.cuenta
+   FROM sewerdevice wd
+     LEFT JOIN ( SELECT sewerdevice.objectid,
+            count(sewerdevice.objectid) AS cuenta
+           FROM sewerdevice
+          WHERE sewerdevice.gdb_branch_id = 0
+          GROUP BY sewerdevice.objectid) cnt ON wd.objectid = cnt.objectid
+  WHERE wd.gdb_branch_id = 0 AND (wd.objectid IN ( SELECT wd_1.objectid
+           FROM sewerdevice wd_1
+          WHERE wd_1.gdb_branch_id = 0
+          GROUP BY wd_1.objectid
+         HAVING count(wd_1.objectid) > 1))
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd."vmt_1705_SEWER_DEVICE"
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd."vmt_1705_SEWER_DEVICE" TO owd;
+GRANT SELECT ON TABLE owd."vmt_1705_SEWER_DEVICE" TO sde;
+GRANT SELECT ON TABLE owd."vmt_1705_SEWER_DEVICE" TO bd_consulta;
