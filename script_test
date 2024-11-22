@@ -1,15 +1,36 @@
 truncate table tabla_1705;
 
-select * FROM owd.func_1704(to_date('20240401', 'YYYYMMDD'), to_date('20241001', 'YYYYMMDD')) where "codigoObraTipo" = 1101 order by "codigoProyecto";
+select * FROM owd.func_1704(to_date('20240401', 'YYYYMMDD'), to_date('20241001', 'YYYYMMDD')) where "codigoObraTipo" = 1151 order by "codigoProyecto";
 
-select * from tabla_1705 WHERE "codigoAtributo" = 9; --WHERE "codigoObra" = '010-CONDDISP-15'
+select * from tabla_1705 WHERE "codigoObraTipo"= 201; --WHERE "codigoObra" = '010-CONDDISP-15'
 
 SELECT profundidad_media_tramo from sewerline WHERE codigo_obra = '640-CONDREC-01' AND id_tramo_conectado = '2'
 
 SELECT * FROM tbl_1102_hist
 
+truncate table tabla_1705;
+select * from owd.insert_1705_203(to_date('20241107','YYYYMMDD'), to_date('20250330','YYYYMMDD'));
+select * from tabla_1705 WHERE gdb_archive_id = 1441608;
+
+SELECT vmt.profundidad_total_pozo, vmt.proyecto_informado_siss 
+	FROM owd.vmt_1705_waterdevice_dbl vmt WHERE vmt.assetid in (SELECT vmt1.assetid FROM vmt_1705_waterdevice_dbl vmt1 WHERE vmt1.gdb_archive_oid = 1441608 )
+
+SELECT * FROM owd.func_1101(
+               to_date('20240415', 'YYYYMMDD'), 
+               to_date('20250330', 'YYYYMMDD')
+)--WHERE "codigoConduccion" is not null and rut = '96963440' 	--Ns
+where "codigoConduccion" is not null and rut = '76833300' 	--Essbio	 
+
+SELECT vmt.gdb_archive_oid, vmt.proyecto_informado_siss, vmt.assetid, vmt.gdb_from_date  FROM owd."vmt_1705_SEWER_DEVICE" vmt WHERE vmt.assettype = 201 AND vmt.assetgroup = 15 AND vmt.assetid  in 
+	(select distinct vmt_1.assetid from owd."vmt_1705_SEWER_DEVICE" vmt_1 WHERE vmt_1.creationdate < to_date('20240415','YYYYMMDD')) and vmt.assetid in ('1501648', '1508964', '141718' ,'112758')
+	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date
 
 
+select * from owd.func_1705
+(to_date('20241107','YYYYMMDD'), to_date('20250330','YYYYMMDD')) 
+--WHERE rut = '96963440' --and codigoProyecto is not null	--Ns
+where "codigoObraTipo"= 103
+AND rut = '76833300'	--Essbio
 
 
 select * FROM owd.func_1701(to_date('20240401', 'YYYYMMDD'), to_date('20240801', 'YYYYMMDD'));

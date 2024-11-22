@@ -7,6 +7,7 @@ TABLESPACE pg_default
 AS
  SELECT wd.objectid,
     wd.creationdate,
+	wd.lastupdate,
     wd.assetgroup,
     wd.assettype,
     wd.associationstatus,
@@ -133,20 +134,10 @@ AS
     wd.gdb_from_date,
     wd.gdb_is_delete,
     wd.gdb_deleted_at,
-    wd.gdb_archive_oid,
-    row_number() OVER (PARTITION BY wd.objectid ORDER BY wd.objectid, wd.gdb_from_date) AS rn,
-    cnt.cuenta
-   FROM sewerdevice wd
-     LEFT JOIN ( SELECT sewerdevice.objectid,
-            count(sewerdevice.objectid) AS cuenta
-           FROM sewerdevice
-          WHERE sewerdevice.gdb_branch_id = 0
-          GROUP BY sewerdevice.objectid) cnt ON wd.objectid = cnt.objectid
-  WHERE wd.gdb_branch_id = 0 AND (wd.objectid IN ( SELECT wd_1.objectid
-           FROM sewerdevice wd_1
-          WHERE wd_1.gdb_branch_id = 0
-          GROUP BY wd_1.objectid
-         HAVING count(wd_1.objectid) > 1))
+    wd.gdb_archive_oid
+   FROM owd.sewerdevice wd
+	WHERE wd.objectid in (SELECT DISTINCT wd1.objectid FROM owd.sewerdevice wd1 WHERE  wd1.creationdate != wd1.lastupdate)
+	AND wd.objectid  not in (SELECT DISTINCT wd2.objectid FROM owd.sewerdevice wd2 WHERE wd2.gdb_is_delete = 1)
 WITH DATA;
 
 ALTER TABLE IF EXISTS owd."vmt_1705_SEWER_DEVICE"

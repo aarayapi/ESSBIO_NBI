@@ -150,7 +150,8 @@ if cantidad > 0 then
 	
 					proyecto_informado_siss = proyecto_informado_siss2;	
 					ownedby  := ownedby2;
-										
+				ELSE
+					correlativo := 3;										
 				END IF;
 				IF correlativo = 3 THEN
 				

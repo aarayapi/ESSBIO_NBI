@@ -336,7 +336,10 @@ if cantidad > 0 then
 					utm_norte_descarga_nbi := utm_norte_descarga_nbi2;
 					utm_este_descarga_nbi := utm_este_descarga_nbi2;	
 					proyecto_informado_siss = proyecto_informado_siss2;							
-					ownedby := ownedby2;					
+					ownedby := ownedby2;	
+				ELSE
+					correlativo := 3;					
+					
 				END IF;
 				IF correlativo = 3 THEN
 				

@@ -36,6 +36,7 @@ DECLARE
     utm_norte_nbi numeric(38,8);  --16
     utm_este_nbi numeric(38,8);  --17
 	ownedby smallint;
+	profundidad_total text;
 	
 	gdb_from_date  timestamp without time zone;
 	assetid character varying(100);
@@ -58,6 +59,7 @@ DECLARE
     utm_norte_nbi2 numeric(38,8);  --16
     utm_este_nbi2 numeric(38,8);  --17
 	ownedby2 smallint;	
+	profundidad_total2 text;	
 	
 	gdb_from_date2  timestamp without time zone;
 	assetid2 character varying(100);	
@@ -131,7 +133,8 @@ if cantidad > 0 then
 			cota := punto.cota; --7
 			secondarydiameter := punto.secondarydiameter; --8
 			designinfo := punto.designinfo; --9
-			profundidad := punto.profundidad; --10
+			profundidad := punto.profundidad; --18
+			profundidad_total := (round(punto.profundidad_total_pozo,2))::text;--10
 			diameter := punto.diameter; --11
 			capacidad_embalse_explotacion := punto.capacidad_embalse_explotacion; --12
 			capacidad_operativa := punto.capacidad_operativa; --13
@@ -160,7 +163,8 @@ if cantidad > 0 then
 				cota2 := punto.cota; --7
 				secondarydiameter2 := punto.secondarydiameter; --8
 				designinfo2 := punto.designinfo; --9
-				profundidad2 := punto.profundidad; --10
+				profundidad2 := punto.profundidad; --18
+				profundidad_total2 := (round(punto.profundidad_total_pozo,2))::text;--10				
 				diameter2 := punto.diameter; --11
 				capacidad_embalse_explotacion2 := punto.capacidad_embalse_explotacion; --12
 				capacidad_operativa2 := punto.capacidad_operativa; --13
@@ -220,9 +224,9 @@ if cantidad > 0 then
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 204, codigo_obra2, '0', 9, round( designinfo,2)::text, round( designinfo2  , 2)::text, gdb_from_date2, gdb_archive_oid2);
 					END IF;	
-					IF  COALESCE(profundidad,'0')  <>  COALESCE(profundidad2,'0') THEN
+					IF  COALESCE(profundidad_total,'')  <>  COALESCE(profundidad_total2,'') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 204, codigo_obra2, '0', 10, round( profundidad , 2)::text, round( profundidad2 , 2)::text, gdb_from_date2, gdb_archive_oid2);
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 204, codigo_obra2, '0', 10,  profundidad_total, profundidad_total2, gdb_from_date2, gdb_archive_oid2);
 					END IF;	
 					IF  COALESCE(diameter,'0')  <>  COALESCE(diameter2,'0') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
@@ -230,7 +234,7 @@ if cantidad > 0 then
 					END IF;
 					IF  COALESCE(capacidad_embalse_explotacion,'0')  <>  COALESCE(capacidad_embalse_explotacion2,'0') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 204, codigo_obra2, '0', 12, capacidad_embalse_explotacion::text, round(  capacidad_embalse_explotacion2 ,2)::text, gdb_from_date2, gdb_archive_oid2);
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 204, codigo_obra2, '0', 12, (round( capacidad_embalse_explotacion,2))::text, (round(  capacidad_embalse_explotacion2 ,2))::text, gdb_from_date2, gdb_archive_oid2);
 					END IF;	
 					IF  COALESCE(capacidad_operativa,'0')  <>  COALESCE(capacidad_operativa2,'0') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
@@ -244,18 +248,18 @@ if cantidad > 0 then
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 204, codigo_obra2, '0', 15, telecontrol::text, telecontrol2::text, gdb_from_date2, gdb_archive_oid2);
 					END IF;	
-					IF  COALESCE(utm_norte_nbi,'0')  <>  COALESCE(utm_norte_nbi,'0') THEN
+					/*IF  COALESCE(utm_norte_nbi,'0')  <>  COALESCE(utm_norte_nbi,'0') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 204, codigo_obra2, '0', 16, round( utm_norte_nbi ,2)::text, round( utm_norte_nbi2 ,2)::text, gdb_from_date2, gdb_archive_oid2);
 					END IF;	
-					/*IF  COALESCE(utm_este_nbi,'0')  <>  COALESCE(utm_este_nbi2,'0') THEN
+					IF  COALESCE(utm_este_nbi,'0')  <>  COALESCE(utm_este_nbi2,'0') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 204, codigo_obra2, '0', 17, round( utm_este_nbi ,2)::text, round( utm_este_nbi2 ,2)::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;
+					END IF;	*/
 					IF  COALESCE(profundidad,'0')  <>  COALESCE(profundidad2,'0') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 204, codigo_obra2, '0', 18, round( profundidad ,2)::text, round( profundidad2 ,2)::text, gdb_from_date2, gdb_archive_oid2);						
-					END IF;	*/
+					END IF;
 					
 					correlativo := 3;
 					
@@ -268,7 +272,8 @@ if cantidad > 0 then
 					cota := cota2; --7
 					secondarydiameter := secondarydiameter2; --8
 					designinfo := designinfo2; --9
-					profundidad := profundidad2; --10
+					profundidad := profundidad2; --18
+					profundidad_total := profundidad_total2;--10						
 					diameter := diameter2; --11
 					capacidad_embalse_explotacion := capacidad_embalse_explotacion2; --12
 					capacidad_operativa := capacidad_operativa2; --13
@@ -282,7 +287,8 @@ if cantidad > 0 then
 					gdb_archive_oid := gdb_archive_oid2;
 					gdb_from_date := gdb_from_date2;
 					proyecto_informado_siss := proyecto_informado_siss2;
-											
+				ELSE
+					correlativo := 3;											
 				END IF;
 				IF correlativo = 3 THEN
 				
@@ -295,7 +301,8 @@ if cantidad > 0 then
 					cota2 := punto.cota; --7
 					secondarydiameter2 := punto.secondarydiameter; --8
 					designinfo2 := punto.designinfo; --9
-					profundidad2 := punto.profundidad; --10
+					profundidad2 := punto.profundidad; --18
+					profundidad_total2 := (round(punto.profundidad_total_pozo,2))::text;--10	
 					diameter2 := punto.diameter; --11
 					capacidad_embalse_explotacion2 := punto.capacidad_embalse_explotacion; --12
 					capacidad_operativa2 := punto.capacidad_operativa; --13
@@ -322,7 +329,8 @@ if cantidad > 0 then
 				cota := cota2; --7
 				secondarydiameter := secondarydiameter2; --8
 				designinfo := designinfo2; --9
-				profundidad := profundidad2; --10
+				profundidad := profundidad2; --18
+				profundidad_total := profundidad_total2;--10
 				diameter := diameter2; --11
 				capacidad_embalse_explotacion := capacidad_embalse_explotacion2; --12
 				capacidad_operativa := capacidad_operativa2; --13
@@ -350,7 +358,8 @@ if cantidad > 0 then
 				cota := punto.cota; --7
 				secondarydiameter := punto.secondarydiameter; --8
 				designinfo := punto.designinfo; --9
-				profundidad := punto.profundidad; --10
+				profundidad := punto.profundidad; --18
+				profundidad_total := (round(punto.profundidad_total_pozo,2))::text;--10	
 				diameter := punto.diameter; --11
 				capacidad_embalse_explotacion := punto.capacidad_embalse_explotacion; --12
 				capacidad_operativa := punto.capacidad_operativa; --13
@@ -402,9 +411,9 @@ if cantidad > 0 then
 									INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 204, punto.codigo_obra, '0', 9, round( designinfo,2)::text, round( punto.designinfo,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
 			END IF;	
-			IF  COALESCE(profundidad,'0')  <>  COALESCE(punto.profundidad,'0') THEN
+			IF  COALESCE(profundidad_total,'')  <>  COALESCE(punto.profundidad_total,'') THEN
 									INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 204, punto.codigo_obra, '0', 10, round( profundidad , 2)::text, round( punto.profundidad , 2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 204, punto.codigo_obra, '0', 10, profundidad_total, (round( punto.profundidad_total_pozo, 2))::text, punto.gdb_from_date, punto.gdb_archive_oid);
 			END IF;	
 			IF  COALESCE(diameter,'0')  <>  COALESCE(punto.diameter,'0') THEN
 									INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
@@ -426,18 +435,18 @@ if cantidad > 0 then
 									INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 204, punto.codigo_obra, '0', 25, telecontrol::text, punto.telecontrol::text, punto.gdb_from_date, punto.gdb_archive_oid);
 			END IF;	
-			IF  COALESCE(utm_norte_nbi,'0')  <>  COALESCE(punto.utm_norte_nbi,'0') THEN
+			/*IF  COALESCE(utm_norte_nbi,'0')  <>  COALESCE(punto.utm_norte_nbi,'0') THEN
 									INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 204, punto.codigo_obra, '0', 16, round( utm_norte_nbi ,2)::text, round( punto.utm_norte_nbi ,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
 			END IF;	
-			/*IF  COALESCE(utm_este_nbi,'0')  <>  COALESCE(punto.utm_este_nbi,'0') THEN
+			IF  COALESCE(utm_este_nbi,'0')  <>  COALESCE(punto.utm_este_nbi,'0') THEN
 									INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 204, punto.codigo_obra, '0', 17, round( utm_este_nbi ,2)::text, round( punto.utm_este_nbi ,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
-			END IF;	
+			END IF;	*/	
 			IF  COALESCE(profundidad,'0')  <>  COALESCE(punto.profundidad,'0') THEN
 									INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 204, punto.codigo_obra, '0', 18, round( profundidad ,2)::text, round( punto.profundidad ,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
-			END IF;		*/		
+			END IF;			
 		END IF;
 	END LOOP;
 END IF;			

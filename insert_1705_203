@@ -36,6 +36,7 @@ DECLARE
     utm_norte_nbi numeric(38,8);  --16
     utm_este_nbi numeric(38,8);  --17
 	ownedby smallint;
+	profundidad_bomba text;
 	
 	gdb_from_date  timestamp without time zone;
 	assetid character varying(100);
@@ -58,6 +59,7 @@ DECLARE
     utm_norte_nbi2 numeric(38,8);  --16
     utm_este_nbi2 numeric(38,8);  --17
 	ownedby2 smallint;	
+	profundidad_bomba2 text;
 	
 	gdb_from_date2  timestamp without time zone;
 	assetid2 character varying(100);	
@@ -124,6 +126,11 @@ if cantidad > 0 then
 		IF correlativo = 1 THEN
 			correlativo := correlativo + 1;
 			
+			--profundidad_bomba := (round(punto.profundidad,2));
+			IF punto.profundidad = '-100'::integer::numeric THEN profundidad_bomba := (round(punto.profundidad, 0))::text;
+			ELSE profundidad_bomba := (round(punto.profundidad, 2))::text;
+			END IF;			
+			
 			ownedby := punto.ownedby;
 			codigo_sistema_siss := punto.codigo_sistema_siss; --1
 			codigo_obra := punto.codigo_obra; --2
@@ -140,8 +147,8 @@ if cantidad > 0 then
 			capacidad_operativa := punto.capacidad_operativa; --13
 			telemetria := punto.telemetria; --14
 			telecontrol := punto.telecontrol; --15
-			utm_norte_nbi := punto.utm_norte_nbi; --16
-			utm_este_nbi := punto.utm_este_nbi; --17
+			--utm_norte_nbi := punto.utm_norte_nbi; --16
+			--utm_este_nbi := punto.utm_este_nbi; --17
 
 			assetid = punto.assetid;
 			
@@ -153,7 +160,11 @@ if cantidad > 0 then
 		ELSIF correlativo > 1 THEN 
 			--correlativo := correlativo + 1;
 			IF correlativo = 2 THEN
-			
+				--profundidad_bomba := (round(punto.profundidad,2));	
+				IF punto.profundidad = '-100'::integer::numeric THEN profundidad_bomba2 := (round(punto.profundidad, 0))::text;
+				ELSE profundidad_bomba2 := (round(punto.profundidad, 2))::text;
+				END IF;					
+				
 				ownedby2 := punto.ownedby;				
 				codigo_sistema_siss2 := punto.codigo_sistema_siss; --1
 				codigo_obra2 := punto.codigo_obra; --2
@@ -170,8 +181,8 @@ if cantidad > 0 then
 				capacidad_operativa2 := punto.capacidad_operativa; --13
 				telemetria2 := punto.telemetria; --14
 				telecontrol2 := punto.telecontrol; --15
-				utm_norte_nbi2 := punto.utm_norte_nbi; --16
-				utm_este_nbi2 := punto.utm_este_nbi; --17
+				--utm_norte_nbi2 := punto.utm_norte_nbi; --16
+				--utm_este_nbi2 := punto.utm_este_nbi; --17
 				ownedby2 := punto.ownedby;
 				assetid2 = punto.assetid;
 
@@ -249,6 +260,10 @@ if cantidad > 0 then
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 203, codigo_obra2, '0', 15, telecontrol::text, telecontrol2::text, gdb_from_date2, gdb_archive_oid2);
 					END IF;	
+					IF  COALESCE(profundidad_bomba,'')  <>  COALESCE(profundidad_bomba2,'') THEN
+											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 203, codigo_obra2, '0', 18, profundidad_bomba::text, profundidad_bomba2::text, gdb_from_date2, gdb_archive_oid2);
+					END IF;						
 					/*IF  COALESCE(utm_norte_nbi,'0')  <>  COALESCE(utm_norte_nbi2,'0') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 203, codigo_obra2, '0', 16, round( utm_norte_nbi ,2)::text, round( utm_norte_nbi2 ,2)::text, gdb_from_date2, gdb_archive_oid2);
@@ -259,7 +274,7 @@ if cantidad > 0 then
 					END IF;	*/
 					
 					correlativo := 3;
-					
+					profundidad_bomba := profundidad_bomba2;
 					codigo_sistema_siss := codigo_sistema_siss2; --1
 					codigo_obra := codigo_obra2; --2
 					name := name2; --3
@@ -275,18 +290,23 @@ if cantidad > 0 then
 					capacidad_operativa := capacidad_operativa2; --13
 					telemetria := telemetria2; --14
 					telecontrol := telecontrol2; --15
-					utm_norte_nbi := utm_norte_nbi2; --16
-					utm_este_nbi := utm_este_nbi2; --17
+					--utm_norte_nbi := utm_norte_nbi2; --16
+					--utm_este_nbi := utm_este_nbi2; --17
 					ownedby := ownedby2;
 					assetid := assetid2;
 
 					gdb_archive_oid := gdb_archive_oid2;
 					gdb_from_date := gdb_from_date2;
 					proyecto_informado_siss := proyecto_informado_siss2;
-											
+				ELSE
+					correlativo := 3;											
 				END IF;
 				IF correlativo = 3 THEN
-				
+					--profundidad_bomba := (round(punto.profundidad,2));
+					IF punto.profundidad = '-100'::integer::numeric THEN profundidad_bomba2 := (round(punto.profundidad, 0))::text;
+					ELSE profundidad_bomba2 := (round(punto.profundidad, 2))::text;
+					END IF;						
+					
 					codigo_sistema_siss2 := punto.codigo_sistema_siss; --1
 					codigo_obra2 := punto.codigo_obra; --2
 					name2 := punto.name; --3
@@ -302,8 +322,8 @@ if cantidad > 0 then
 					capacidad_operativa2 := punto.capacidad_operativa; --13
 					telemetria2 := punto.telemetria; --14
 					telecontrol2 := punto.telecontrol; --15
-					utm_norte_nbi2 := punto.utm_norte_nbi; --16
-					utm_este_nbi2 := punto.utm_este_nbi; --17
+					--utm_norte_nbi2 := punto.utm_norte_nbi; --16
+					--utm_este_nbi2 := punto.utm_este_nbi; --17
 					ownedby2 := punto.ownedby;						
 					assetid2 = punto.assetid;
 
@@ -314,6 +334,7 @@ if cantidad > 0 then
 
 			END IF;
 			IF correlativo = 2 THEN
+				profundidad_bomba := profundidad_bomba2;
 				codigo_sistema_siss := codigo_sistema_siss2; --1
 				codigo_obra := codigo_obra2; --2
 				name := name2; --3
@@ -330,8 +351,8 @@ if cantidad > 0 then
 				telemetria := telemetria2; --14
 				telecontrol := telecontrol2; --15
 				------------------------------
-				utm_norte_nbi := utm_norte_nbi2; --16
-				utm_este_nbi := utm_este_nbi2; --17
+				--utm_norte_nbi := utm_norte_nbi2; --16
+				--utm_este_nbi := utm_este_nbi2; --17
 				ownedby := ownedby2;
 				assetid := assetid2;
 
@@ -341,6 +362,11 @@ if cantidad > 0 then
 			END IF;
 		 	IF assetid <> punto.assetid THEN
 				correlativo := 2;
+
+				--profundidad_bomba := (round(punto.profundidad,2));
+				IF punto.profundidad = '-100'::integer::numeric THEN profundidad_bomba := (round(punto.profundidad, 0))::text;
+				ELSE profundidad_bomba := (round(punto.profundidad, 2))::text;
+				END IF;					
 				
 				codigo_sistema_siss := punto.codigo_sistema_siss; --1
 				codigo_obra := punto.codigo_obra; --2
@@ -357,8 +383,8 @@ if cantidad > 0 then
 				capacidad_operativa := punto.capacidad_operativa; --13
 				telemetria := punto.telemetria; --14
 				telecontrol := punto.telecontrol; --15
-				utm_norte_nbi := punto.utm_norte_nbi; --16
-				utm_este_nbi := punto.utm_este_nbi; --17
+				--utm_norte_nbi := punto.utm_norte_nbi; --16
+				--utm_este_nbi := punto.utm_este_nbi; --17
 				ownedby := punto.ownedby;		
 				assetid = punto.assetid;
 
@@ -425,8 +451,12 @@ if cantidad > 0 then
 			END IF;	
 			IF  COALESCE(telecontrol,'0')  <>  COALESCE(punto.telecontrol,'0') THEN
 									INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 203, punto.codigo_obra, '0', 25, telecontrol::text, punto.telecontrol::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 203, punto.codigo_obra, '0', 15, telecontrol::text, punto.telecontrol::text, punto.gdb_from_date, punto.gdb_archive_oid);
 			END IF;	
+			IF  COALESCE(profundidad_bomba,'')  <>  COALESCE(punto.profundidad_bomba,'') THEN
+									INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 203, punto.codigo_obra, '0', 18, profundidad_bomba::text, punto.profundidad_bomba::text, punto.gdb_from_date, punto.gdb_archive_oid);
+			END IF;				
 			/*IF  COALESCE(utm_norte_nbi,'0')  <>  COALESCE(punto.utm_norte_nbi,'0') THEN
 									INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 203, punto.codigo_obra, '0', 16, round( utm_norte_nbi ,2)::text, round( punto.utm_norte_nbi ,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);

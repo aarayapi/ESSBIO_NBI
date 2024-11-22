@@ -182,7 +182,7 @@ if cantidad > 0 then
 					END IF;
 					IF  COALESCE(secondarydiameter,'0')  <>  COALESCE(secondarydiameter2,'0') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 303, codigo_obra2, '0', 10, round( secondarydiameter,2 )::text, round( punto.secondarydiameter2 ,2 )::text, gdb_from_date2, gdb_archive_oid2);
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 303, codigo_obra2, '0', 10, round( secondarydiameter,2 )::text, round( punto.secondarydiameter ,2 )::text, gdb_from_date2, gdb_archive_oid2);
 					END IF;	
 					IF  COALESCE(potencia_instalada,'0')  <>  COALESCE(potencia_instalada2,'0') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
@@ -218,7 +218,8 @@ if cantidad > 0 then
 					gdb_archive_oid := gdb_archive_oid2;
 					gdb_from_date := gdb_from_date2;
 					proyecto_informado_siss := proyecto_informado_siss2;
-											
+				ELSE
+					correlativo := 3;											
 				END IF;
 				IF correlativo = 3 THEN
 				
