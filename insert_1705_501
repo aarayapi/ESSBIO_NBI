@@ -30,7 +30,7 @@ DECLARE
 	sistema_filtracion integer; --10
 	tipo_unidad integer; --11
 	otro character varying(255); --12
-	potencia_instalada integer; --13
+	potencia_instalada numeric; --13
 	designinfo numeric(38,2); --14
 	turbiedad numeric(38,2); --15
 	valor_as numeric(38,2); --16
@@ -63,7 +63,7 @@ DECLARE
 	sistema_filtracion2 integer; --10
 	tipo_unidad2 integer; --11
 	otro2 character varying(255); --12
-	potencia_instalada2 integer; --13
+	potencia_instalada2 numeric; --13
 	designinfo2 numeric(38,2); --14
 	turbiedad2 numeric(38,2); --15
 	valor_as2 numeric(38,2); --16
@@ -154,7 +154,7 @@ if cantidad > 0 then
 			sistema_filtracion := punto.sistema_filtracion; --10
 			tipo_unidad := punto.tipo_unidad; --11
 			otro := punto.otro; --12
-			potencia_instalada := punto.potencia_instalada; --13
+			potencia_instalada := punto.potencia_instalada::numeric; --13
 			designinfo := punto.designinfo; --14
 			turbiedad := punto.turbiedad; --15
 			valor_as := punto.valoras; --16
@@ -195,7 +195,7 @@ if cantidad > 0 then
 				sistema_filtracion2 := punto.sistema_filtracion; --10
 				tipo_unidad2 := punto.tipo_unidad; --11
 				otro2 := punto.otro; --12
-				potencia_instalada2 := punto.potencia_instalada; --13
+				potencia_instalada2 := punto.potencia_instalada::numeric; --13
 				designinfo2 := punto.designinfo; --14
 				turbiedad2:= punto.turbiedad; --15
 				valor_as2 := punto.valoras; --16
@@ -278,7 +278,7 @@ if cantidad > 0 then
 					----------------
 					IF  COALESCE(potencia_instalada,'0')  <>  COALESCE(potencia_instalada2,'0') THEN
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 501, codigo_obra2, '0', 13, potencia_instalada::text, potencia_instalada2::text, gdb_from_date2, assetid2::integer);
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 501, codigo_obra2, '0', 13, '(round(potencia_instalada,2))::text', (round(potencia_instalada2,2))::text, gdb_from_date2, assetid2::integer);
 					END IF;	
 					IF  COALESCE(designinfo,'0')  <>  COALESCE(designinfo2,'0') THEN
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
@@ -548,7 +548,7 @@ if cantidad > 0 then
 			END IF;
 			IF  COALESCE(potencia_instalada,'0')  <>  COALESCE(punto.potencia_instalada,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 501, punto.codigo_obra, '0', 13, potencia_instalada::text, round(punto.potencia_instalada,2)::text, punto.gdb_from_date, punto.assetid::integer);
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 501, punto.codigo_obra, '0', 13, (round(potencia_instalada,2))::text, (round(punto.potencia_instalada,2))::text, punto.gdb_from_date, punto.assetid::integer);
 			END IF;	
 			IF  COALESCE(designinfo,'0')  <>  COALESCE(punto.designinfo,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	

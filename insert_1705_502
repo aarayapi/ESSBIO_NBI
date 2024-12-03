@@ -314,7 +314,7 @@ if cantidad > 0 then
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 502, codigo_obra2, '0', 20, valor_color::text, valor_color2::text, gdb_from_date2, assetid2::integer);
 					END IF;	
-					IF  COALESCE(solidos_disueltos_totales,'0')  <>  COALESCE(solidos_disueltos_totalesr2,'0') THEN
+					IF  COALESCE(solidos_disueltos_totales,'0')  <>  COALESCE(solidos_disueltos_totales2,'0') THEN
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 502, codigo_obra2, '0', 21, solidos_disueltos_totales::text, solidos_disueltos_totales2::text, gdb_from_date2, assetid2::integer);
 					END IF;	
