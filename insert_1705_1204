@@ -210,7 +210,7 @@ if cantidad > 0 then
 					END IF;	
 					IF  COALESCE(potencia_aireacion,'0')  <>   COALESCE(potencia_aireacion2,'0') THEN
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 12, potencia_aireacion::text, potencia_aireacion2::text, gdb_from_date2, gdb_archive_oid2);
+						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1204, codigo_obra2, '0', 12, (round(potencia_aireacion,2))::text, (round(potencia_aireacion2,2))::text, gdb_from_date2, gdb_archive_oid2);
 					END IF;	
 					IF  COALESCE(numero_sedim_primarios,'0')  <>   COALESCE(numero_sedim_primarios2,'0') THEN
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
@@ -378,7 +378,7 @@ if cantidad > 0 then
 				END IF;
 				IF  COALESCE(potencia_aireacion,'0')  <>  COALESCE(punto.potencia_aireacion,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 12, potencia_aireacion::text, punto.potencia_aireacion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1204, punto.codigo_obra, '0', 12, (round(potencia_aireacion,2))::text, (round(punto.potencia_aireacion,2))::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;
 				IF  COALESCE(numero_sedim_primarios,'0')  <>  COALESCE(punto.numero_sedim_primarios,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	

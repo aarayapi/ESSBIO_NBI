@@ -1,0 +1,47 @@
+-- View: owd.vmt_1705_as_desinfecciondecloracion
+
+ DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_as_desinfecciondecloracion;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_as_desinfecciondecloracion
+TABLESPACE pg_default
+AS
+ SELECT sd.ownedby,
+    sd.proyecto_informado_siss,
+    sd.codigo_sistema_siss,
+    ds.objectid,
+    ds.codigo_obra,
+    ds.decloracion,
+    ds.desinfeccion,
+    ds.otro_tipo_desinfeccion,
+    ds.tipo_desinfeccion,
+    ds.assetguid,
+    ds.globalid,
+    ds.creator,
+    ds.creationdate,
+    ds.updatedby,
+    ds.lastupdate,
+    ds.created_user,
+    ds.created_date,
+    ds.last_edited_user,
+    ds.last_edited_date,
+    ds.gdb_branch_id,
+    ds.gdb_from_date,
+    ds.gdb_is_delete,
+    ds.gdb_deleted_at,
+    ds.gdb_deleted_by,
+    ds.gdb_archive_oid
+   FROM as_desinfecciondecloracion ds
+     LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text
+
+	 WHERE ds.gdb_branch_id = 0 AND ds.objectid in (select distinct wd1.objectid from as_desinfecciondecloracion wd1 where wd1.created_date != wd1.last_edited_date)
+  AND sd.proyecto_informado_siss IS NOT NULL	 
+		 
+		 
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_1705_as_desinfecciondecloracion
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_1705_as_desinfecciondecloracion TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_as_desinfecciondecloracion TO sde;
+GRANT SELECT ON TABLE owd.vmt_1705_as_desinfecciondecloracion TO bd_consulta;

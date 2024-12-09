@@ -17,7 +17,8 @@ DECLARE
 	codigoarchivo smallint;
 	rut character varying(20);
     periodo integer;
-	
+
+    codigo_sistema_siss integer; --1
     codigo_obra character varying(255); --1	
     desinfeccion integer; --2
 	tipo_desinfeccion integer; --3
@@ -27,7 +28,8 @@ DECLARE
 	
 	gdb_from_date  timestamp without time zone;
 	objectid integer;
-	
+
+    codigo_sistema_siss2 integer; --1
     codigo_obra2 character varying(255); --1	
     desinfeccion2 integer; --2
 	tipo_desinfeccion2 integer; --3
@@ -44,7 +46,7 @@ DECLARE
 	proyecto_informado_siss2 character varying(100);
 	cantidad integer;
 	correlativo smallint;
-	resultado character varying(100);
+	resultado character varying(500);
 	cuenta2 integer;	
 BEGIN
 
@@ -75,10 +77,12 @@ if cantidad > 0 then
 	
 		cuenta2 := cuenta2 + 1;	 
 
+		resultado := resultado ||',__//'|| correlativo || ' ,'|| cuenta2 ;	 
 	 
 		IF correlativo = 1 then
 			correlativo := correlativo + 1;
 			
+			codigo_sistema_siss := punto.codigo_sistema_siss;
 			codigo_obra := punto.codigo_obra; --1	
 			desinfeccion := punto.desinfeccion; --2
 			tipo_desinfeccion := punto.tipo_desinfeccion; --3
@@ -91,9 +95,12 @@ if cantidad > 0 then
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby  := punto.ownedby;
 			
+			resultado := resultado || '_1G_'|| gdb_archive_oid::text;
+			
 		ELSIF correlativo > 1 THEN
 			IF correlativo = 2 THEN
-			
+				
+				codigo_sistema_siss2 := punto.codigo_sistema_siss;
 				codigo_obra2 := punto.codigo_obra; --1	
 				desinfeccion2 := punto.desinfeccion; --2
 				tipo_desinfeccion2 := punto.tipo_desinfeccion; --3
@@ -105,16 +112,24 @@ if cantidad > 0 then
 				gdb_from_date2 := punto.gdb_from_date;
 				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
 				ownedby2  := punto.ownedby;
+				
+				resultado := resultado || '_2G2_'|| gdb_archive_oid2::text;
+				
 			END IF;			
 			
 			IF objectid = objectid2 THEN
 				IF COALESCE(proyecto_informado_siss,'Unknown')  <> COALESCE(proyecto_informado_siss2,'Unknown')  AND correlativo = 2 THEN
 					correlativo := correlativo + 1;
+					resultado := resultado || ',_ IF_1' ;
 				
 				ELSIF (COALESCE(proyecto_informado_siss2,'Unknown')  <> COALESCE(punto.proyecto_informado_siss,'Unknown')  AND correlativo = 3) OR objectid <> punto.objectid THEN
 					correlativo := correlativo + 1;
+					resultado := resultado || ',_ IF_2' ;
 				END IF;	
-				IF correlativo = 4  AND gdb_from_date2 >= fecha_inicio AND gdb_from_date2 <= fecha_fin AND proyecto_informado_siss2 is not null  THEN		
+				IF correlativo = 4  AND gdb_from_date2 >= fecha_inicio AND gdb_from_date2 <= fecha_fin AND proyecto_informado_siss2 is not null  THEN	
+				
+					resultado := resultado || ',_ IF_3' ;
+				
 					IF ownedby = 103 THEN rut = '76833300';
 					ELSIF ownedby = 104 THEN rut = '96963440';
 					ELSE rut = NULL;
@@ -142,7 +157,7 @@ if cantidad > 0 then
 					END IF;	
 					
 					correlativo := 3;
-					
+					codigo_sistema_siss := codigo_sistema_siss2;
 					codigo_obra := codigo_obra2; --1	
 					desinfeccion := desinfeccion2; --2
 					tipo_desinfeccion := tipo_desinfeccion2; --3
@@ -155,7 +170,7 @@ if cantidad > 0 then
 					correlativo := 3;										
 				END IF;
 				IF correlativo = 3 THEN
-				
+					codigo_sistema_siss2 := punto.codigo_sistema_siss;
 					codigo_obra2 := punto.codigo_obra; --1	
 					desinfeccion2 := punto.desinfeccion; --2
 					tipo_desinfeccion2 := punto.tipo_desinfeccion; --3
@@ -167,10 +182,12 @@ if cantidad > 0 then
 					gdb_from_date2 := punto.gdb_from_date;
 					proyecto_informado_siss2 := punto.proyecto_informado_siss;	
 					ownedby2  := punto.ownedby;
+					
+					resultado := resultado || '_4G2_'|| gdb_archive_oid2::text;
 				END IF;	
 			END IF;
 			IF correlativo = 2 THEN	
-			
+				codigo_sistema_siss := codigo_sistema_siss2;
 				codigo_obra := codigo_obra2; --1	
 				desinfeccion := desinfeccion2; --2
 				tipo_desinfeccion := tipo_desinfeccion2; --3
@@ -180,11 +197,14 @@ if cantidad > 0 then
 				proyecto_informado_siss = proyecto_informado_siss2;	
 				ownedby  := ownedby2;
 				
+				resultado := resultado || '_5G_'|| gdb_archive_oid::text;
+				
 			END IF;				
 
 			IF objectid <> punto.objectid THEN
 				correlativo := 2;
 				
+				codigo_sistema_siss := punto.codigo_sistema_siss;
 				codigo_obra := punto.codigo_obra; --1	
 				desinfeccion := punto.desinfeccion; --2
 				tipo_desinfeccion := punto.tipo_desinfeccion; --3
@@ -197,8 +217,12 @@ if cantidad > 0 then
 				proyecto_informado_siss := punto.proyecto_informado_siss;
 				ownedby  := punto.ownedby;
 				
+				resultado := resultado || '_6G_'|| gdb_archive_oid::text;
+				
 			END IF;
 			IF  cuenta2 = cantidad AND punto.gdb_from_date >= fecha_inicio AND punto.gdb_from_date <= fecha_fin AND punto.proyecto_informado_siss is not null THEN
+
+				resultado := resultado || ',_ IF_4' ;
 
 				IF ownedby = 103 THEN rut = '76833300';
 				ELSIF ownedby = 104 THEN rut = '96963440';
@@ -230,7 +254,7 @@ if cantidad > 0 then
 	END LOOP;
 END IF;			
 
- resultado := cantidad::text;
+ --resultado := cantidad::text;
  RETURN resultado;
 END;
 $BODY$;
