@@ -2932,7 +2932,7 @@ FROM  (SELECT '5'::text AS "codigoProceso",
     wl.codigo_sistema_siss AS "codigoSistema",
 	0 AS "codigoLocalidad",
 	1405 AS "codigoObraTipo",
-	wl.codigo_obra AS "codigoObra",
+	atr.codigo_obra AS "codigoObra",
 	'0' AS "codigoTramo",
 		CASE
 			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
@@ -3016,7 +3016,7 @@ FROM  (SELECT '5'::text AS "codigoProceso",
     sl.codigo_sistema_siss AS "codigoSistema",
 	0 AS "codigoLocalidad",
 	1405 AS "codigoObraTipo",
-	sl.codigo_obra AS "codigoObra",
+	atr.codigo_obra AS "codigoObra",
 	''0'' AS "codigoTramo",
 		CASE
 			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
@@ -3115,7 +3115,7 @@ FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b
 	grp.proyecto_informado_siss AS "codigoProyecto",
     grp.codigo_sistema_siss AS "codigoSistema",
 	0 AS "codigoLocalidad",
-	1402 AS "codigoObraTipo",
+	1601 AS "codigoObraTipo",
 	grp.codigo_obra AS "codigoObra",
 	''0'' AS "codigoTramo",
 		CASE
@@ -3215,7 +3215,7 @@ FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b
 	grp.proyecto_informado_siss AS "codigoProyecto",
     grp.codigo_sistema_siss AS "codigoSistema",
 	0 AS "codigoLocalidad",
-	1402 AS "codigoObraTipo",
+	1602 AS "codigoObraTipo",
 	grp.codigo_obra AS "codigoObra",
 	''0'' AS "codigoTramo",
 		CASE

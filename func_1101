@@ -30,16 +30,16 @@ BEGIN
     wl.codigo_obra_origen AS "CodigoObraOrigen",
     wl.tipo_obra_destino AS "TipoObraDestino",
     wl.codigo_obra_destino AS "CodigoObraDestino",
-    sum(wl.measuredlength) AS "LongitudConduccion"
+    round(sum(st_length(wl.shape))::numeric, 2)
    FROM owd.vmt_waterline_1101 wl
-  WHERE  wl.creationdate >= fecha_inicio AND wl.creationdate <= fecha_fin AND 
-  wl.codigo_obra in (SELECT DISTINCT codigo_obra from owd.vmt_waterline_1101 where creationdate >= fecha_inicio)
+  WHERE wl.creationdate <= fecha_fin AND 
+  wl.codigo_obra not in (SELECT DISTINCT codigo_obra from owd.vmt_waterline_1101 where creationdate < fecha_inicio AND codigo_obra is not null)
   GROUP BY (
         CASE wl.ownedby
             WHEN 103 THEN '76833300'::text
             WHEN 104 THEN '96963440'::text
             ELSE NULL::text
-        END), wl.codigo_sistema_siss, wl.nombre_conduccion, wl.etapa, wl.codigo_obra, wl.tipo_obra_origen, wl.codigo_obra_origen, wl.tipo_obra_destino, wl.codigo_obra_destino;
+        END), wl.codigo_sistema_siss, wl.nombre_conduccion,  wl.codigo_obra, wl.tipo_obra_origen, wl.codigo_obra_origen, wl.tipo_obra_destino, wl.codigo_obra_destino, wl.etapa;
 
 END;
 $BODY$;

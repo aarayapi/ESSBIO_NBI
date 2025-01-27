@@ -1,0 +1,22 @@
+truncate table tabla_1705;
+select * from owd.insert_1705_1207(to_date('20240415','YYYYMMDD'), to_date('20250330','YYYYMMDD'));
+select "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id from tabla_1705
+
+--WHERE "codigoAtributo" = 10
+WHERE "codigoAtributo" not in (17,16);
+
+
+
+SELECT objectid, gdb_archive_oid,  codigo_obra, gdb_from_date, creationdate, material_marcopartidor_presa, lifecyclestatus, capacidad_operativa, telecontrol, telemetria, diameter, seccion_rio, fuente, cota, designinfo, capacidad_embalse_explotacion,
+longitud_barrera_dren_presa, ancho_presa, material_marcopartidor_presa, vmt.tipo_captacion
+	FROM owd."vmt_1705_waterdevice_dbl" vmt WHERE vmt.assettype = 561 AND vmt.assetgroup = 20 AND vmt.assetid  in 
+	(select distinct vmt_1.assetid from owd.vmt_1705_waterdevice_dbl vmt_1 WHERE  vmt_1.creationdate < to_date('20240215','YYYYMMDD')
+	AND vmt_1.gdb_from_date BETWEEN to_date('20240215','YYYYMMDD') AND to_date('20250330','YYYYMMDD')) 
+	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date 
+
+
+
+truncate table tabla_1705;
+select * from owd.insert_1705_1205(to_date('20240415','YYYYMMDD'), to_date('20250330','YYYYMMDD'));
+
+select * from tabla_1705;	

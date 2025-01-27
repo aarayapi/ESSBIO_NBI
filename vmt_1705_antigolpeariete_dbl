@@ -1,0 +1,69 @@
+-- View: owd.vmt_1705_antigolpeariete_dbl
+
+-- DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_antigolpeariete_dbl;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_antigolpeariete_dbl
+TABLESPACE pg_default
+AS
+ SELECT cm.objectid,
+    cm.assetid,
+    cm.lifecyclestatus,
+    cm.ownedby,
+    cm.codigo_obra,
+    cm.tipo,
+    cm.codigo_obra_asociada,
+    cm.tipo_obra_asociada,
+    cm.diametro,
+    cm.volumen_estanque_ag,
+    cm.periodo_informado_siss,
+    cm.codigo_sistema_siss,
+    cm.proyecto_informado_siss,
+    cm.proyecto_ultima_edicion,
+    cm.codigo_obra_diseno,
+    cm.gdb_from_date,
+    cm.gdb_archive_oid,
+    cm.codigo_sistema_nbi,
+    cm.created_date,
+    cm.rn,
+    cm.cuenta
+   FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' 
+   
+SELECT aga.objectid, 
+ aga.assetid, 
+ aga.lifecyclestatus, 
+ aga.ownedby, 
+ aga.codigo_obra, 
+ aga.tipo, 
+ aga.codigo_obra_asociada, 
+ aga.tipo_obra_asociada, 
+ aga.diametro, 
+ aga.volumen_estanque_ag, 
+ aga.periodo_informado_siss, 
+ aga.codigo_sistema_siss,  
+ aga.proyecto_informado_siss, 
+ aga.proyecto_ultima_edicion, 
+ aga.codigo_obra_diseno, 
+ aga.gdb_from_date, 
+ aga.gdb_archive_oid, 
+ aga.codigo_sistema_nbi,
+ aga.created_date,
+ row_number() OVER (PARTITION BY aga.objectid ORDER BY aga.objectid, aga.gdb_from_date) AS rn,
+ cnt.cuenta
+	FROM owd.antigolpeariete aga LEFT JOIN ( SELECT antigolpeariete.objectid,
+            count(antigolpeariete.objectid) AS cuenta
+           FROM antigolpeariete
+          WHERE antigolpeariete.gdb_branch_id = 0
+          GROUP BY antigolpeariete.objectid) cnt ON aga.objectid = cnt.objectid
+  WHERE aga.gdb_branch_id = 0 AND (aga.objectid IN ( SELECT wd_1.objectid
+           FROM antigolpeariete wd_1
+          WHERE wd_1.gdb_branch_id = 0
+          GROUP BY wd_1.objectid
+         HAVING count(wd_1.objectid) > 1))'::text) cm(objectid integer, assetid character varying(64), lifecyclestatus smallint, ownedby smallint, codigo_obra character varying(254), tipo integer, codigo_obra_asociada character varying(255), tipo_obra_asociada integer, diametro integer, volumen_estanque_ag numeric(38,8), periodo_informado_siss integer, codigo_sistema_siss integer, proyecto_informado_siss character varying(255), proyecto_ultima_edicion character varying(255), codigo_obra_diseno character varying(255), gdb_from_date timestamp without time zone, gdb_archive_oid integer, codigo_sistema_nbi character varying(255), created_date timestamp without time zone, rn integer, cuenta integer)
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_1705_antigolpeariete_dbl
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_1705_antigolpeariete_dbl TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_antigolpeariete_dbl TO psanhueza;
+GRANT SELECT ON TABLE owd.vmt_1705_antigolpeariete_dbl TO bd_consulta;

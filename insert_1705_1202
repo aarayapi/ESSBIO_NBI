@@ -46,9 +46,9 @@ DECLARE
 	proyecto_informado_siss character varying(100);
 	proyecto_informado_siss2 character varying(100);
 	cantidad integer;
-	correlativo smallint;
-	resultado character varying(100);
-	cuenta2 integer;	
+	estado smallint;
+	resultado character varying(500);
+	cuenta integer;	
 BEGIN
 
 codigoproceso :=  5;
@@ -57,30 +57,32 @@ codigoarchivo := 1705;
 periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
 
 resultado   := '';
-correlativo := 1;
+estado := 0;
 cantidad := 0;
-cuenta2 := 0;
+cuenta := 0;
 
 --REFRESH MATERIALIZED VIEW owd."vmt_1705_SEWER_DEVICE";
 --DELETE FROM owd.tabla_1705 where fecha >= fecha_inicio AND fecha <= fecha_fin;
 
------------------------------------------351--------------------------------------------------
+-----------------------------------------1202--------------------------------------------------
 
 SELECT count(*) into cantidad
 	FROM owd.vmt_1705_as_pretratamiento vmt WHERE vmt.objectid  in 
-	(select distinct vmt_1.objectid from owd.vmt_1705_as_pretratamiento vmt_1 WHERE vmt_1.created_date < fecha_inicio);
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_pretratamiento vmt_1 WHERE vmt_1.created_date < fecha_inicio
+	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin);
 	 
 if cantidad > 0 then
    	FOR punto IN SELECT * 
 	FROM owd.vmt_1705_as_pretratamiento vmt WHERE vmt.objectid  in 
-	(select distinct vmt_1.objectid from owd.vmt_1705_as_pretratamiento vmt_1 WHERE vmt_1.created_date < fecha_inicio) 
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_pretratamiento vmt_1 WHERE vmt_1.created_date < fecha_inicio
+	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin) 
 	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date LOOP
 	
-		cuenta2 := cuenta2 + 1;	 
-
+		cuenta := cuenta + 1;	 
+		--resultado := resultado || '_//_cuenta_' || cuenta ;
 	 
-		IF correlativo = 1 then
-			correlativo := correlativo + 1;
+		IF cuenta = 1 then
+			estado := 1;
 			
 			codigo_sistema_siss :=  punto.codigo_sistema_siss;
 			codigo_obra := punto.codigo_obra; --1	
@@ -96,9 +98,72 @@ if cantidad > 0 then
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby  := punto.ownedby;
 			
-		ELSIF correlativo > 1 THEN
-			IF correlativo = 2 THEN
+			--resultado := resultado || '_IF1_';	
+			
+		ELSIF objectid = punto.objectid AND punto.gdb_from_date < fecha_inicio AND estado = 1 THEN
+
+			codigo_sistema_siss :=  punto.codigo_sistema_siss;
+			codigo_obra := punto.codigo_obra; --1	
+			identificador_unidad := punto.identificador_unidad; --2
+			tipo_pretratamiento := punto.tipo_pretratamiento; --3
+			tipo_operacion := punto.tipo_operacion; --4
+			paso_rejas := punto.paso_rejas; --5
+			limpieza_pretratamiento := punto.limpieza_pretratamiento; --6
+			
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby  := punto.ownedby;
+
+			--resultado := resultado || '_IF2_';
+
+		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 AND objectid = punto.objectid THEN
+			
+			estado:= 2;
+			
+			codigo_sistema_siss2 :=  punto.codigo_sistema_siss;
+			codigo_obra2 := punto.codigo_obra; --1	
+			identificador_unidad2 := punto.identificador_unidad; --2
+			tipo_pretratamiento2 := punto.tipo_pretratamiento; --3
+			tipo_operacion2 := punto.tipo_operacion; --4
+			paso_rejas2 := punto.paso_rejas; --5
+			limpieza_pretratamiento2 := punto.limpieza_pretratamiento; --6
+
+			objectid2 = punto.objectid;			
+			gdb_archive_oid2 := punto.gdb_archive_oid;
+			gdb_from_date2 := punto.gdb_from_date;
+			proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+			ownedby2  := punto.ownedby;
+
+			--resultado := resultado || '_IF3_oid1_' || gdb_archive_oid;
+		END IF;
+		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN		
+		
+			IF cuenta = cantidad THEN		
+
+				IF ownedby = 103 THEN rut = '76833300';
+				ELSIF ownedby = 104 THEN rut = '96963440';
+				ELSE rut = NULL;
+				END IF;			
 				
+				IF  COALESCE(tipo_pretratamiento,'0')  <>  COALESCE(punto.tipo_pretratamiento,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad::integer, 3, tipo_pretratamiento::text, punto.tipo_pretratamiento::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(tipo_operacion,'0')  <>  COALESCE(punto.tipo_operacion,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad::integer, 4, tipo_operacion::text, punto.tipo_operacion::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(paso_rejas,'0')  <>  COALESCE(punto.paso_rejas,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad::integer, 5, paso_rejas::text, round(punto.paso_rejas,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;		
+				IF  COALESCE(limpieza_pretratamiento,'0')  <>  COALESCE(punto.limpieza_pretratamiento,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad::integer, 6, limpieza_pretratamiento::text, punto.limpieza_pretratamiento::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;						
+			ELSE		
 				codigo_sistema_siss2 :=  punto.codigo_sistema_siss;
 				codigo_obra2 := punto.codigo_obra; --1	
 				identificador_unidad2 := punto.identificador_unidad; --2
@@ -111,90 +176,40 @@ if cantidad > 0 then
 				gdb_archive_oid2 := punto.gdb_archive_oid;
 				gdb_from_date2 := punto.gdb_from_date;
 				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
-				ownedby2  := punto.ownedby;
-			END IF;			
-			
-			IF objectid = objectid2 THEN
-				IF COALESCE(proyecto_informado_siss,'Unknown')  <> COALESCE(proyecto_informado_siss2,'Unknown')  AND correlativo = 2 THEN
-					correlativo := correlativo + 1;
-				
-				ELSIF (COALESCE(proyecto_informado_siss2,'Unknown')  <> COALESCE(punto.proyecto_informado_siss,'Unknown')  AND correlativo = 3) OR objectid <> punto.objectid THEN
-					correlativo := correlativo + 1;
-				END IF;	
-				IF correlativo = 4  AND gdb_from_date2 >= fecha_inicio AND gdb_from_date2 <= fecha_fin AND proyecto_informado_siss2 is not null  THEN		
-					IF ownedby = 103 THEN rut = '76833300';
-					ELSIF ownedby = 104 THEN rut = '96963440';
-					ELSE rut = NULL;
-					END IF;
-					
-					IF  COALESCE(tipo_pretratamiento,'0')  <>   COALESCE(tipo_pretratamiento2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1202, codigo_obra2, identificador_unidad2, 3, tipo_pretratamiento::text, tipo_pretratamiento2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(tipo_operacion,'0')  <>   COALESCE(tipo_operacion2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1202, codigo_obra2, identificador_unidad2, 4, tipo_operacion::text, tipo_operacion2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(paso_rejas,'0')  <>  COALESCE(paso_rejas2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1202, codigo_obra2, identificador_unidad2, 5, paso_rejas::text, paso_rejas2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;						
-					IF  COALESCE(limpieza_pretratamiento,'0')  <>  COALESCE(limpieza_pretratamiento2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1202, codigo_obra2, identificador_unidad2, 6, limpieza_pretratamiento::text, limpieza_pretratamiento2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;					
-					
-					correlativo := 3;
-					
-					codigo_sistema_siss :=  codigo_sistema_siss2;
-					codigo_obra := codigo_obra2; --1	
-					identificador_unidad := identificador_unidad2; --2
-					tipo_pretratamiento := tipo_pretratamiento2; --3
-					tipo_operacion := tipo_operacion2; --4
-					paso_rejas := paso_rejas2; --5
-					limpieza_pretratamiento := limpieza_pretratamiento2; --6
-	
-					proyecto_informado_siss = proyecto_informado_siss2;	
-					ownedby  := ownedby2;
-				ELSE
-					correlativo := 3;										
-				END IF;
-				IF correlativo = 3 THEN
-					
-					codigo_sistema_siss2 :=  punto.codigo_sistema_siss;
-					codigo_obra2 := punto.codigo_obra; --1	
-					identificador_unidad2 := punto.identificador_unidad; --2
-					tipo_pretratamiento2 := punto.tipo_pretratamiento; --3
-					tipo_operacion2 := punto.tipo_operacion; --4
-					paso_rejas2 := punto.paso_rejas; --5
-					limpieza_pretratamiento2 := punto.limpieza_pretratamiento; --6
-
-					objectid2 = punto.objectid;			
-					gdb_archive_oid2 := punto.gdb_archive_oid;
-					gdb_from_date2 := punto.gdb_from_date;
-					proyecto_informado_siss2 := punto.proyecto_informado_siss;	
-					ownedby2  := punto.ownedby;
-					
-				END IF;	
+				ownedby2  := punto.ownedby;	
 			END IF;
-			IF correlativo = 2 THEN	
-				
-				codigo_sistema_siss := codigo_sistema_siss2;
-				codigo_obra := codigo_obra2; --1	
-				identificador_unidad := identificador_unidad2; --2
-				tipo_pretratamiento := tipo_pretratamiento2; --3
-				tipo_operacion := tipo_operacion2; --4
-				paso_rejas := paso_rejas2; --5
-				limpieza_pretratamiento := limpieza_pretratamiento2; --6
-				
-				proyecto_informado_siss = proyecto_informado_siss2;	
-				ownedby  := ownedby2;
-				
-			END IF;				
+			--resultado := resultado || '_IF4_cuenta_' || cuenta || '_cantidad_' || cantidad;			
+		ELSIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN		
 
-			IF objectid::integer <> punto.objectid::integer THEN
-				correlativo := 2;
-				
+			IF ownedby = 103 THEN rut = '76833300';
+			ELSIF ownedby = 104 THEN rut = '96963440';
+			ELSE rut = NULL;
+			END IF;
+
+			IF  COALESCE(tipo_pretratamiento,'0')  <>   COALESCE(tipo_pretratamiento2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1202, codigo_obra2, identificador_unidad2::integer, 3, tipo_pretratamiento::text, tipo_pretratamiento2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(tipo_operacion,'0')  <>   COALESCE(tipo_operacion2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1202, codigo_obra2, identificador_unidad2::integer, 4, tipo_operacion::text, tipo_operacion2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(paso_rejas,'0')  <>  COALESCE(paso_rejas2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1202, codigo_obra2, identificador_unidad2::integer, 5, paso_rejas::text, paso_rejas2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;						
+			IF  COALESCE(limpieza_pretratamiento,'0')  <>  COALESCE(limpieza_pretratamiento2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1202, codigo_obra2, identificador_unidad2::integer, 6, limpieza_pretratamiento::text, limpieza_pretratamiento2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+
+			IF objectid = punto.objectid THEN
+
+				estado := 3;
+
+			ELSE
+				estado := 1;
+
 				codigo_sistema_siss :=  punto.codigo_sistema_siss;
 				codigo_obra := punto.codigo_obra; --1	
 				identificador_unidad := punto.identificador_unidad; --2
@@ -206,38 +221,32 @@ if cantidad > 0 then
 				objectid = punto.objectid;
 				gdb_archive_oid = punto.gdb_archive_oid;			
 				gdb_from_date := punto.gdb_from_date;
-				proyecto_informado_siss := punto.proyecto_informado_siss;	
+				proyecto_informado_siss := punto.proyecto_informado_siss;
 				ownedby  := punto.ownedby;
-				
-			END IF;
-			IF  cuenta2 = cantidad AND punto.gdb_from_date >= fecha_inicio AND punto.gdb_from_date <= fecha_fin AND punto.proyecto_informado_siss is not null THEN
-				IF ownedby = 103 THEN rut = '76833300';
-				ELSIF ownedby = 104 THEN rut = '96963440';
-				ELSE rut = NULL;
-				END IF;			
-				
-				IF  COALESCE(tipo_pretratamiento,'0')  <>  COALESCE(punto.tipo_pretratamiento,'0') THEN
-					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad, 3, tipo_pretratamiento::text, punto.tipo_pretratamiento::text, punto.gdb_from_date, punto.gdb_archive_oid);
-				END IF;	
-				IF  COALESCE(tipo_operacion,'0')  <>  COALESCE(punto.tipo_operacion,'0') THEN
-					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad, 4, tipo_operacion::text, punto.tipo_operacion::text, punto.gdb_from_date, punto.gdb_archive_oid);
-				END IF;	
-				IF  COALESCE(paso_rejas,'0')  <>  COALESCE(punto.paso_rejas,'0') THEN
-					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad, 5, paso_rejas::text, round(punto.paso_rejas,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
-				END IF;		
-				IF  COALESCE(limpieza_pretratamiento,'0')  <>  COALESCE(punto.limpieza_pretratamiento,'0') THEN
-					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad, 6, limpieza_pretratamiento::text, punto.limpieza_pretratamiento::text, punto.gdb_from_date, punto.gdb_archive_oid);
-				END IF;							
-			END IF;
-		END IF;
+					
+			END IF;	
+			--resultado := resultado || '_IF5_oid2_' || gdb_archive_oid2;			
+		ELSIF (estado = 3 or estado = 1) AND punto.objectid <> objectid THEN
+			estado := 1;				
+			codigo_sistema_siss :=  punto.codigo_sistema_siss;
+			codigo_obra := punto.codigo_obra; --1	
+			identificador_unidad := punto.identificador_unidad; --2
+			tipo_pretratamiento := punto.tipo_pretratamiento; --3
+			tipo_operacion := punto.tipo_operacion; --4
+			paso_rejas := punto.paso_rejas; --5
+			limpieza_pretratamiento := punto.limpieza_pretratamiento; --6
+
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby  := punto.ownedby;
+			--resultado := resultado || '_IF6_';				
+		END IF;				
 	END LOOP;
 END IF;			
 
- resultado := cantidad::text;
+ --resultado := cantidad::text;
  RETURN resultado;
 END;
 $BODY$;

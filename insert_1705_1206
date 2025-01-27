@@ -62,7 +62,8 @@ DECLARE
 	cantidad integer;
 	correlativo smallint;
 	resultado character varying(100);
-	cuenta2 integer;	
+	estado smallint;
+	cuenta integer;	
 BEGIN
 
 codigoproceso :=  5;
@@ -70,9 +71,9 @@ codigoarchivo := 1705;
 --rut := '96963440';
 periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
 resultado   := '';
-correlativo := 1;
+estado := 0;
 cantidad := 0;
-cuenta2 := 0;
+cuenta := 0;
 
 --REFRESH MATERIALIZED VIEW owd."vmt_1705_SEWER_DEVICE";
 --DELETE FROM owd.tabla_1705 where fecha >= fecha_inicio AND fecha <= fecha_fin;
@@ -81,20 +82,22 @@ cuenta2 := 0;
 
 SELECT count(*) into cantidad
 	FROM owd.vmt_1705_as_linea_lodos_ptas vmt WHERE vmt.objectid  in 
-	(select distinct vmt_1.objectid from owd.vmt_1705_as_linea_lodos_ptas vmt_1 WHERE vmt_1.created_date < fecha_inicio);
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_linea_lodos_ptas vmt_1 WHERE vmt_1.created_date < fecha_inicio
+	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin);
 	 
 if cantidad > 0 then
    	FOR punto IN SELECT * 
 	FROM owd.vmt_1705_as_linea_lodos_ptas vmt WHERE vmt.objectid  in 
-	(select distinct vmt_1.objectid from owd.vmt_1705_as_linea_lodos_ptas vmt_1 WHERE vmt_1.created_date < fecha_inicio) 
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_linea_lodos_ptas vmt_1 WHERE vmt_1.created_date < fecha_inicio
+	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin) 
 	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date LOOP
 	
-		cuenta2 := cuenta2 + 1;	 
+		cuenta := cuenta + 1;
+		
+		IF cuenta = 1 THEN
 
-	 
-		IF correlativo = 1 then
-			correlativo := correlativo + 1;
-			
+			estado := 1;
+		
 			codigo_obra := punto.codigo_obra; --1	
 			espesador := punto.espesador; --2
 			digestor := punto.digestor; --3
@@ -117,198 +120,59 @@ if cantidad > 0 then
 			ownedby  := punto.ownedby;
 
 			
-		ELSIF correlativo > 1 THEN
-			IF correlativo = 2 THEN
+		ELSIF objectid = punto.objectid AND punto.gdb_from_date < fecha_inicio AND estado = 1 THEN
+
+			codigo_obra := punto.codigo_obra; --1	
+			espesador := punto.espesador; --2
+			digestor := punto.digestor; --3
+			uso_gas_digestor_anaerobio := punto.uso_gas_digestor_anaerobio; --4
+			deshidratacion := punto.deshidratacion; --5
+			estabilizador_cal := punto.estabilizador_cal; --6
+			uso_polimero := punto.uso_polimero; --7
+			lechos_secado := punto.lechos_secado; --8
+			area_lechos_secado := punto.area_lechos_secado; --9
+			canchas_secado := punto.canchas_secado; --10
+			area_canchas_secado := punto.area_canchas_secado; --11
+			disposicion_final := punto.disposicion_final; --12
+			otra_disposicion_final := punto.otra_disposicion_final; --13
+			nombre_vertedero := punto.nombre_vertedero; --14
 			
-				codigo_obra2 := punto.codigo_obra; --1	
-				espesador2 := punto.espesador; --2
-				digestor2 := punto.digestor; --3
-				uso_gas_digestor_anaerobio2 := punto.uso_gas_digestor_anaerobio; --4
-				deshidratacion2 := punto.deshidratacion; --5
-				estabilizador_cal2 := punto.estabilizador_cal; --6
-				uso_polimero2 := punto.uso_polimero; --7
-				lechos_secado2 := punto.lechos_secado; --8
-				area_lechos_secado2 := punto.area_lechos_secado; --9
-				canchas_secado2 := punto.canchas_secado; --10
-				area_canchas_secado2 := punto.area_canchas_secado; --11
-				disposicion_final2 := punto.disposicion_final; --12
-				otra_disposicion_final2 := punto.otra_disposicion_final; --13
-				nombre_vertedero2 := punto.nombre_vertedero; --14
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby  := punto.ownedby;
+		
+		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 AND objectid = punto.objectid THEN
 
-				objectid2 = punto.objectid;			
-				gdb_archive_oid2 := punto.gdb_archive_oid;
-				gdb_from_date2 := punto.gdb_from_date;
-				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
-				ownedby2  := punto.ownedby;
-			END IF;			
+			estado := 2;	
 			
-			IF objectid = objectid2 THEN
-				IF COALESCE(proyecto_informado_siss,'Unknown')  <> COALESCE(proyecto_informado_siss2,'Unknown')  AND correlativo = 2 THEN
-					correlativo := correlativo + 1;
-				
-				ELSIF (COALESCE(proyecto_informado_siss2,'Unknown')  <> COALESCE(punto.proyecto_informado_siss,'Unknown')  AND correlativo = 3) OR objectid <> punto.objectid THEN
-					correlativo := correlativo + 1;
-				END IF;	
-				IF correlativo = 4  AND gdb_from_date2 >= fecha_inicio AND gdb_from_date2 <= fecha_fin AND proyecto_informado_siss2 is not null  THEN		
-					IF ownedby = 103 THEN rut = '76833300';
-					ELSIF ownedby = 104 THEN rut = '96963440';
-					ELSE rut = NULL;
-					END IF;
-					
-					/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(codigo_obra2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 1, codigo_obra::text, codigo_obra2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	*/
-					IF  COALESCE(espesador,'0')  <>  COALESCE(espesador2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 2, espesador::text, espesador2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(digestor,'0')  <>   COALESCE(digestor2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 3, digestor::text, digestor2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(uso_gas_digestor_anaerobio,'0')  <>   COALESCE(uso_gas_digestor_anaerobio2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 4, uso_gas_digestor_anaerobio::text, uso_gas_digestor_anaerobio2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;			
-					IF  COALESCE(deshidratacion,'0')  <>   COALESCE(deshidratacion2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 5, deshidratacion::text, deshidratacion2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(estabilizador_cal,'0')  <>   COALESCE(estabilizador_cal2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 6, estabilizador_cal::text, estabilizador_cal2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(uso_polimero,'0')  <>   COALESCE(uso_polimero2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 7, uso_polimero::text, uso_polimero2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(lechos_secado,'0')  <>   COALESCE(lechos_secado2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 8, lechos_secado::text, lechos_secado2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(area_lechos_secado,'0')  <>   COALESCE(area_lechos_secado2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 9, area_lechos_secado::text, area_lechos_secado2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(canchas_secado,'0')  <>   COALESCE(canchas_secado2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 10, canchas_secado::text, canchas_secado2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(area_canchas_secado,'0')  <>   COALESCE(area_canchas_secado2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 11, area_canchas_secado::text, area_canchas_secado2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(disposicion_final,'0')  <>   COALESCE(disposicion_final2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 12, disposicion_final::text, disposicion_final2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(otra_disposicion_final,'0')  <>   COALESCE(otra_disposicion_final2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 13, otra_disposicion_final::text, otra_disposicion_final2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(nombre_vertedero,'0')  <>   COALESCE(nombre_vertedero2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 14, nombre_vertedero::text, nombre_vertedero2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
+			codigo_obra2 := punto.codigo_obra; --1	
+			espesador2 := punto.espesador; --2
+			digestor2 := punto.digestor; --3
+			uso_gas_digestor_anaerobio2 := punto.uso_gas_digestor_anaerobio; --4
+			deshidratacion2 := punto.deshidratacion; --5
+			estabilizador_cal2 := punto.estabilizador_cal; --6
+			uso_polimero2 := punto.uso_polimero; --7
+			lechos_secado2 := punto.lechos_secado; --8
+			area_lechos_secado2 := punto.area_lechos_secado; --9
+			canchas_secado2 := punto.canchas_secado; --10
+			area_canchas_secado2 := punto.area_canchas_secado; --11
+			disposicion_final2 := punto.disposicion_final; --12
+			otra_disposicion_final2 := punto.otra_disposicion_final; --13
+			nombre_vertedero2 := punto.nombre_vertedero; --14
 
-					
-					correlativo := 3;
-					
-					codigo_obra := codigo_obra2; --1	
-					espesador := espesador2; --2
-					digestor := digestor2; --3
-					uso_gas_digestor_anaerobio := uso_gas_digestor_anaerobio2; --4
-					deshidratacion := deshidratacion2; --5
-					estabilizador_cal := estabilizador_cal2; --6
-					uso_polimero := uso_polimero2; --7
-					lechos_secado := lechos_secado2; --8
-					area_lechos_secado := area_lechos_secado2; --9
-					canchas_secado := canchas_secado2; --10
-					area_canchas_secado := area_canchas_secado2; --11
-					disposicion_final := disposicion_final2; --12
-					otra_disposicion_final := otra_disposicion_final2; --13
-					nombre_vertedero := nombre_vertedero2; --14
-	
-					proyecto_informado_siss = proyecto_informado_siss2;
-					ownedby  := ownedby2;
-				ELSE
-					correlativo := 3;										
-				END IF;
-				IF correlativo = 3 THEN
-				
-					codigo_obra2 := punto.codigo_obra; --1	
-					espesador2 := punto.espesador; --2
-					digestor2 := punto.digestor; --3
-					uso_gas_digestor_anaerobio2 := punto.uso_gas_digestor_anaerobio; --4
-					deshidratacion2 := punto.deshidratacion; --5
-					estabilizador_cal2 := punto.estabilizador_cal; --6
-					uso_polimero2 := punto.uso_polimero; --7
-					lechos_secado2 := punto.lechos_secado; --8
-					area_lechos_secado2 := punto.area_lechos_secado; --9
-					canchas_secado2 := punto.canchas_secado; --10
-					area_canchas_secado2 := punto.area_canchas_secado; --11
-					disposicion_final2 := punto.disposicion_final; --12
-					otra_disposicion_final2 := punto.otra_disposicion_final; --13
-					nombre_vertedero2 := punto.nombre_vertedero; --14
+			objectid2 = punto.objectid;			
+			gdb_archive_oid2 := punto.gdb_archive_oid;
+			gdb_from_date2 := punto.gdb_from_date;
+			proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+			ownedby2  := punto.ownedby;
+		END IF;
 
-					objectid2 = punto.objectid;			
-					gdb_archive_oid2 := punto.gdb_archive_oid;
-					gdb_from_date2 := punto.gdb_from_date;
-					proyecto_informado_siss2 := punto.proyecto_informado_siss;	
-					ownedby2  := punto.ownedby;
-					
-				END IF;	
-			END IF;
-			IF correlativo = 2 THEN	
+		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN
 			
-				codigo_obra := codigo_obra2; --1	
-				espesador := espesador2; --2
-				digestor := digestor2; --3
-				uso_gas_digestor_anaerobio := uso_gas_digestor_anaerobio2; --4
-				deshidratacion := deshidratacion2; --5
-				estabilizador_cal := estabilizador_cal2; --6
-				uso_polimero := uso_polimero2; --7
-				lechos_secado := lechos_secado2; --8
-				area_lechos_secado := area_lechos_secado2; --9
-				canchas_secado := canchas_secado2; --10
-				area_canchas_secado := area_canchas_secado2; --11
-				disposicion_final := disposicion_final2; --12
-				otra_disposicion_final := otra_disposicion_final2; --13
-				nombre_vertedero := nombre_vertedero2; --14
-				
-				proyecto_informado_siss = proyecto_informado_siss2;	
-				ownedby  := ownedby2;
-				
-			END IF;				
-
-			IF objectid <> punto.objectid THEN
-				correlativo := 2;
-				
-				codigo_obra := punto.codigo_obra; --1	
-				espesador := punto.espesador; --2
-				digestor := punto.digestor; --3
-				uso_gas_digestor_anaerobio := punto.uso_gas_digestor_anaerobio; --4
-				deshidratacion := punto.deshidratacion; --5
-				estabilizador_cal := punto.estabilizador_cal; --6
-				uso_polimero := punto.uso_polimero; --7
-				lechos_secado := punto.lechos_secado; --8
-				area_lechos_secado := punto.area_lechos_secado; --9
-				canchas_secado := punto.canchas_secado; --10
-				area_canchas_secado := punto.area_canchas_secado; --11
-				disposicion_final := punto.disposicion_final; --12
-				otra_disposicion_final := punto.otra_disposicion_final; --13
-				nombre_vertedero := punto.nombre_vertedero; --14
-
-				objectid = punto.objectid;
-				gdb_archive_oid = punto.gdb_archive_oid;			
-				gdb_from_date := punto.gdb_from_date;
-				proyecto_informado_siss := punto.proyecto_informado_siss;	
-				ownedby  := punto.ownedby;
-				
-			END IF;
-			IF  cuenta2 = cantidad AND punto.gdb_from_date >= fecha_inicio AND punto.gdb_from_date <= fecha_fin AND punto.proyecto_informado_siss is not null THEN
-
+			IF cuenta = cantidad THEN
+			
 				IF ownedby = 103 THEN rut = '76833300';
 				ELSIF ownedby = 104 THEN rut = '96963440';
 				ELSE rut = NULL;
@@ -369,7 +233,148 @@ if cantidad > 0 then
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1206, punto.codigo_obra, '0', 14, nombre_vertedero::text, punto.nombre_vertedero::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;
+			ELSE
+				codigo_obra2 := punto.codigo_obra; --1	
+				espesador2 := punto.espesador; --2
+				digestor2 := punto.digestor; --3
+				uso_gas_digestor_anaerobio2 := punto.uso_gas_digestor_anaerobio; --4
+				deshidratacion2 := punto.deshidratacion; --5
+				estabilizador_cal2 := punto.estabilizador_cal; --6
+				uso_polimero2 := punto.uso_polimero; --7
+				lechos_secado2 := punto.lechos_secado; --8
+				area_lechos_secado2 := punto.area_lechos_secado; --9
+				canchas_secado2 := punto.canchas_secado; --10
+				area_canchas_secado2 := punto.area_canchas_secado; --11
+				disposicion_final2 := punto.disposicion_final; --12
+				otra_disposicion_final2 := punto.otra_disposicion_final; --13
+				nombre_vertedero2 := punto.nombre_vertedero; --14
+
+				objectid2 = punto.objectid;			
+				gdb_archive_oid2 := punto.gdb_archive_oid;
+				gdb_from_date2 := punto.gdb_from_date;
+				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+				ownedby2  := punto.ownedby;			
+				
+			END If;
+				
+		ELSIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN						
+				
+			IF ownedby = 103 THEN rut = '76833300';
+			ELSIF ownedby = 104 THEN rut = '96963440';
+			ELSE rut = NULL;
 			END IF;
+
+			/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(codigo_obra2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 1, codigo_obra::text, codigo_obra2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	*/
+			IF  COALESCE(espesador,'0')  <>  COALESCE(espesador2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 2, espesador::text, espesador2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(digestor,'0')  <>   COALESCE(digestor2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 3, digestor::text, digestor2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(uso_gas_digestor_anaerobio,'0')  <>   COALESCE(uso_gas_digestor_anaerobio2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 4, uso_gas_digestor_anaerobio::text, uso_gas_digestor_anaerobio2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;			
+			IF  COALESCE(deshidratacion,'0')  <>   COALESCE(deshidratacion2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 5, deshidratacion::text, deshidratacion2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(estabilizador_cal,'0')  <>   COALESCE(estabilizador_cal2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 6, estabilizador_cal::text, estabilizador_cal2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(uso_polimero,'0')  <>   COALESCE(uso_polimero2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 7, uso_polimero::text, uso_polimero2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(lechos_secado,'0')  <>   COALESCE(lechos_secado2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 8, lechos_secado::text, lechos_secado2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(area_lechos_secado,'0')  <>   COALESCE(area_lechos_secado2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 9, area_lechos_secado::text, area_lechos_secado2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(canchas_secado,'0')  <>   COALESCE(canchas_secado2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 10, canchas_secado::text, canchas_secado2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(area_canchas_secado,'0')  <>   COALESCE(area_canchas_secado2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 11, area_canchas_secado::text, area_canchas_secado2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(disposicion_final,'0')  <>   COALESCE(disposicion_final2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 12, disposicion_final::text, disposicion_final2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(otra_disposicion_final,'0')  <>   COALESCE(otra_disposicion_final2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 13, otra_disposicion_final::text, otra_disposicion_final2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(nombre_vertedero,'0')  <>   COALESCE(nombre_vertedero2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1206, codigo_obra2, '0', 14, nombre_vertedero::text, nombre_vertedero2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;					
+				
+			IF objectid = punto.objectid THEN
+
+				estado := 3;
+
+			ELSE
+				estado := 1;
+				
+				codigo_obra := punto.codigo_obra; --1	
+				espesador := punto.espesador; --2
+				digestor := punto.digestor; --3
+				uso_gas_digestor_anaerobio := punto.uso_gas_digestor_anaerobio; --4
+				deshidratacion := punto.deshidratacion; --5
+				estabilizador_cal := punto.estabilizador_cal; --6
+				uso_polimero := punto.uso_polimero; --7
+				lechos_secado := punto.lechos_secado; --8
+				area_lechos_secado := punto.area_lechos_secado; --9
+				canchas_secado := punto.canchas_secado; --10
+				area_canchas_secado := punto.area_canchas_secado; --11
+				disposicion_final := punto.disposicion_final; --12
+				otra_disposicion_final := punto.otra_disposicion_final; --13
+				nombre_vertedero := punto.nombre_vertedero; --14
+
+				objectid = punto.objectid;
+				gdb_archive_oid = punto.gdb_archive_oid;			
+				gdb_from_date := punto.gdb_from_date;
+				proyecto_informado_siss := punto.proyecto_informado_siss;
+				ownedby  := punto.ownedby;			
+			END IF;
+			
+		ELSIF (estado = 3 or estado = 1) AND punto.objectid <> objectid THEN			
+				
+			estado := 1;
+				
+			codigo_obra := punto.codigo_obra; --1	
+			espesador := punto.espesador; --2
+			digestor := punto.digestor; --3
+			uso_gas_digestor_anaerobio := punto.uso_gas_digestor_anaerobio; --4
+			deshidratacion := punto.deshidratacion; --5
+			estabilizador_cal := punto.estabilizador_cal; --6
+			uso_polimero := punto.uso_polimero; --7
+			lechos_secado := punto.lechos_secado; --8
+			area_lechos_secado := punto.area_lechos_secado; --9
+			canchas_secado := punto.canchas_secado; --10
+			area_canchas_secado := punto.area_canchas_secado; --11
+			disposicion_final := punto.disposicion_final; --12
+			otra_disposicion_final := punto.otra_disposicion_final; --13
+			nombre_vertedero := punto.nombre_vertedero; --14
+
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby  := punto.ownedby;						
+				
 		END IF;
 	END LOOP;
 END IF;			

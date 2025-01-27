@@ -59,9 +59,9 @@ DECLARE
 	proyecto_informado_siss character varying(100);
 	proyecto_informado_siss2 character varying(100);
 	cantidad integer;
-	correlativo smallint;
+	estado smallint;
 	resultado character varying(100);
-	cuenta2 integer;	
+	cuenta integer;	
 BEGIN
 
 codigoproceso :=  5;
@@ -70,9 +70,9 @@ codigoarchivo := 1705;
 periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
 
 resultado   := '';
-correlativo := 1;
+estado :=0;
 cantidad := 0;
-cuenta2 := 0;
+cuenta := 0;
 
 --REFRESH MATERIALIZED VIEW owd."vmt_1705_SEWER_DEVICE";
 --DELETE FROM owd.tabla_1705 where fecha >= fecha_inicio AND fecha <= fecha_fin;
@@ -80,19 +80,21 @@ cuenta2 := 0;
 -- WHERE sl.assetgroup = 7 AND sl.assettype = 402;	  
 SELECT count(*) into cantidad
 	FROM owd.vmt_1705_as_contrololores vmt WHERE vmt.objectid in 
-	(select distinct vmt_1.objectid from owd.vmt_1705_as_contrololores vmt_1 WHERE vmt_1.created_date < fecha_inicio);
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_contrololores vmt_1 WHERE vmt_1.created_date < fecha_inicio
+	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin);
 	 
 if cantidad > 0 then
    	FOR punto IN SELECT * 
 	FROM owd.vmt_1705_as_contrololores vmt WHERE vmt.objectid  in 
-	(select distinct vmt_1.objectid from owd.vmt_1705_as_contrololores vmt_1 WHERE vmt_1.created_date < fecha_inicio) 
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_contrololores vmt_1 WHERE vmt_1.created_date < fecha_inicio
+	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin) 
 	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date LOOP
 	
-		cuenta2 := cuenta2 + 1;	 
+		cuenta := cuenta + 1;
 
-	 
-		IF correlativo = 1 then
-			correlativo := correlativo + 1;
+		IF cuenta = 1 THEN
+
+			estado := 1;
 			
 			codigo_sistema_siss := punto.codigo_sistema_siss;
 			codigo_obra := punto.codigo_obra; --1	
@@ -114,175 +116,55 @@ if cantidad > 0 then
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby := punto.ownedby;
 			
-		ELSIF correlativo > 1 THEN
-			IF correlativo = 2 THEN
+		ELSIF objectid = punto.objectid AND punto.gdb_from_date < fecha_inicio AND estado = 1 THEN
+
+			codigo_sistema_siss := punto.codigo_sistema_siss;
+			codigo_obra := punto.codigo_obra; --1	
+			mitigacion_olores := punto.mitigacion_olores; --2
+			sistema_mitigacion := punto.sistema_mitigacion; --3
+			otro_sistema_mitigacion := punto.otro_sistema_mitigacion; --4
+			potencia_total_instalada := punto.potencia_total_instalada; --5
+			tablero_automatico := punto.tablero_automatico; --6
+			aforo_afluente := punto.aforo_afluente; --7
+			aforo_efluente := punto.aforo_efluente; --8
+			bypass_general := punto.bypass_general; --9
+			bypass_pretratamiento := punto.bypass_pretratamiento; --10
+			bypass_tratamiento_biologico := punto.bypass_tratamiento_biologico; --11
 			
-				codigo_sistema_siss2 := punto.codigo_sistema_siss; 
-				codigo_obra2 := punto.codigo_obra; --1	
-				mitigacion_olores2 := punto.mitigacion_olores; --2
-				sistema_mitigacion2 := punto.sistema_mitigacion; --3
-				otro_sistema_mitigacion2 := punto.otro_sistema_mitigacion; --4
-				potencia_total_instalada2 := punto.potencia_total_instalada; --5
-				tablero_automatico2 := punto.tablero_automatico; --6
-				aforo_afluente2 := punto.aforo_afluente; --7
-				aforo_efluente2 := punto.aforo_efluente; --8
-				bypass_general2 := punto.bypass_general; --9
-				bypass_pretratamiento2 := punto.bypass_pretratamiento; --10
-				bypass_tratamiento_biologico2 := punto.bypass_tratamiento_biologico; --11
+			--assetid = punto.assetid;
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby := punto.ownedby;
 
-				objectid2 = punto.objectid;			
-				gdb_archive_oid2 := punto.gdb_archive_oid;
-				gdb_from_date2 := punto.gdb_from_date;
-				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
-				ownedby2 := punto.ownedby;
-				
-			END IF;			
+		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 AND objectid = punto.objectid THEN
+
+			estado := 2;
+
+			codigo_sistema_siss2 := punto.codigo_sistema_siss; 
+			codigo_obra2 := punto.codigo_obra; --1	
+			mitigacion_olores2 := punto.mitigacion_olores; --2
+			sistema_mitigacion2 := punto.sistema_mitigacion; --3
+			otro_sistema_mitigacion2 := punto.otro_sistema_mitigacion; --4
+			potencia_total_instalada2 := punto.potencia_total_instalada; --5
+			tablero_automatico2 := punto.tablero_automatico; --6
+			aforo_afluente2 := punto.aforo_afluente; --7
+			aforo_efluente2 := punto.aforo_efluente; --8
+			bypass_general2 := punto.bypass_general; --9
+			bypass_pretratamiento2 := punto.bypass_pretratamiento; --10
+			bypass_tratamiento_biologico2 := punto.bypass_tratamiento_biologico; --11
+
+			objectid2 = punto.objectid;			
+			gdb_archive_oid2 := punto.gdb_archive_oid;
+			gdb_from_date2 := punto.gdb_from_date;
+			proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+			ownedby2 := punto.ownedby;
+		END IF;
+		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN
 			
-			IF objectid = objectid2 THEN
-				IF COALESCE(proyecto_informado_siss,'Unknown')  <> COALESCE(proyecto_informado_siss2,'Unknown')  AND correlativo = 2 THEN
-					correlativo := correlativo + 1;
-				
-				ELSIF (COALESCE(proyecto_informado_siss2,'Unknown')  <> COALESCE(punto.proyecto_informado_siss,'Unknown')  AND correlativo = 3) OR objectid <> punto.objectid THEN
-					correlativo := correlativo + 1;
-				END IF;	
-				IF correlativo = 4  AND gdb_from_date2 >= fecha_inicio AND gdb_from_date2 <= fecha_fin AND proyecto_informado_siss2 is not null  THEN			
-					IF ownedby = 103 THEN rut = '76833300';
-					ELSIF ownedby = 104 THEN rut = '96963440';
-					ELSE rut = NULL;
-					END IF;
-					/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(codigo_obra2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 1, codigo_obra::text, codigo_obra2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	*/
-					IF  COALESCE(mitigacion_olores,'0')  <>  COALESCE(mitigacion_olores2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 2, mitigacion_olores::text, mitigacion_olores2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(sistema_mitigacion,'0')  <>   COALESCE(sistema_mitigacion2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 3, sistema_mitigacion::text, sistema_mitigacion2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(otro_sistema_mitigacion,'0')  <>   COALESCE(otro_sistema_mitigacion2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 4, otro_sistema_mitigacion::text, otro_sistema_mitigacion2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;		
-					IF  COALESCE(potencia_total_instalada,'0')  <>   COALESCE(potencia_total_instalada2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 5, potencia_total_instalada::text, potencia_total_instalada2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(tablero_automatico,'0')  <>   COALESCE(tablero_automatico2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 6, tablero_automatico::text, tablero_automatico2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(aforo_afluente,'0')  <>   COALESCE(aforo_afluente2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 7, aforo_afluente::text, aforo_afluente2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(aforo_efluente,'0')  <>   COALESCE(aforo_efluente2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 8, aforo_efluente::text, aforo_efluente2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(bypass_general,'0')  <>   COALESCE(bypass_general2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 9, bypass_general::text, bypass_general2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(bypass_pretratamiento,'0')  <>   COALESCE(bypass_pretratamiento2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 10, bypass_pretratamiento::text, bypass_pretratamiento2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(bypass_tratamiento_biologico,'0')  <>   COALESCE(bypass_tratamiento_biologico2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 11, bypass_tratamiento_biologico::text, bypass_tratamiento_biologico2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					
-					correlativo := 3;
-					
-					codigo_sistema_siss := codigo_sistema_siss2; --1
-					codigo_obra := codigo_obra2; --1	
-					mitigacion_olores := mitigacion_olores2; --2
-					sistema_mitigacion := sistema_mitigacion2; --3
-					otro_sistema_mitigacion := otro_sistema_mitigacion2; --4
-					potencia_total_instalada := potencia_total_instalada2; --5
-					tablero_automatico := tablero_automatico2; --6
-					aforo_afluente := aforo_afluente2; --7
-					aforo_efluente := aforo_efluente2; --8
-					bypass_general := bypass_general2; --9
-					bypass_pretratamiento := bypass_pretratamiento2; --10
-					bypass_tratamiento_biologico := bypass_tratamiento_biologico2; --11
-	
-					proyecto_informado_siss = proyecto_informado_siss2;	
-					ownedby := ownedby2;
-				ELSE
-					correlativo := 3;										
-				END IF;
-				IF correlativo = 3 THEN
-				
-					codigo_sistema_siss2 := punto.codigo_sistema_siss;
-					codigo_obra2 := punto.codigo_obra; --1	
-					mitigacion_olores2 := punto.mitigacion_olores; --2
-					sistema_mitigacion2 := punto.sistema_mitigacion; --3
-					otro_sistema_mitigacion2 := punto.otro_sistema_mitigacion; --4
-					potencia_total_instalada2 := punto.potencia_total_instalada; --5
-					tablero_automatico2 := punto.tablero_automatico; --6
-					aforo_afluente2 := punto.aforo_afluente; --7
-					aforo_efluente2 := punto.aforo_efluente; --8
-					bypass_general2 := punto.bypass_general; --9
-					bypass_pretratamiento2 := punto.bypass_pretratamiento; --10
-					bypass_tratamiento_biologico2 := punto.bypass_tratamiento_biologico; --11
+			IF cuenta = cantidad THEN
 
-					objectid2 = punto.objectid;			
-					gdb_archive_oid2 := punto.gdb_archive_oid;
-					gdb_from_date2 := punto.gdb_from_date;
-					proyecto_informado_siss2 := punto.proyecto_informado_siss;	
-					ownedby2 := punto.ownedby;
-					
-				END IF;	
-			END IF;
-			IF correlativo = 2 THEN	
-				
-				codigo_sistema_siss := codigo_sistema_siss2;
-				codigo_obra := codigo_obra2; --1	
-				mitigacion_olores := mitigacion_olores2; --2
-				sistema_mitigacion := sistema_mitigacion2; --3
-				otro_sistema_mitigacion := otro_sistema_mitigacion2; --4
-				potencia_total_instalada := potencia_total_instalada2; --5
-				tablero_automatico := tablero_automatico2; --6
-				aforo_afluente := aforo_afluente2; --7
-				aforo_efluente := aforo_efluente2; --8
-				bypass_general := bypass_general2; --9
-				bypass_pretratamiento := bypass_pretratamiento2; --10
-				bypass_tratamiento_biologico := bypass_tratamiento_biologico2; --11
-				
-				proyecto_informado_siss = proyecto_informado_siss2;
-				ownedby := ownedby2;
-				
-			END IF;				
-
-			IF objectid <> punto.objectid THEN
-				correlativo := 2;
-				
-				codigo_sistema_siss := punto.codigo_sistema_siss;
-				codigo_obra := punto.codigo_obra; --1	
-				mitigacion_olores := punto.mitigacion_olores; --2
-				sistema_mitigacion := punto.sistema_mitigacion; --3
-				otro_sistema_mitigacion := punto.otro_sistema_mitigacion; --4
-				potencia_total_instalada := punto.potencia_total_instalada; --5
-				tablero_automatico := punto.tablero_automatico; --6
-				aforo_afluente := punto.aforo_afluente; --7
-				aforo_efluente := punto.aforo_efluente; --8
-				bypass_general := punto.bypass_general; --9
-				bypass_pretratamiento := punto.bypass_pretratamiento; --10
-				bypass_tratamiento_biologico := punto.bypass_tratamiento_biologico; --11
-
-				objectid = punto.objectid;
-				gdb_archive_oid = punto.gdb_archive_oid;			
-				gdb_from_date := punto.gdb_from_date;
-				proyecto_informado_siss := punto.proyecto_informado_siss;
-				ownedby := punto.ownedby;
-				
-				
-			END IF;
-			IF  cuenta2 = cantidad AND punto.gdb_from_date >= fecha_inicio AND punto.gdb_from_date <= fecha_fin AND punto.proyecto_informado_siss is not null THEN
 				IF ownedby = 103 THEN rut = '76833300';
 				ELSIF ownedby = 104 THEN rut = '96963440';
 				ELSE rut = NULL;
@@ -331,7 +213,133 @@ if cantidad > 0 then
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1209, punto.codigo_obra, '0', 11, bypass_tratamiento_biologico::text, punto.bypass_tratamiento_biologico::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;
+
+			ELSE
+
+				codigo_sistema_siss2 := punto.codigo_sistema_siss; 
+				codigo_obra2 := punto.codigo_obra; --1	
+				mitigacion_olores2 := punto.mitigacion_olores; --2
+				sistema_mitigacion2 := punto.sistema_mitigacion; --3
+				otro_sistema_mitigacion2 := punto.otro_sistema_mitigacion; --4
+				potencia_total_instalada2 := punto.potencia_total_instalada; --5
+				tablero_automatico2 := punto.tablero_automatico; --6
+				aforo_afluente2 := punto.aforo_afluente; --7
+				aforo_efluente2 := punto.aforo_efluente; --8
+				bypass_general2 := punto.bypass_general; --9
+				bypass_pretratamiento2 := punto.bypass_pretratamiento; --10
+				bypass_tratamiento_biologico2 := punto.bypass_tratamiento_biologico; --11
+
+				objectid2 = punto.objectid;			
+				gdb_archive_oid2 := punto.gdb_archive_oid;
+				gdb_from_date2 := punto.gdb_from_date;
+				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+				ownedby2 := punto.ownedby;
+				
 			END IF;
+
+		ELSIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN		
+
+			IF ownedby = 103 THEN rut = '76833300';
+			ELSIF ownedby = 104 THEN rut = '96963440';
+			ELSE rut = NULL;
+			END IF;
+			/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(codigo_obra2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 1, codigo_obra::text, codigo_obra2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	*/
+			IF  COALESCE(mitigacion_olores,'0')  <>  COALESCE(mitigacion_olores2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 2, mitigacion_olores::text, mitigacion_olores2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(sistema_mitigacion,'0')  <>   COALESCE(sistema_mitigacion2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 3, sistema_mitigacion::text, sistema_mitigacion2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(otro_sistema_mitigacion,'0')  <>   COALESCE(otro_sistema_mitigacion2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 4, otro_sistema_mitigacion::text, otro_sistema_mitigacion2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;		
+			IF  COALESCE(potencia_total_instalada,'0')  <>   COALESCE(potencia_total_instalada2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 5, potencia_total_instalada::text, potencia_total_instalada2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(tablero_automatico,'0')  <>   COALESCE(tablero_automatico2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 6, tablero_automatico::text, tablero_automatico2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(aforo_afluente,'0')  <>   COALESCE(aforo_afluente2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 7, aforo_afluente::text, aforo_afluente2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(aforo_efluente,'0')  <>   COALESCE(aforo_efluente2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 8, aforo_efluente::text, aforo_efluente2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(bypass_general,'0')  <>   COALESCE(bypass_general2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 9, bypass_general::text, bypass_general2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(bypass_pretratamiento,'0')  <>   COALESCE(bypass_pretratamiento2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 10, bypass_pretratamiento::text, bypass_pretratamiento2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(bypass_tratamiento_biologico,'0')  <>   COALESCE(bypass_tratamiento_biologico2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1209, codigo_obra2, '0', 11, bypass_tratamiento_biologico::text, bypass_tratamiento_biologico2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+					
+			IF objectid = punto.objectid THEN
+
+				estado := 3;
+
+			ELSE
+				estado := 1;
+				
+				codigo_sistema_siss := punto.codigo_sistema_siss;
+				codigo_obra := punto.codigo_obra; --1	
+				mitigacion_olores := punto.mitigacion_olores; --2
+				sistema_mitigacion := punto.sistema_mitigacion; --3
+				otro_sistema_mitigacion := punto.otro_sistema_mitigacion; --4
+				potencia_total_instalada := punto.potencia_total_instalada; --5
+				tablero_automatico := punto.tablero_automatico; --6
+				aforo_afluente := punto.aforo_afluente; --7
+				aforo_efluente := punto.aforo_efluente; --8
+				bypass_general := punto.bypass_general; --9
+				bypass_pretratamiento := punto.bypass_pretratamiento; --10
+				bypass_tratamiento_biologico := punto.bypass_tratamiento_biologico; --11
+
+				--assetid = punto.assetid;
+				objectid = punto.objectid;
+				gdb_archive_oid = punto.gdb_archive_oid;			
+				gdb_from_date := punto.gdb_from_date;
+				proyecto_informado_siss := punto.proyecto_informado_siss;
+				ownedby := punto.ownedby;
+			END IF;
+
+		ELSIF (estado = 3 or estado = 1) AND punto.objectid <> objectid THEN
+
+			estado:=1;
+
+			codigo_sistema_siss := punto.codigo_sistema_siss;
+			codigo_obra := punto.codigo_obra; --1	
+			mitigacion_olores := punto.mitigacion_olores; --2
+			sistema_mitigacion := punto.sistema_mitigacion; --3
+			otro_sistema_mitigacion := punto.otro_sistema_mitigacion; --4
+			potencia_total_instalada := punto.potencia_total_instalada; --5
+			tablero_automatico := punto.tablero_automatico; --6
+			aforo_afluente := punto.aforo_afluente; --7
+			aforo_efluente := punto.aforo_efluente; --8
+			bypass_general := punto.bypass_general; --9
+			bypass_pretratamiento := punto.bypass_pretratamiento; --10
+			bypass_tratamiento_biologico := punto.bypass_tratamiento_biologico; --11
+
+			--assetid = punto.assetid;
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby := punto.ownedby;
+				
 		END IF;
 	END LOOP;
 END IF;			

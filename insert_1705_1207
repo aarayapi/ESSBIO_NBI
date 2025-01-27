@@ -28,7 +28,7 @@ DECLARE
 	ownedby smallint;
 	
 	gdb_from_date  timestamp without time zone;
-	assetid character varying(100);
+	objectid integer;
 	
     codigo_obra2 character varying(255); --1	
     LongitudTotal2 numeric(38,2); --2 --revisar 
@@ -40,16 +40,16 @@ DECLARE
 	ownedby2 smallint;
 
 	gdb_from_date2  timestamp without time zone;
-	assetid2 character varying(100);
+	objectid2 integer;
 
 	gdb_archive_oid integer;
 	gdb_archive_oid2 integer;
 	proyecto_informado_siss character varying(100);
 	proyecto_informado_siss2 character varying(100);
 	cantidad integer;
-	correlativo smallint;
+	estado smallint;
 	resultado character varying(100);
-	cuenta2 integer;	
+	cuenta integer;	
 BEGIN
 
 codigoproceso :=  5;
@@ -57,9 +57,9 @@ codigoarchivo := 1705;
 --rut := '96963440';
 periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
 resultado   := '';
-correlativo := 1;
+estado := 0;
 cantidad := 0;
-cuenta2 := 0;
+cuenta := 0;
 
 --REFRESH MATERIALIZED VIEW owd."vmt_1705_SEWER_DEVICE";
 --DELETE FROM owd.tabla_1705 where fecha >= fecha_inicio AND fecha <= fecha_fin;
@@ -68,19 +68,22 @@ cuenta2 := 0;
 --vmt.assetgroup = 7 AND vmt.assettype = 401 OR vmt.assettype = 402
 SELECT count(*) into cantidad
 	FROM owd."vmt_1705_SEWER_DEVICE" vmt WHERE vmt.assetgroup = 7 AND vmt.assettype = 401 OR vmt.assettype = 402 AND vmt.objectid  in 
-	(select distinct vmt_1.objectid from owd."vmt_1705_SEWER_DEVICE" vmt_1 WHERE vmt_1.creationdate < fecha_inicio);
+	(select distinct vmt_1.objectid from owd."vmt_1705_SEWER_DEVICE" vmt_1 WHERE vmt_1.creationdate < fecha_inicio
+	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin);
 	 
 if cantidad > 0 then
    	FOR punto IN SELECT * 
 	FROM owd."vmt_1705_SEWER_DEVICE" vmt WHERE vmt.assetgroup = 7 AND vmt.assettype = 401 OR vmt.assettype = 402 AND vmt.objectid  in 
-	(select distinct vmt_1.objectid from owd."vmt_1705_SEWER_DEVICE" vmt_1 WHERE vmt_1.creationdate < fecha_inicio) 
+	(select distinct vmt_1.objectid from owd."vmt_1705_SEWER_DEVICE" vmt_1 WHERE vmt_1.creationdate < fecha_inicio
+	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin) 
 	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date LOOP
 	
-		cuenta2 := cuenta2 + 1;	 
+		cuenta := cuenta + 1;	 
 
 	 
-		IF correlativo = 1 then
-			correlativo := correlativo + 1;
+		IF cuenta = 1 THEN
+
+			estado := 1;
 			
 			codigo_obra := punto.codigo_obra; --1	
 			LongitudTotal := punto.LongitudTotal; --2 --revisar 
@@ -90,140 +93,49 @@ if cantidad > 0 then
 			numerotoberas := punto.numerotoberas; --6
 			anchozonaproteccionlitoral := punto.anchozonaproteccionlitoral; --7
 			
-			assetid = punto.assetid;
+			objectid = punto.objectid;
 			gdb_archive_oid = punto.gdb_archive_oid;			
 			gdb_from_date := punto.gdb_from_date;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby := punto.ownedby;
 			
-		ELSIF correlativo > 1 THEN
-			IF correlativo = 2 THEN
+		ELSIF objectid = punto.objectid AND punto.gdb_from_date < fecha_inicio AND estado = 1 THEN
+			codigo_obra := punto.codigo_obra; --1	
+			LongitudTotal := punto.LongitudTotal; --2 --revisar 
+			largodifusor := punto.largodifusor; --3
+			tipodifusor := punto.otipodifusor; --4
+			otrotipodifusor:= punto.otrotipodifusor; --5
+			numerotoberas := punto.numerotoberas; --6
+			anchozonaproteccionlitoral := punto.anchozonaproteccionlitoral; --7
 			
-				codigo_obra2 := punto.codigo_obra; --1	
-				LongitudTotal2 := punto.LongitudTotal; --2 --revisar 
-				largodifusor2 := punto.largodifusor; --3
-				tipodifusor2 := punto.otipodifusor; --4
-				otrotipodifusor2:= punto.otrotipodifusor; --5
-				numerotoberas2 := punto.numerotoberas; --6
-				anchozonaproteccionlitoral2 := punto.anchozonaproteccionlitoral; --7
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby := punto.ownedby;
+			
+		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 AND objectid = punto.objectid THEN
 
-				assetid2 = punto.assetid;			
-				gdb_archive_oid2 := punto.gdb_archive_oid;
-				gdb_from_date2 := punto.gdb_from_date;
-				proyecto_informado_siss2 := punto.proyecto_informado_siss;
-				ownedby2 := punto.ownedby;
-				
-			END IF;			
-			
-			IF assetid = assetid2 THEN
-				IF COALESCE(proyecto_informado_siss,'Unknown')  <> COALESCE(proyecto_informado_siss2,'Unknown')  AND correlativo = 2 THEN
-					correlativo := correlativo + 1;
-				
-				ELSIF (COALESCE(proyecto_informado_siss2,'Unknown')  <> COALESCE(punto.proyecto_informado_siss,'Unknown')  AND correlativo = 3) OR assetid <> punto.assetid THEN
-					correlativo := correlativo + 1;
-				END IF;	
-				IF correlativo = 4  AND gdb_from_date2 >= fecha_inicio AND gdb_from_date2 <= fecha_fin AND proyecto_informado_siss2 is not null  THEN			
-					IF ownedby = 103 THEN rut = '76833300';
-					ELSIF ownedby = 104 THEN rut = '96963440';
-					ELSE rut = NULL;
-					END IF;
-					/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(codigo_obra2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 1, codigo_obra::text, codigo_obra2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	*/
-					IF  COALESCE(LongitudTotal,'0')  <>  COALESCE(LongitudTotal2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 2, LongitudTotal::text, LongitudTotal2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(largodifusor,'0')  <>   COALESCE(largodifusor2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 3, largodifusor::text, largodifusor2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(tipodifusor,'0')  <>   COALESCE(tipodifusor2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 4, tipodifusor::text, tipodifusor2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;		
-					IF  COALESCE(otrotipodifusor,'0')  <>   COALESCE(otrotipodifusor2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 5, otrotipodifusor::text, otrotipodifusor2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(numerotoberas,'0')  <>   COALESCE(numerotoberas2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 6, numerotoberas::text, numerotoberas2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(anchozonaproteccionlitoral,'0')  <>   COALESCE(anchozonaproteccionlitoral2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 7, anchozonaproteccionlitoral::text, anchozonaproteccionlitoral2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
+			estado := 2;			
 					
-					correlativo := 3;
-					
-					codigo_obra := codigo_obra2; --1	
-					LongitudTotal := LongitudTotal2; --2 --revisar 
-					largodifusor := largodifusor2; --3
-					tipodifusor := otipodifusor2; --4
-					otrotipodifusor:= otrotipodifusor2; --5
-					numerotoberas := numerotoberas2; --6
-					anchozonaproteccionlitoral := anchozonaproteccionlitoral2; --7
-	
-					proyecto_informado_siss = proyecto_informado_siss2;
-					ownedby := ownedby2;
-										
-				END IF;
-				IF correlativo = 3 THEN
-				
-					codigo_obra2 := punto.codigo_obra; --1	
-					LongitudTotal2 := punto.LongitudTotal; --2 --revisar 
-					largodifusor2 := punto.largodifusor; --3
-					tipodifusor2 := punto.otipodifusor; --4
-					otrotipodifusor2:= punto.otrotipodifusor; --5
-					numerotoberas2 := punto.numerotoberas; --6
-					anchozonaproteccionlitoral2 := punto.anchozonaproteccionlitoral; --7
+			codigo_obra2 := punto.codigo_obra; --1	
+			LongitudTotal2 := punto.LongitudTotal; --2 --revisar 
+			largodifusor2 := punto.largodifusor; --3
+			tipodifusor2 := punto.otipodifusor; --4
+			otrotipodifusor2:= punto.otrotipodifusor; --5
+			numerotoberas2 := punto.numerotoberas; --6
+			anchozonaproteccionlitoral2 := punto.anchozonaproteccionlitoral; --7
 
-					assetid2 = punto.assetid;			
-					gdb_archive_oid2 := punto.gdb_archive_oid;
-					gdb_from_date2 := punto.gdb_from_date;
-					proyecto_informado_siss2 := punto.proyecto_informado_siss;	
-					ownedby2 := punto.ownedby;
-				ELSE
-					correlativo := 3;					
-				END IF;	
-			END IF;
-			IF correlativo = 2 THEN	
+			objectid2 = punto.objectid;			
+			gdb_archive_oid2 := punto.gdb_archive_oid;
+			gdb_from_date2 := punto.gdb_from_date;
+			proyecto_informado_siss2 := punto.proyecto_informado_siss;
+			ownedby2 := punto.ownedby;
+		END IF;		
+		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN
 			
-				codigo_obra := codigo_obra2; --1	
-				LongitudTotal := LongitudTotal2; --2 --revisar 
-				largodifusor := largodifusor2; --3
-				tipodifusor := otipodifusor2; --4
-				otrotipodifusor:= otrotipodifusor2; --5
-				numerotoberas := numerotoberas2; --6
-				anchozonaproteccionlitoral := anchozonaproteccionlitoral2; --7
-				
-				proyecto_informado_siss = proyecto_informado_siss2;	
-				ownedby := ownedby2;
-				
-			END IF;				
-
-			IF assetid <> punto.assetid THEN
-				correlativo := 2;
-				
-				codigo_obra := punto.codigo_obra; --1	
-				LongitudTotal := punto.LongitudTotal; --2 --revisar 
-				largodifusor := punto.largodifusor; --3
-				tipodifusor := punto.otipodifusor; --4
-				otrotipodifusor:= punto.otrotipodifusor; --5
-				numerotoberas := punto.numerotoberas; --6
-				anchozonaproteccionlitoral := punto.anchozonaproteccionlitoral; --7
-
-				assetid = punto.assetid;
-				gdb_archive_oid = punto.gdb_archive_oid;			
-				gdb_from_date := punto.gdb_from_date;
-				proyecto_informado_siss := punto.proyecto_informado_siss;	
-				ownedby := punto.ownedby;
-				
-				
-			END IF;
-			IF  cuenta2 = cantidad AND punto.gdb_from_date >= fecha_inicio AND punto.gdb_from_date <= fecha_fin AND punto.proyecto_informado_siss is not null THEN
+			IF cuenta = cantidad THEN
+			
 				IF ownedby = 103 THEN rut = '76833300';
 				ELSIF ownedby = 104 THEN rut = '96963440';
 				ELSE rut = NULL;
@@ -257,7 +169,98 @@ if cantidad > 0 then
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1207, punto.codigo_obra, '0', 7, anchozonaproteccionlitoral::text, round(punto.anchozonaproteccionlitoral,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;	
+			ELSE
+			
+				codigo_obra2 := punto.codigo_obra; --1	
+				LongitudTotal2 := punto.LongitudTotal; --2 --revisar 
+				largodifusor2 := punto.largodifusor; --3
+				tipodifusor2 := punto.otipodifusor; --4
+				otrotipodifusor2:= punto.otrotipodifusor; --5
+				numerotoberas2 := punto.numerotoberas; --6
+				anchozonaproteccionlitoral2 := punto.anchozonaproteccionlitoral; --7
+
+				objectid2 = punto.objectid;			
+				gdb_archive_oid2 := punto.gdb_archive_oid;
+				gdb_from_date2 := punto.gdb_from_date;
+				proyecto_informado_siss2 := punto.proyecto_informado_siss;
+				ownedby2 := punto.ownedby;		
+				
 			END IF;
+			
+		ELSIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN				
+			
+			IF ownedby = 103 THEN rut = '76833300';
+			ELSIF ownedby = 104 THEN rut = '96963440';
+			ELSE rut = NULL;
+			END IF;
+			/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(codigo_obra2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 1, codigo_obra::text, codigo_obra2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	*/
+			IF  COALESCE(LongitudTotal,'0')  <>  COALESCE(LongitudTotal2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 2, LongitudTotal::text, LongitudTotal2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(largodifusor,'0')  <>   COALESCE(largodifusor2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 3, largodifusor::text, largodifusor2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(tipodifusor,'0')  <>   COALESCE(tipodifusor2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 4, tipodifusor::text, tipodifusor2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;		
+			IF  COALESCE(otrotipodifusor,'0')  <>   COALESCE(otrotipodifusor2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 5, otrotipodifusor::text, otrotipodifusor2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(numerotoberas,'0')  <>   COALESCE(numerotoberas2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 6, numerotoberas::text, numerotoberas2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(anchozonaproteccionlitoral,'0')  <>   COALESCE(anchozonaproteccionlitoral2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1207, codigo_obra2, '0', 7, anchozonaproteccionlitoral::text, anchozonaproteccionlitoral2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+
+			IF objectid = punto.objectid THEN
+
+				estado := 3;
+
+			ELSE
+				estado := 1;
+				
+				codigo_obra := punto.codigo_obra; --1	
+				LongitudTotal := punto.LongitudTotal; --2 --revisar 
+				largodifusor := punto.largodifusor; --3
+				tipodifusor := punto.otipodifusor; --4
+				otrotipodifusor:= punto.otrotipodifusor; --5
+				numerotoberas := punto.numerotoberas; --6
+				anchozonaproteccionlitoral := punto.anchozonaproteccionlitoral; --7
+
+				objectid = punto.objectid;
+				gdb_archive_oid = punto.gdb_archive_oid;			
+				gdb_from_date := punto.gdb_from_date;
+				proyecto_informado_siss := punto.proyecto_informado_siss;
+				ownedby := punto.ownedby;				
+				
+			END IF;
+			
+		ELSIF (estado = 3 or estado = 1) AND punto.objectid <> objectid THEN		
+			
+			codigo_obra := punto.codigo_obra; --1	
+			LongitudTotal := punto.LongitudTotal; --2 --revisar 
+			largodifusor := punto.largodifusor; --3
+			tipodifusor := punto.otipodifusor; --4
+			otrotipodifusor:= punto.otrotipodifusor; --5
+			numerotoberas := punto.numerotoberas; --6
+			anchozonaproteccionlitoral := punto.anchozonaproteccionlitoral; --7
+
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby := punto.ownedby;					
+				
 		END IF;
 	END LOOP;
 END IF;			

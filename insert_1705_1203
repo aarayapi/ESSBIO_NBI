@@ -23,7 +23,7 @@ DECLARE
 	ownedby smallint;
 	
 	gdb_from_date  timestamp without time zone;
-	objectid character varying(100);
+	objectid integer;
 	
     codigo_obra2 character varying(255); --1	
     numero_sedim_primarios2 integer; --2
@@ -39,9 +39,9 @@ DECLARE
 	proyecto_informado_siss character varying(100);
 	proyecto_informado_siss2 character varying(100);
 	cantidad integer;
-	correlativo smallint;
-	resultado character varying(100);
-	cuenta2 integer;	
+	estado smallint;
+	resultado character varying(500);
+	cuenta integer;	
 BEGIN
 
 codigoproceso :=  5;
@@ -50,9 +50,9 @@ codigoarchivo := 1705;
 periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
 
 resultado   := '';
-correlativo := 1;
+estado := 0;
 cantidad := 0;
-cuenta2 := 0;
+cuenta := 0;
 
 --REFRESH MATERIALIZED VIEW owd."vmt_1705_SEWER_DEVICE";
 --DELETE FROM owd.tabla_1705 where fecha >= fecha_inicio AND fecha <= fecha_fin;
@@ -61,19 +61,22 @@ cuenta2 := 0;
 
 SELECT count(*) into cantidad
 	FROM owd.vmt_1705_as_tratamientoprimario vmt WHERE vmt.objectid  in 
-	(select distinct vmt_1.objectid from owd.vmt_1705_as_tratamientoprimario vmt_1 WHERE vmt_1.created_date < fecha_inicio);
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_tratamientoprimario vmt_1 WHERE vmt_1.created_date < fecha_inicio
+	 AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin);
 	 
 if cantidad > 0 then
    	FOR punto IN SELECT * 
 	FROM owd.vmt_1705_as_tratamientoprimario vmt WHERE vmt.objectid  in 
-	(select distinct vmt_1.objectid from owd.vmt_1705_as_tratamientoprimario vmt_1 WHERE vmt_1.created_date < fecha_inicio) 
+	(select distinct vmt_1.objectid from owd.vmt_1705_as_tratamientoprimario vmt_1 WHERE vmt_1.created_date < fecha_inicio
+	 AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin) 
 	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date LOOP
 	
-		cuenta2 := cuenta2 + 1;	 
+		cuenta := cuenta + 1;
 
 	 
-		IF correlativo = 1 then
-			correlativo := correlativo + 1;
+		IF cuenta = 1 THEN
+
+			estado := 1;
 			
 			codigo_obra := punto.codigo_obra; --1	
 			numero_sedim_primarios := punto.numero_sedim_primarios; --2
@@ -86,109 +89,43 @@ if cantidad > 0 then
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby  := punto.ownedby;
 			
-		ELSIF correlativo > 1 THEN
-			IF correlativo = 2 THEN
+		ELSIF objectid = punto.objectid AND punto.gdb_from_date < fecha_inicio AND estado = 1 THEN
 			
-				codigo_obra2 := punto.codigo_obra; --1	
-				numero_sedim_primarios2 := punto.numero_sedim_primarios; --2
-				area_sedimentacion_primaria2 := punto.area_sedimentacion_primaria; --3
-				profundidad_prom_sedimentador2 := punto.profundidad_prom_sedimentador; --4
-
-				objectid2 = punto.objectid;			
-				gdb_archive_oid2 := punto.gdb_archive_oid;
-				gdb_from_date2 := punto.gdb_from_date;
-				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
-				ownedby2  := punto.ownedby;
-			END IF;			
+			codigo_obra := punto.codigo_obra; --1	
+			numero_sedim_primarios := punto.numero_sedim_primarios; --2
+			area_sedimentacion_primaria := punto.area_sedimentacion_primaria; --3
+			profundidad_prom_sedimentador := punto.profundidad_prom_sedimentador; --4
 			
-			IF objectid = objectid2 THEN
-				IF COALESCE(proyecto_informado_siss,'Unknown')  <> COALESCE(proyecto_informado_siss2,'Unknown')  AND correlativo = 2 THEN
-					correlativo := correlativo + 1;
-				
-				ELSIF (COALESCE(proyecto_informado_siss2,'Unknown')  <> COALESCE(punto.proyecto_informado_siss,'Unknown')  AND correlativo = 3) OR objectid::integer <> punto.objectid THEN
-					correlativo := correlativo + 1;
-				END IF;	
-				IF correlativo = 4  AND gdb_from_date2 >= fecha_inicio AND gdb_from_date2 <= fecha_fin AND proyecto_informado_siss2 is not null  THEN	
-				
-					IF ownedby = 103 THEN rut = '76833300';
-					ELSIF ownedby = 104 THEN rut = '96963440';
-					ELSE rut = NULL;
-					END IF;
-					
-					
-					IF  COALESCE(numero_sedim_primarios,'0')  <>  COALESCE(numero_sedim_primarios2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1203, codigo_obra2, '0', 2, numero_sedim_primarios::text, numero_sedim_primarios2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(area_sedimentacion_primaria,'0')  <>   COALESCE(area_sedimentacion_primaria2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1203, codigo_obra2, '0', 3, area_sedimentacion_primaria::text, area_sedimentacion_primaria2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;	
-					IF  COALESCE(profundidad_prom_sedimentador,'0')  <>   COALESCE(profundidad_prom_sedimentador2,'0') THEN
-						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1203, codigo_obra2, '0', 4, profundidad_prom_sedimentador::text, profundidad_prom_sedimentador2::text, gdb_from_date2, gdb_archive_oid2);
-					END IF;				
-					
-					correlativo := 3;
-					
-					codigo_obra := codigo_obra2; --1	
-					numero_sedim_primarios := numero_sedim_primarios2; --2
-					area_sedimentacion_primaria := area_sedimentacion_primaria2; --3
-					profundidad_prom_sedimentador := profundidad_prom_sedimentador2; --4
-	
-					proyecto_informado_siss = proyecto_informado_siss2;		
-					ownedby  := ownedby2;
-				ELSE
-					correlativo := 3;										
-				END IF;
-				IF correlativo = 3 THEN
-				
-					codigo_obra2 := punto.codigo_obra; --1	
-					numero_sedim_primarios2 := punto.numero_sedim_primarios; --2
-					area_sedimentacion_primaria2 := punto.area_sedimentacion_primaria; --3
-					profundidad_prom_sedimentador2 := punto.profundidad_prom_sedimentador; --4
-
-					objectid2 = punto.objectid;			
-					gdb_archive_oid2 := punto.gdb_archive_oid;
-					gdb_from_date2 := punto.gdb_from_date;
-					proyecto_informado_siss2 := punto.proyecto_informado_siss;	
-					ownedby2  := punto.ownedby;
-				END IF;	
-			END IF;
-			IF correlativo = 2 THEN	
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby  := punto.ownedby;
 			
-				codigo_obra := codigo_obra2; --1	
-				numero_sedim_primarios := numero_sedim_primarios2; --2
-				area_sedimentacion_primaria := area_sedimentacion_primaria2; --3
-				profundidad_prom_sedimentador := profundidad_prom_sedimentador2; --4
-				
-				proyecto_informado_siss = proyecto_informado_siss2;
-				ownedby  := ownedby2;
-				
-			END IF;				
+		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 AND objectid = punto.objectid THEN
 
-			IF objectid::integer <> punto.objectid::integer THEN
-				correlativo := 2;
-				
-				codigo_obra := punto.codigo_obra; --1	
-				numero_sedim_primarios := punto.numero_sedim_primarios; --2
-				area_sedimentacion_primaria := punto.area_sedimentacion_primaria; --3
-				profundidad_prom_sedimentador := punto.profundidad_prom_sedimentador; --4
+			estado := 2;
 
-				objectid = punto.objectid;
-				gdb_archive_oid = punto.gdb_archive_oid;			
-				gdb_from_date := punto.gdb_from_date;
-				proyecto_informado_siss := punto.proyecto_informado_siss;	
-				ownedby  := punto.ownedby;
-			END IF;
-			IF  cuenta2 = cantidad AND punto.gdb_from_date >= fecha_inicio AND punto.gdb_from_date <= fecha_fin AND punto.proyecto_informado_siss is not null THEN
-				
+			codigo_obra2 := punto.codigo_obra; --1	
+			numero_sedim_primarios2 := punto.numero_sedim_primarios; --2
+			area_sedimentacion_primaria2 := punto.area_sedimentacion_primaria; --3
+			profundidad_prom_sedimentador2 := punto.profundidad_prom_sedimentador; --4
+
+			objectid2 = punto.objectid;			
+			gdb_archive_oid2 := punto.gdb_archive_oid;
+			gdb_from_date2 := punto.gdb_from_date;
+			proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+			ownedby2  := punto.ownedby;
+		END IF;	
+		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN			
+
+			IF cuenta = cantidad THEN
 				IF ownedby = 103 THEN rut = '76833300';
 				ELSIF ownedby = 104 THEN rut = '96963440';
 				ELSE rut = NULL;
 				END IF;			
-				
-				
+
+
 				IF  COALESCE(numero_sedim_primarios,'0')  <>  COALESCE(punto.numero_sedim_primarios,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1203, punto.codigo_obra, '0', 2, numero_sedim_primarios::text, punto.numero_sedim_primarios::text, punto.gdb_from_date, punto.gdb_archive_oid);
@@ -200,8 +137,76 @@ if cantidad > 0 then
 				IF  COALESCE(profundidad_prom_sedimentador,'0')  <>  COALESCE(punto.profundidad_prom_sedimentador,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1203, punto.codigo_obra, '0', 4, profundidad_prom_sedimentador::text, round(punto.profundidad_prom_sedimentador,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
-				END IF;							
+				END IF;	
+			ELSE
+				codigo_obra2 := punto.codigo_obra; --1	
+				numero_sedim_primarios2 := punto.numero_sedim_primarios; --2
+				area_sedimentacion_primaria2 := punto.area_sedimentacion_primaria; --3
+				profundidad_prom_sedimentador2 := punto.profundidad_prom_sedimentador; --4
+
+				objectid2 = punto.objectid;			
+				gdb_archive_oid2 := punto.gdb_archive_oid;
+				gdb_from_date2 := punto.gdb_from_date;
+				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+				ownedby2  := punto.ownedby;
 			END IF;
+		ELSEIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN		
+
+			IF ownedby = 103 THEN rut = '76833300';
+			ELSIF ownedby = 104 THEN rut = '96963440';
+			ELSE rut = NULL;
+			END IF;
+
+
+			IF  COALESCE(numero_sedim_primarios,'0')  <>  COALESCE(numero_sedim_primarios2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1203, codigo_obra2, '0', 2, numero_sedim_primarios::text, numero_sedim_primarios2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(area_sedimentacion_primaria,'0')  <>   COALESCE(area_sedimentacion_primaria2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1203, codigo_obra2, '0', 3, area_sedimentacion_primaria::text, area_sedimentacion_primaria2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
+			IF  COALESCE(profundidad_prom_sedimentador,'0')  <>   COALESCE(profundidad_prom_sedimentador2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1203, codigo_obra2, '0', 4, profundidad_prom_sedimentador::text, profundidad_prom_sedimentador2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;				
+			
+			IF objectid = punto.objectid THEN
+
+				estado := 3;
+
+			ELSE
+				estado := 1;		
+				
+				codigo_obra := punto.codigo_obra; --1	
+				numero_sedim_primarios := punto.numero_sedim_primarios; --2
+				area_sedimentacion_primaria := punto.area_sedimentacion_primaria; --3
+				profundidad_prom_sedimentador := punto.profundidad_prom_sedimentador; --4
+
+				objectid = punto.objectid;
+				gdb_archive_oid = punto.gdb_archive_oid;			
+				gdb_from_date := punto.gdb_from_date;
+				proyecto_informado_siss := punto.proyecto_informado_siss;
+				ownedby  := punto.ownedby;				
+			END IF;			
+			
+		ELSIF (estado = 3 or estado = 1) AND punto.objectid <> objectid THEN		
+			
+			estado := 1;		
+			
+			codigo_obra := punto.codigo_obra; --1	
+			numero_sedim_primarios := punto.numero_sedim_primarios; --2
+			area_sedimentacion_primaria := punto.area_sedimentacion_primaria; --3
+			profundidad_prom_sedimentador := punto.profundidad_prom_sedimentador; --4
+			
+			objectid = punto.objectid;
+			gdb_archive_oid = punto.gdb_archive_oid;			
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby  := punto.ownedby;			
+
+					
+
 		END IF;
 	END LOOP;
 END IF;			

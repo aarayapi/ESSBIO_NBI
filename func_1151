@@ -1,0 +1,51 @@
+-- FUNCTION: owd.func_1151(date, date)
+
+-- DROP FUNCTION IF EXISTS owd.func_1151(date, date);
+
+CREATE OR REPLACE FUNCTION owd.func_1151(
+	fecha_inicio date,
+	fecha_fin date)
+    RETURNS TABLE("codigoProceso" text, "codigoArchivo" text, rut text, periodo text, "codigoSistema" integer, "codigoConduccion" character varying, "Etapa" integer, "NombreObra" character varying, "TipoObraOrigen" integer, "CodigoObraOrigen" character varying, "TipoObraDestino" integer, "CodigoObraDestino" character varying, "LongitudConduccion" numeric) 
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
+
+AS $BODY$
+
+BEGIN
+	RETURN QUERY 
+ SELECT '5'::text AS "codigoProceso",
+    '1151'::text AS "codigoArchivo",
+        CASE sl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+    sl.codigo_sistema_siss AS "codigoSistema",
+    sl.codigo_obra AS "codigoConduccion",
+    sl.etapa AS "Etapa",
+    sl.nombre_conduccion AS "NombreObra",
+    sl.tipo_obra_origen AS "TipoObraOrigen",
+    sl.codigo_obra_origen AS "CodigoObraOrigen",
+    sl.tipo_obra_destino AS "TipoObraDestino",
+    sl.codigo_obra_destino AS "CodigoObraDestino",
+    round(sum(st_length(sl.shape))::numeric, 2) AS "LongitudConduccion"
+   FROM owd.vmt_sewerline_1151 sl
+  WHERE  sl.creationdate <= fecha_fin
+  AND sl.codigo_obra NOT IN (select distinct codigo_obra FROM owd.vmt_sewerline_1151 WHERE creationdate < fecha_inicio AND codigo_obra is not null)
+  GROUP BY sl.ownedby, sl.codigo_sistema_siss, sl.codigo_obra, sl.nombre_conduccion, sl.tipo_obra_origen, sl.codigo_obra_origen, sl.tipo_obra_destino, sl.codigo_obra_destino, sl.etapa;
+
+END;
+$BODY$;
+
+ALTER FUNCTION owd.func_1151(date, date)
+    OWNER TO owd;
+
+GRANT EXECUTE ON FUNCTION owd.func_1151(date, date) TO PUBLIC;
+
+GRANT EXECUTE ON FUNCTION owd.func_1151(date, date) TO bd_consulta;
+
+GRANT EXECUTE ON FUNCTION owd.func_1151(date, date) TO owd;
+

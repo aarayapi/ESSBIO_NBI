@@ -1,8 +1,8 @@
--- FUNCTION: owd.insert_1705_1205(date, date)
+-- FUNCTION: owd.test_1705_305(date, date)
 
--- DROP FUNCTION IF EXISTS owd.insert_1705_1205(date, date);
+-- DROP FUNCTION IF EXISTS owd.test_1705_305(date, date);
 
-CREATE OR REPLACE FUNCTION owd.insert_1705_1205(
+CREATE OR REPLACE FUNCTION owd.test_1705_305(
 	fecha_inicio date,
 	fecha_fin date)
     RETURNS text
@@ -48,10 +48,11 @@ DECLARE
 	estado smallint;
 	resultado character varying(500);
 	cuenta integer;	
+	
 BEGIN
 
 codigoproceso :=  5;
-codigoarchivo := 1705; 
+codigoarchivo := 1703; 
 --rut := '96963440';
 periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
 
@@ -59,11 +60,7 @@ resultado   := '';
 estado := 0;
 cantidad := 0;
 cuenta := 0;
-
---REFRESH MATERIALIZED VIEW owd."vmt_1705_SEWER_DEVICE";
---DELETE FROM owd.tabla_1705 where fecha >= fecha_inicio AND fecha <= fecha_fin;
-
------------------------------------------1205-------------------------------------------------
+ 
 
 SELECT count(*) into cantidad
 	FROM owd.vmt_1705_as_desinfecciondecloracion vmt WHERE vmt.objectid  in 
@@ -77,6 +74,7 @@ if cantidad > 0 then
 
 		cuenta := cuenta + 1;
 		
+		resultado := resultado || '_//_cuenta_' || cuenta ;
 
 		IF cuenta = 1 THEN
 
@@ -95,6 +93,7 @@ if cantidad > 0 then
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby  := punto.ownedby;
 			
+			resultado := resultado || '_IF1_';
 
 		ELSIF objectid = punto.objectid AND punto.gdb_from_date < fecha_inicio AND estado = 1 THEN
 
@@ -112,8 +111,9 @@ if cantidad > 0 then
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby  := punto.ownedby;		
 			
+			resultado := resultado || '_IF2_';
 
-		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 AND objectid = punto.objectid THEN
+		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 THEN
 
 			estado := 2;
 
@@ -130,8 +130,9 @@ if cantidad > 0 then
 			proyecto_informado_siss2 := punto.proyecto_informado_siss;	
 			ownedby2  := punto.ownedby;	
 			
-		END IF;
-		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN
+			resultado := resultado || '_IF3_oid1_' || gdb_archive_oid;
+
+		ELSEIF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN
 			
 			IF cuenta = cantidad THEN
 				IF ownedby = 103 THEN rut = '76833300';
@@ -174,14 +175,23 @@ if cantidad > 0 then
 				ownedby2  := punto.ownedby;		
 			END IF;
 			
+			resultado := resultado || '_IF4_cuenta_' || cuenta || '_cantidad_' || cantidad;
+			--resultado := resultado || '_IF4_cuenta_';
 
 		ELSEIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN		
+
+
+			--cuenta := 1;
 
 			IF ownedby = 103 THEN rut = '76833300';
 			ELSIF ownedby = 104 THEN rut = '96963440';
 			ELSE rut = NULL;
 			END IF;
 
+			/*IF  COALESCE(codigo_obra,'0')  <>  COALESCE(codigo_obra2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1205, codigo_obra2, '0', 1, codigo_obra::text, codigo_obra2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	*/
 			IF  COALESCE(desinfeccion,'0')  <>  COALESCE(desinfeccion2,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1205, codigo_obra2, '0', 2, desinfeccion::text, desinfeccion2::text, gdb_from_date2, gdb_archive_oid2);
@@ -219,8 +229,8 @@ if cantidad > 0 then
 				proyecto_informado_siss := punto.proyecto_informado_siss;
 				ownedby  := punto.ownedby;		
 			END IF;
-			
-		ELSIF (estado = 3 or estado = 1) AND punto.objectid <> objectid THEN
+			resultado := resultado || '_IF5_oid2_' || gdb_archive_oid2;
+		ELSIF estado = 3 AND punto.objectid <> objectid THEN
 
 			estado := 1;
 
@@ -236,16 +246,16 @@ if cantidad > 0 then
 			gdb_from_date := punto.gdb_from_date;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby  := punto.ownedby;			
-
+			resultado := resultado || '_IF6_';
 		END IF;
 
 	END LOOP;	
 	
 END IF;
-
+ 
  RETURN resultado;
 END;
 $BODY$;
 
-ALTER FUNCTION owd.insert_1705_1205(date, date)
+ALTER FUNCTION owd.test_1705_305(date, date)
     OWNER TO owd;
