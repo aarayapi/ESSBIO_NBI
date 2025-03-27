@@ -179,7 +179,7 @@ if cantidad > 0 then
 			--resultado := resultado || '_IF4_cuenta_';
 
 		ELSEIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN		
-
+			RAISE NOTICE 'globalid - %', globalid;	
 
 			--cuenta := 1;
 

@@ -1,0 +1,74 @@
+			SELECT * 
+			FROM owd.vmt_1705_501_ap_pretratamiento_dbl ap --order by ap.objectid 
+			WHERE ap.gdb_archive_oid in (SELECT MAX(ap1.gdb_archive_oid) 
+										 FROM owd.vmt_1705_501_ap_pretratamiento_dbl ap1 
+										 WHERE ap1.created_date < to_date('20240301','YYYYMMDD')
+										 AND ap1.gdb_from_date < to_date('20240301','YYYYMMDD')
+										 AND ap1.assetguid = '{49EC2F3D-D627-45D9-8FE3-62CB40D1D969}' 
+										 group by ap1.objectid );
+			
+			
+			SELECT * 
+			FROM owd.vmt_1705_501_ap_pretratamiento_dbl ap --order by ap.objectid 
+			WHERE ap.gdb_archive_oid in (SELECT MAX(ap1.gdb_archive_oid) 
+										 FROM owd.vmt_1705_501_ap_pretratamiento_dbl ap1 
+										 WHERE ap1.created_date < to_date('20240301','YYYYMMDD')
+										 AND  ap1.gdb_from_date < to_date('20250301','YYYYMMDD')
+										 AND ap1.assetguid = '{49EC2F3D-D627-45D9-8FE3-62CB40D1D969}' 
+										 group by ap1.objectid )
+			
+
+			SELECT apmax.objectid,
+			apmax.turbiedad, 
+			apmax.valoras,
+			apmax.valormn,
+			apmax.valorfe,
+			apmax.valorcolor,
+			apmax.solidosdisueltostotales,
+			apmax.sulfatos,
+			apmax.cloruros,
+			apmax.otroparametro,
+			apmax.valorotroparametro,
+			apmin.turbiedad as apminturbiedad, 
+			apmin.valoras as apminvaloras,
+			apmin.valormn as apminvalormn,
+			apmin.valorfe as apminvalorfe,
+			apmin.valorcolor as apminvalorcolor,
+			apmin.solidosdisueltostotales as apminsolidosdisueltostotales,
+			apmin.sulfatos as apminsulfatos,
+			apmin.cloruros as apmincloruros,
+			apmin.otroparametro as apminotroparametro,
+			apmin.valorotroparametro as apminvalorotroparametro			
+			FROM owd.vmt_1705_501_ap_pretratamiento_dbl apmax 
+			LEFT JOIN owd.vmt_1705_501_ap_pretratamiento_dbl apmin on apmax.objectid = apmin.objectid 
+			WHERE apmax.gdb_archive_oid in (SELECT MAX(ap1.gdb_archive_oid) 
+										 FROM owd.vmt_1705_501_ap_pretratamiento_dbl ap1 
+										 WHERE ap1.created_date < to_date('20240301','YYYYMMDD')
+										 AND ap1.gdb_from_date < to_date('20240301','YYYYMMDD')
+										 AND ap1.assetguid = '{49EC2F3D-D627-45D9-8FE3-62CB40D1D969}' 
+										 group by ap1.objectid )
+										 				 
+			AND apmin.gdb_archive_oid IN 	(SELECT MAX(ap1.gdb_archive_oid) 
+										 FROM owd.vmt_1705_501_ap_pretratamiento_dbl ap1 
+										 WHERE ap1.created_date < to_date('20240301','YYYYMMDD')
+										 AND  ap1.gdb_from_date < to_date('20250301','YYYYMMDD')
+										 AND ap1.assetguid = '{49EC2F3D-D627-45D9-8FE3-62CB40D1D969}' 
+										 group by ap1.objectid )
+
+
+			SELECT * 
+			FROM owd.vmt_1705_501_ap_pretratamiento_dbl ap WHERE ap.assetguid = '{49EC2F3D-D627-45D9-8FE3-62CB40D1D969}' 			
+			
+
+			SELECT *
+			FROM owd.vmt_1705_501_ap_pretratamiento_dbl ap --order by ap.objectid 
+			WHERE ap.gdb_archive_oid in (SELECT MAX(ap1.gdb_archive_oid) 
+										 FROM owd.vmt_1705_501_ap_pretratamiento_dbl ap1 
+										 WHERE ap1.created_date <> ap1.last_edited_date group by ap1.objectid )
+			AND ap.assetguid = '{1B5BB240-7364-4814-9D39-FB24925D7F73}' 
+			AND ap.created_date < to_date('20240415','YYYYMMDD') AND ap.gdb_from_date BETWEEN to_date('20240415','YYYYMMDD') AND to_date('20250330','YYYYMMDD')
+			order by objectid;
+
+
+			SELECT * FROM owd.vmt_1705_501_ap_pretratamiento_dbl ap --order by ap.objectid 
+			WHERE ap.assetguid = '{1B5BB240-7364-4814-9D39-FB24925D7F73}' 

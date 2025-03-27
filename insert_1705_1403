@@ -183,7 +183,7 @@ if cantidad > 0 then
 				END IF;	
 				IF  COALESCE(diameter,'0')  <>  COALESCE(punto.diameter,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1403, punto.codigo_obra, '0', 6, diameter::text, punto.diameter::text, punto.gdb_from_date, punto.gdb_archive_oid::integer);
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1403, punto.codigo_obra, '0', 6, (round(diameter,2))::text, (round(punto.diameter,2))::text, punto.gdb_from_date, punto.gdb_archive_oid::integer);
 				END IF;	
 				IF  COALESCE(simple_doble,'0')  <>  COALESCE(punto.simple_doble,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
@@ -249,7 +249,7 @@ if cantidad > 0 then
 			END IF;			
 			IF  COALESCE(diameter,'0')  <>  COALESCE(diameter2,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss2, 1403, codigo_obra2, '0', 6, diameter::text, diameter2::text, gdb_from_date2, gdb_archive_oid2::integer);
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss2, 1403, codigo_obra2, '0', 6, (round(diameter,2))::text, (round(diameter2,2))::text, gdb_from_date2, gdb_archive_oid2::integer);
 			END IF;
 			IF  COALESCE(simple_doble,'0')  <>  COALESCE(simple_doble2,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	

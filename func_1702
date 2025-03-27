@@ -16,25 +16,39 @@ AS $BODY$
 BEGIN
 	RETURN QUERY ---------------------------------------------802---------------------------------
 
-SELECT * FROM (SELECT  cm.codigoproceso  AS "codigoProceso" , cm.codigoarchivo AS "codigoArchivo", cm.rut , cm.periodo , cm.codigoProyecto , cm.codigosistema , 
+SELECT * FROM (SELECT  cm.codigoproceso  AS "codigoProceso" , cm.codigoarchivo AS "codigoArchivo", 
+	   CASE cm.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+       END AS rut, 
+			   cm.periodo , cm.codigoProyecto , cm.codigosistema , 
    cm.codigoLocalidad , cm.tipoObraUrbanizacion , cm.accion , cm.codigoModificar , cm.materialTipoMedidor ,
   cm.OtroMaterial , cm.NombreSectorRed , cm.NumeroArranques , cm.NumeroMedidores , cm.NumeroUniones , cm.NumeroGrifos, cm."NumeroValvulas" 
 FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'SELECT  ''5''::text AS codigoProceso,
      ''1702'' AS codigoarchivo,
-        CASE wl.ownedby
-            WHEN 103 THEN ''76833300''::text
-            WHEN 104 THEN ''96963440''::text
-            ELSE NULL::text
-        END AS rut,
+	CASE
+		WHEN wl.ownedby_narran IS NULL AND wl.ownedby_grifo IS NOT NULL THEN wl.ownedby_grifo
+		WHEN wl.ownedby_grifo IS NULL AND wl.ownedby_narran IS NULL THEN wl.ownedby_valv
+		ELSE wl.ownedby_narran
+	END AS ownedby,
     (date_part(''year''::text, CURRENT_DATE) - 1::double precision) || ''12''::text AS periodo,			
-	wl.proyecto_informado_siss AS "codigoProyecto",
+	CASE
+		WHEN wl.proyecto_informado_siss_narran IS NULL AND wl.proyecto_informado_siss_grifo IS NOT NULL THEN wl.proyecto_informado_siss_grifo
+		WHEN wl.proyecto_informado_siss_grifo IS NULL AND wl.proyecto_informado_siss_narran IS NULL THEN wl.proyecto_informado_siss_valv
+		ELSE wl.proyecto_informado_siss_narran
+	END AS "codigoProyecto",
     wl.codigo_sistema_siss AS codigosistema,	
     ( SELECT a.codigo_localidad_siss
            FROM concesionmetro_ap a
           WHERE a.codigo_localidad = wl.codigo_localidad) AS "codigoLocalidad",
 	802 AS "tipoObraUrbanizacion",
 	1 AS accion, 
-    wl.codigo_sector AS "codigoModificar",
+	CASE
+    	WHEN wl.codigo_sector_narran IS NULL AND wl.codigo_sector_distribucion_grifo IS NOT NULL THEN ''800-'' || wl.codigo_sector_distribucion_grifo
+		WHEN wl.codigo_sector_narran IS NULL AND wl.codigo_sector_distribucion_grifo IS NULL THEN ''800-'' || wl.codigo_sector_distribucion_valv
+		ELSE ''800-'' ||  wl.codigo_sector_narran		
+	END AS "codigoModificar",
     0  AS "materialTipoMedidor",
     NULL  AS  "OtroMaterial",	
 	wl.nombre AS "NombreSectorRed",
@@ -44,25 +58,38 @@ FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10
 	ngrifos AS "NumeroGrifos",
 	nvalvulas AS "NumeroValvulas"
    FROM 
-  ((SELECT wl.ownedby, wl.proyecto_informado_siss, wl.codigo_sistema_siss, wl.codigo_localidad, 
-  wl.codigo_sector_distribucion AS codigo_sector, count(objectid) AS narran FROM vmt_waterline_sb wl   WHERE  wl.assetgroup = 2 AND wl.assettype = 11 
+  ((SELECT wl.ownedby as ownedby_narran, wl.proyecto_informado_siss AS proyecto_informado_siss_narran, wl.codigo_sistema_siss AS codigo_sistema_siss_narran, 
+		wl.codigo_localidad AS codigo_localidad_narran, 
+  wl.codigo_sector_distribucion AS codigo_sector_narran, count(objectid) AS narran FROM vmt_waterline_sb wl   WHERE  wl.assetgroup = 2 AND wl.assettype = 11 
 	 AND wl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
 					   AND wl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
-  GROUP BY wl.ownedby, wl.proyecto_informado_siss, wl.codigo_sistema_siss, wl.codigo_localidad, wl.codigo_sector_distribucion ) vmwl
+  GROUP BY wl.ownedby, wl.proyecto_informado_siss, wl.codigo_sistema_siss, wl.codigo_localidad, wl.codigo_sector_distribucion) vmwl
   LEFT JOIN (SELECT DISTINCT nombre, codigo_sector_distribucion FROM owd.sectoresdistribucion) st
-   ON st.codigo_sector_distribucion::text =  vmwl.codigo_sector
+   ON st.codigo_sector_distribucion::text =  vmwl.codigo_sector_narran
    
-  LEFT JOIN (SELECT count(objectid) AS ngrifos, codigo_sector_distribucion FROM vmt_waterdevice_sb WHERE assetgroup = 7 AND assettype = 321 
-			AND creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
-		    AND creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')			
-			GROUP BY codigo_sector_distribucion) wlgrifo
-			ON vmwl.codigo_sector::text =  wlgrifo.codigo_sector_distribucion 
-  LEFT JOIN (SELECT count(objectid) AS nvalvulas, codigo_sector_distribucion FROM vmt_waterdevice_sb WHERE assetgroup = 2 AND assettype in (167,169, 170,172,173,175)
-			AND creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
-					   AND creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
-			GROUP BY codigo_sector_distribucion) wlvalv
-  			ON vmwl.codigo_sector::text =  wlvalv.codigo_sector_distribucion ) wl')
-cm(codigoProceso text, codigoArchivo text, rut text, periodo text, codigoProyecto character varying(255), codigosistema integer, 
+  FULL JOIN (SELECT count(wgrf.objectid) AS ngrifos, wgrf.codigo_sector_distribucion AS codigo_sector_distribucion_grifo, wgrf.proyecto_informado_siss AS proyecto_informado_siss_grifo, wgrf.ownedby AS ownedby_grifo, wgrf.proyecto_informado_siss, 
+		   wgrf.codigo_sistema_siss, wgrf.codigo_localidad FROM vmt_waterdevice_sb wgrf WHERE wgrf.assetgroup = 7 AND wgrf.assettype = 321
+			AND wgrf.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND wgrf.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')			
+			GROUP BY wgrf.ownedby, wgrf.proyecto_informado_siss, wgrf.codigo_sistema_siss, wgrf.codigo_localidad, wgrf.codigo_sector_distribucion ) wlgrifo
+			ON vmwl.codigo_sector_narran::text =  wlgrifo.codigo_sector_distribucion_grifo 	
+			AND vmwl.proyecto_informado_siss_narran = wlgrifo.proyecto_informado_siss_grifo
+			AND vmwl.ownedby_narran = wlgrifo.ownedby_grifo
+			AND vmwl.codigo_sistema_siss_narran = wlgrifo.codigo_sistema_siss
+			AND vmwl.codigo_localidad_narran = wlgrifo.codigo_localidad
+			
+  FULL JOIN (SELECT count(wgrf.objectid) AS nvalvulas, wgrf.codigo_sector_distribucion AS codigo_sector_distribucion_valv, wgrf.proyecto_informado_siss AS proyecto_informado_siss_valv, wgrf.ownedby AS ownedby_valv, wgrf.proyecto_informado_siss, 
+		    wgrf.codigo_sistema_siss, wgrf.codigo_localidad FROM vmt_waterdevice_sb wgrf WHERE wgrf.assetgroup = 2 AND wgrf.assettype in (167, 170,172,173,175)
+			AND wgrf.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+			AND wgrf.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			GROUP BY wgrf.ownedby, wgrf.proyecto_informado_siss, wgrf.codigo_sistema_siss, wgrf.codigo_localidad, wgrf.codigo_sector_distribucion) wlvalv
+			ON vmwl.codigo_sector_narran::text =  wlvalv.codigo_sector_distribucion_valv   
+			AND vmwl.proyecto_informado_siss_narran = wlvalv.proyecto_informado_siss_valv
+			AND vmwl.ownedby_narran = wlvalv.ownedby_valv
+			AND vmwl.codigo_sistema_siss_narran = wlvalv.codigo_sistema_siss
+			AND vmwl.codigo_localidad_narran = wlvalv.codigo_localidad) AS wl
+			ORDER by wl.codigo_sector_narran, wl.proyecto_informado_siss_narran ) wl')
+cm(codigoProceso text, codigoArchivo text, ownedby smallint, periodo text, codigoProyecto character varying(255), codigosistema integer, 
    codigoLocalidad smallint, tipoObraUrbanizacion integer, accion integer, codigoModificar text, materialTipoMedidor integer, OtroMaterial text,
  NombreSectorRed character varying(40), NumeroArranques bigint, NumeroMedidores integer, NumeroUniones integer, NumeroGrifos bigint, "NumeroValvulas" bigint)
 

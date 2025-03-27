@@ -1,0 +1,37 @@
+-- View: owd.view_1501
+
+DROP VIEW owd.view_1501;
+
+CREATE OR REPLACE VIEW owd.view_1501
+ AS
+ SELECT '5'::text AS codigoproceso,
+    '1501'::text AS codigoarchivo,
+    cm.rut_empresa AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+    rc.codigo_comuna AS "Comuna",
+    rc.codigo_sistema AS "Sistema",
+    cm.codigo_localidad_siss AS "Localidad Ubicación",
+    rc.codigo_recinto AS "Código Recinto",
+    rc.nombre_recinto AS "Nombre Recinto",
+    rc.rol_avaluo AS "Rol Avalúo",
+    rc.direccion AS "Dirección",
+    rc.relacion_juridica AS "Relación Jurídica",
+    rc.otra_rel_juridica AS "Otra Relación Jurídica",
+    round(rc.superficie,2) AS "Superficie",
+    rc.ubicacion AS "Ubicación",
+    rc.fojas AS "Fojas",
+    rc.numero AS "Número",
+    rc.annio AS "Año",
+    rc.conservador AS "Conservador",
+    round(rc.monto,2) AS "Monto",
+    rc.created_date AS creationdate
+   FROM recintos rc
+     LEFT JOIN concesionmetro cm ON rc.codigo_localidad = cm.codigo_localidad;
+
+ALTER TABLE owd.view_1501
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.view_1501 TO owd;
+GRANT SELECT ON TABLE owd.view_1501 TO psanhueza;
+GRANT SELECT ON TABLE owd.view_1501 TO bd_consulta;
+

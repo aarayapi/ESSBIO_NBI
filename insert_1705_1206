@@ -54,6 +54,8 @@ DECLARE
 	
 	gdb_from_date2  timestamp without time zone;
 	objectid2 integer;
+	
+	codigo_sistema_siss2 character varying(100);
 
 	gdb_archive_oid integer;
 	gdb_archive_oid2 integer;
@@ -117,6 +119,8 @@ if cantidad > 0 then
 			gdb_archive_oid = punto.gdb_archive_oid;			
 			gdb_from_date := punto.gdb_from_date;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
+			--codigo_sistema_siss2 := punto.codigo_sistema_siss; -- Revisar Alberto por Favor lo colocamos nosotros
+
 			ownedby  := punto.ownedby;
 
 			
@@ -141,6 +145,8 @@ if cantidad > 0 then
 			gdb_archive_oid = punto.gdb_archive_oid;			
 			gdb_from_date := punto.gdb_from_date;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
+	--   codigo_sistema_siss2 := punto.codigo_sistema_siss; -- Revisar Alberto por Favor lo colocamos nosotros
+
 			ownedby  := punto.ownedby;
 		
 		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 AND objectid = punto.objectid THEN
@@ -165,7 +171,8 @@ if cantidad > 0 then
 			objectid2 = punto.objectid;			
 			gdb_archive_oid2 := punto.gdb_archive_oid;
 			gdb_from_date2 := punto.gdb_from_date;
-			proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+			proyecto_informado_siss2 := punto.proyecto_informado_siss;
+		    codigo_sistema_siss2 := punto.codigo_sistema_siss; -- Revisar Alberto por Favor lo colocamos nosotros
 			ownedby2  := punto.ownedby;
 		END IF;
 
@@ -252,7 +259,8 @@ if cantidad > 0 then
 				objectid2 = punto.objectid;			
 				gdb_archive_oid2 := punto.gdb_archive_oid;
 				gdb_from_date2 := punto.gdb_from_date;
-				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+				proyecto_informado_siss2 := punto.proyecto_informado_siss;
+			   codigo_sistema_siss2 := punto.codigo_sistema_siss; -- Revisar Alberto por Favor lo colocamos nosotros
 				ownedby2  := punto.ownedby;			
 				
 			END If;

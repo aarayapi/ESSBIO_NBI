@@ -1,5 +1,4 @@
 -- View: owd.vmt_1705_1405_atravieso
-
 DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_1405_atravieso;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_1405_atravieso
@@ -21,8 +20,6 @@ AS
     qr.diameter,
     qr.profundidad,
     qr.gdb_from_date,
-    qr.rn,
-    qr.cuenta,
     qr.gdb_archive_oid,
     qr.created_date
    FROM ( SELECT atr.objectid,
@@ -47,22 +44,13 @@ AS
                     ELSE round(atr.profundidad, 2)
                 END AS profundidad,
             atr.gdb_from_date,
-            row_number() OVER (PARTITION BY atr.objectid ORDER BY atr.objectid, atr.gdb_from_date) AS rn,
-            cnt.cuenta,
             atr.gdb_archive_oid,
             atr.created_date
            FROM as_atravieso atr
              LEFT JOIN vmt_sewerline_sb sl ON sl.globalid::text = atr.assetguid::text
-             LEFT JOIN ( SELECT as_atravieso.objectid,
-                    count(as_atravieso.objectid) AS cuenta
-                   FROM as_atravieso
-                  WHERE as_atravieso.gdb_branch_id = 0
-                  GROUP BY as_atravieso.objectid) cnt ON atr.objectid = cnt.objectid
-          WHERE atr.gdb_branch_id = 0 AND (atr.objectid IN ( SELECT wd_1.objectid
-                   FROM as_atravieso wd_1
-                  WHERE wd_1.gdb_branch_id = 0
-                  GROUP BY wd_1.objectid
-                 HAVING count(wd_1.objectid) > 1))
+          WHERE (atr.objectid IN ( SELECT atr2.objectid
+                   FROM as_atravieso atr2
+                  WHERE atr2.created_date <> atr2.last_edited_date))
         UNION
          SELECT cm.objectid,
             cm.proyecto_informado_siss,
@@ -86,8 +74,6 @@ AS
                     ELSE round(cm.profundidad, 2)
                 END AS profundidad,
             cm.gdb_from_date,
-            cm.rn,
-            cm.cuenta,
             cm.gdb_archive_oid,
             cm.creationdate
            FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '
@@ -107,21 +93,13 @@ AS
   	atr.diameter::integer,
 	atr.profundidad,	
     atr.gdb_from_date,
-   row_number() OVER (PARTITION BY atr.objectid ORDER BY atr.objectid, atr.gdb_from_date) AS rn,
-	cnt.cuenta,
 	atr.gdb_archive_oid	,
 	atr.created_date
 	FROM owd.ap_atraviesos atr LEFT JOIN owd.vmt_waterline_sb sl on sl.globalid = atr.assetguid
-   LEFT JOIN ( SELECT ap_atraviesos.objectid,
-            count(ap_atraviesos.objectid) AS cuenta
-           FROM ap_atraviesos
-          WHERE ap_atraviesos.gdb_branch_id = 0
-          GROUP BY ap_atraviesos.objectid) cnt ON atr.objectid = cnt.objectid
-  WHERE atr.gdb_branch_id = 0 AND (atr.objectid IN ( SELECT wd_1.objectid
-           FROM ap_atraviesos wd_1
-          WHERE wd_1.gdb_branch_id = 0
-          GROUP BY wd_1.objectid
-         HAVING count(wd_1.objectid) > 1))'::text) cm(objectid integer, proyecto_informado_siss character varying(256), ownedby smallint, codigo_sistema_siss integer, codigo_obra character varying(255), tipo_conduccion_red integer, codigo_conduccion character varying(255), codigo_tramo character varying(255), tipo integer, otro_tipo character varying(255), modo integer, otro_modo character varying(255), measuredlength numeric(38,8), diameter numeric(38,8), profundidad numeric(38,8), gdb_from_date timestamp without time zone, rn integer, cuenta integer, gdb_archive_oid integer, creationdate timestamp without time zone)) qr
+  	WHERE atr.objectid IN (SELECT atr2.objectid FROM owd.ap_atraviesos atr2
+					  WHERE atr2.created_date <> atr2.last_edited_date)'::text) cm(objectid integer, proyecto_informado_siss character varying(256), ownedby smallint, codigo_sistema_siss integer, codigo_obra character varying(255), tipo_conduccion_red integer, codigo_conduccion character varying(255), codigo_tramo character varying(255), tipo integer, otro_tipo character varying(255), modo integer, otro_modo character varying(255), measuredlength numeric(38,8), diameter numeric(38,8), profundidad numeric(38,8), gdb_from_date timestamp without time zone, gdb_archive_oid integer, creationdate timestamp without time zone)) qr
+
+	
   ORDER BY qr.objectid, qr.gdb_from_date
 WITH DATA;
 

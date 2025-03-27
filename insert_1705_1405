@@ -27,7 +27,7 @@ DECLARE
 	otro_tipo character varying(255); --7
 	modo integer; --8
 	otro_modo character varying(255); --7	
-	measuredlength numeric(38,8); 
+	measuredlength numeric(38,2); 
 	diameter integer; 
 	profundidad numeric(38,2); 
 	ownedby smallint;
@@ -99,8 +99,10 @@ if cantidad > 0 then
 		--resultado := resultado || '_//_cuenta_' || cuenta ;
 
 		IF cuenta = 1 THEN
-
+		
 			estado := 1;
+			
+			RAISE NOTICE 'IF1--cuenta: %, estado: %, objectid: %, gdb_archive_oid: %', cuenta, estado, punto.objectid, punto.gdb_archive_oid;				
 			
 			codigo_sistema_siss := punto.codigo_sistema_siss; --1
 			codigo_obra := punto.codigo_obra; --2
@@ -128,7 +130,9 @@ if cantidad > 0 then
 			ownedby := punto.ownedby;
 			
 		ELSIF objectid = punto.objectid AND punto.gdb_from_date < fecha_inicio AND estado = 1 THEN
-				
+
+			RAISE NOTICE 'ELSIF11--cuenta: %, estado: %, objectid: %, gdb_archive_oid: %', cuenta, estado, punto.objectid, punto.gdb_archive_oid;		
+
 			codigo_sistema_siss := punto.codigo_sistema_siss; --1
 			codigo_obra := punto.codigo_obra; --2
 			tipo_conduccion_red := punto.tipo_conduccion_red; --2
@@ -155,7 +159,11 @@ if cantidad > 0 then
 			ownedby := punto.ownedby;
 			
 		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 AND objectid = punto.objectid THEN			
-				
+
+			estado := 2;
+
+			RAISE NOTICE 'ELSIF12--cuenta: %, estado: %, objectid: %, gdb_archive_oid: %', cuenta, estado, punto.objectid, punto.gdb_archive_oid;		
+
 			codigo_sistema_siss2 := punto.codigo_sistema_siss; --1
 			codigo_obra2 := punto.codigo_obra; --2
 			tipo_conduccion_red2 := punto.tipo_conduccion_red; --2
@@ -182,9 +190,9 @@ if cantidad > 0 then
 				
 		END IF;
 		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN
-			
+			RAISE NOTICE 'IF2--cuenta: %, estado: %, objectid: %, gdb_archive_oid: %', cuenta, estado, punto.objectid, punto.gdb_archive_oid;	
 			IF cuenta = cantidad THEN
-			
+				RAISE NOTICE 'IF21--cuenta: %, estado: %, objectid: %', cuenta, estado, objectid;			
 				IF ownedby = 103 THEN rut = '76833300';
 				ELSIF ownedby = 104 THEN rut = '96963440';
 				ELSE rut = NULL;
@@ -233,7 +241,7 @@ if cantidad > 0 then
 
 				IF  COALESCE(diameter,'0')  <>  COALESCE(punto.diameter,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1405, punto.codigo_obra, '0', 11, (round(diameter,2))::text, round(punto.diameter,0)::text, punto.gdb_from_date, punto.gdb_arhchive_oid);
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1405, punto.codigo_obra, '0', 11, diameter::integer::text, punto.diameter::integer::text, punto.gdb_from_date, punto.gdb_arhchive_oid);
 				END IF;
 
 				IF punto.profundidad = -100 THEN profundidad_ = round(punto.profundidad, 0);
@@ -246,7 +254,7 @@ if cantidad > 0 then
 				END IF;			
 			
 			ELSE			
-			
+				RAISE NOTICE 'ELSE21--cuenta: %, estado: %', cuenta, estado;				
 				codigo_sistema_siss2 := punto.codigo_sistema_siss; --1
 				codigo_obra2 := punto.codigo_obra; --2
 				tipo_conduccion_red2 := punto.tipo_conduccion_red; --2
@@ -272,7 +280,9 @@ if cantidad > 0 then
 			END IF;
 
 		ELSIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN		
-
+			
+			RAISE NOTICE 'ELSIF2--cuenta: %, estado: %, objectid: %, gdb_archive_oid: %', cuenta, estado, punto.objectid, punto.gdb_archive_oid;
+			
 			IF ownedby = 103 THEN rut = '76833300';
 			ELSIF ownedby = 104 THEN rut = '96963440';
 			ELSE rut = NULL;
@@ -322,12 +332,12 @@ if cantidad > 0 then
 
 			IF  COALESCE(diameter,'0')  <>  COALESCE(diameter2,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1405, codigo_obra2, '0', 11, (round(diameter,2))::text, (round(diameter2,2))::text, gdb_from_date2, gdb_archive_oid2);
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1405, codigo_obra2, '0', 11, diameter::integer::text, diameter2::integer::text, gdb_from_date2, gdb_archive_oid2);
 			END IF;
 
 			IF  COALESCE(profundidad,'0')  <>  COALESCE(profundidad2,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1405, codigo_obra2, '0', 12, (round(profundidad,2))::text, (round(profundidad2,2))::text, gdb_from_date2, gdb_arhchive_oid2);
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1405, codigo_obra2, '0', 12, (round(profundidad,0))::text, (round(profundidad2,0))::text, gdb_from_date2, gdb_archive_oid2);
 			END IF;		
 					
 			IF objectid = punto.objectid THEN
@@ -364,6 +374,8 @@ if cantidad > 0 then
 
 			END IF;
 		ELSIF (estado = 3 or estado = 1) AND punto.objectid <> objectid THEN
+
+			RAISE NOTICE '2ELSIF22--cuenta: %, estado: %, objectid: %, gdb_archive_oid: %', cuenta, estado, punto.objectid, punto.gdb_archive_oid;
 
 			estado := 1;
 

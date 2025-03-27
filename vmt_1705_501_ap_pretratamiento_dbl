@@ -1,0 +1,88 @@
+-- View: owd.vmt_1705_501_ap_pretratamiento_dbl
+
+DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_501_ap_pretratamiento_dbl;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_501_ap_pretratamiento_dbl
+TABLESPACE pg_default
+AS
+ SELECT cm.porcentaje_caudal_descarte,
+    cm.tipo_planta,
+    cm.filtro_arena,
+    cm.num_unidades_filtro_arena,
+    cm.filtro_cartucho,
+    cm.num_unidades_filtro_cartucho,
+    cm.num_unidades_osmosis_inversa,
+	cm.objectid,
+    cm.turbiedad,
+    cm.valoras,
+    cm.valormn,
+    cm.valorfe,
+    cm.valorcolor,
+    cm.solidosdisueltostotales,
+    cm.sulfatos,
+    cm.cloruros,
+    cm.otroparametro,
+    cm.valorotroparametro,
+	cm.assetguid,
+	cm.gdb_archive_oid,
+	cm.created_date,
+	cm.last_edited_date,
+	cm.gdb_from_date
+   FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' 
+ SELECT 
+ap.porcentaje_caudal_descarte,
+ap.tipo_planta,
+ap.filtro_arena,
+ap.num_unidades_filtro_arena,
+ap.filtro_cartucho,
+ap.num_unidades_filtro_cartucho,
+ap.num_unidades_osmosis_inversa, 
+ap.objectid,
+round(ap.turbiedad, 2) AS Turbiedad,
+round(ap.valor_as, 2) AS ValorAs,
+round(ap.valor_mn, 2) AS ValorMn,
+round(ap.valor_fe, 2) AS ValorFe,
+round(ap.valor_color, 2) AS ValorColor,
+round(ap.solidos_disueltos_totales, 2) AS SolidosDisueltosTotales,
+round(ap.sulfatos, 2) AS Sulfatos,
+round(ap.cloruros, 2) AS Cloruros,
+ap.otro_parametro AS OtroParametro,
+round(ap.valor_otro_parametro, 2) AS ValorOtroParametro,
+ap.assetguid,
+ap.gdb_archive_oid,
+ap.created_date,
+ap.last_edited_date,
+ap.gdb_from_date			   
+  FROM ap_plantatratamiento ap 
+  WHERE ap.gdb_branch_id = 0 AND ap.objectid in (select distinct objectid from ap_plantatratamiento where created_date != last_edited_date)'::text) 
+  cm(porcentaje_caudal_descarte numeric(38,2), 
+	 tipo_planta integer, 
+	 filtro_arena integer, 
+	 num_unidades_filtro_arena integer, 
+	 filtro_cartucho integer, 
+	 num_unidades_filtro_cartucho integer, 
+	 num_unidades_osmosis_inversa integer, 
+	 objectid integer,
+	 turbiedad numeric, 
+	 valoras numeric, 
+	 valormn numeric, 
+	 valorfe numeric, 
+	 valorcolor numeric, 
+	 solidosdisueltostotales numeric, 
+	 sulfatos numeric, 
+	 cloruros numeric, 
+	 otroparametro character varying(255), 
+	 valorotroparametro numeric, 
+	 assetguid character varying(38),
+	 gdb_archive_oid integer,
+	 created_date timestamp without time zone,
+	 last_edited_date timestamp without time zone,
+	gdb_from_date timestamp without time zone)
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_1705_501_ap_pretratamiento_dbl
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_1705_501_ap_pretratamiento_dbl TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_501_ap_pretratamiento_dbl TO psanhueza;
+GRANT SELECT ON TABLE owd.vmt_1705_501_ap_pretratamiento_dbl TO bd_consulta;

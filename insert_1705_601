@@ -195,7 +195,6 @@ if cantidad > 0 then
 				ELSE rut = NULL;
 				END IF;		
 
-
 				IF  COALESCE(name,'0')  <>  COALESCE(punto.name,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 601, punto.codigo_obra, '0', 3, name::text, punto.name::text, punto.gdb_from_date, punto.gdb_archive_oid);
@@ -214,7 +213,7 @@ if cantidad > 0 then
 				END IF;	
 				IF  COALESCE(otro,'0')  <>  COALESCE(punto.otro,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 601, punto.codigo_obra, '0', 7, otro::text, punto.otro::text, punto.gdb_from_date, punto.gdb_from_date::integer);
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 601, punto.codigo_obra, '0', 7, otro::text, punto.otro::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;	
 				IF  COALESCE(designinfo,'0')  <>  COALESCE(punto.designinfo,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
@@ -267,7 +266,6 @@ if cantidad > 0 then
 			ELSIF ownedby = 104 THEN rut = '96963440';
 			ELSE rut = NULL;
 			END IF;				
-
 
 			IF  COALESCE(name,'0')  <>  COALESCE(name2,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	

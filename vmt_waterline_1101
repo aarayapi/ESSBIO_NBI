@@ -1,0 +1,100 @@
+-- View: owd.vmt_waterline_1101
+
+--DROP MATERIALIZED VIEW IF EXISTS owd.vmt_waterline_1101;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_waterline_1101
+TABLESPACE pg_default
+AS
+ SELECT wl.objectid,
+    wl.globalid,
+    wl.assetgroup,
+    wl.assettype,
+    wl.associationstatus,
+    wl.isconnected,
+    wl.fromdeviceterminal,
+    wl.todeviceterminal,
+    wl.creationdate,
+    wl.creator,
+    wl.lastupdate,
+    wl.updatedby,
+    wl.cpsubnetworkname,
+    wl.supportedsubnetworkname,
+    wl.systemsubnetworkname,
+    wl.pressuresubnetworkname,
+    wl.isolationsubnetworkname,
+    wl.dmasubnetworkname,
+    wl.installdate,
+    wl.assetid,
+    wl.ownedby,
+    wl.maintby,
+    wl.notes,
+    wl.diameter,
+    wl.measuredlength,
+    wl.adddetails,
+    wl.lifecyclestatus,
+    wl.bondedinsulated,
+    wl.cptraceability,
+    wl.inservicedate,
+    wl.retireddate,
+    wl.material,
+    wl.cpoverride,
+    wl.designtype,
+    wl.spatialsource,
+    wl.spatialconfidence,
+    wl.nombre_conduccion,
+    wl.codigo_financiamiento,
+    wl.periodo_informado_siss,
+    wl.anio_instalacion,
+    wl.proyecto_informado_siss,
+    wl.codigo_sistema_siss,
+    wl.red_tipo_cliente,
+    wl.tipo_red,
+    wl.uso_red,
+    wl.porcentaje_napa,
+    wl.presion_maxima_trabajo,
+    wl.tipo_operacion,
+    wl.tipo_terreno,
+    wl.descripcion_proceso,
+    wl.etapa,
+    wl.codigo_localidad,
+    wl.codigo_comuna,
+    wl.tipo_financiamiento,
+    wl.codigo_obra,
+    wl.codigo_duplicidad,
+    wl.justificacion_duplicidad,
+    wl.metodo_rehabilitacion,
+    wl.id_troncal,
+    wl.id_tramo_conectado,
+    wl.id_inventario_ultima_edicion,
+    wl.id_inventario,
+    wl.fecha_ultima_edicion,
+    wl.codigo_sector_distribucion,
+    wl.codigo_cuartel,
+    wl.codigo_obra_diseno,
+    wl.codigo_sector_presion,
+    wl.tipo_obra_origen,
+    wl.codigo_obra_origen,
+    wl.tipo_obra_destino,
+    wl.codigo_obra_destino,
+    wl.proyecto_ultima_edicion,
+    wl.profundidad_media_tramo,
+    wl.tipo_obra_red,
+    wl.paralelo,
+    wl.otro,
+    wl.shape
+   FROM owd.waterline wl
+  WHERE (wl.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+           FROM ( SELECT waterline.gdb_archive_oid,
+                    row_number() OVER (PARTITION BY waterline.objectid ORDER BY waterline.gdb_from_date DESC) AS rn,
+                    waterline.gdb_is_delete
+                   FROM owd.waterline
+                  WHERE waterline.gdb_branch_id = 0 AND waterline.gdb_from_date <= '9999-12-31 23:59:59'::timestamp without time zone) mb_
+          WHERE mb_.rn = 1)) AND wl.assetgroup = 1 AND (wl.assettype = 1 OR wl.assettype = 2 OR wl.assettype = 3)
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_waterline_1101
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_waterline_1101 TO owd;
+GRANT SELECT ON TABLE owd.vmt_waterline_1101 TO psanhueza;
+GRANT SELECT ON TABLE owd.vmt_waterline_1101 TO bd_consulta;

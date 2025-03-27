@@ -38,6 +38,7 @@ DECLARE
 	
 	gdb_archive_oid integer;
 	gdb_archive_oid2 integer;
+	codigo_sistema_siss2 integer;
 	proyecto_informado_siss character varying(100);
 	proyecto_informado_siss2 character varying(100);
 	resultado text;
@@ -119,12 +120,12 @@ if cantidad > 0 then
 			tipo2 := punto.tipo; --3
 			potencia_subestacion2 := punto.potencia_subestacion; --4
 
-
 			objectid2 = punto.objectid;
 
 			gdb_archive_oid2 := punto.gdb_archive_oid;
 			gdb_from_date2 := punto.gdb_from_date;
 			proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+			codigo_sistema_siss2 := punto.codigo_sistema_siss;			
 			ownedby2 := punto.ownedby;
 				
 		END IF;
@@ -160,12 +161,12 @@ if cantidad > 0 then
 				tipo2 := punto.tipo; --3
 				potencia_subestacion2 := punto.potencia_subestacion; --4
 
-
 				objectid2 = punto.objectid;
 
 				gdb_archive_oid2 := punto.gdb_archive_oid;
 				gdb_from_date2 := punto.gdb_from_date;
 				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
+				codigo_sistema_siss2 := punto.codigo_sistema_siss;
 				ownedby2 := punto.ownedby;		
 			END IF;		
 			

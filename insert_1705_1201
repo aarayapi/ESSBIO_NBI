@@ -379,6 +379,12 @@ if cantidad > 0 then
 			
 			END IF;
 		ELSIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN		
+		
+				IF ownedby = 103 THEN rut = '76833300';
+				ELSIF ownedby = 104 THEN rut = '96963440';
+				ELSE rut = NULL;
+				END IF;		
+		
 				IF  COALESCE(lifecyclestatus,'0')  <>   COALESCE(lifecyclestatus2,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1201, codigo_obra2, '0', 5, lifecyclestatus::text, lifecyclestatus2::text, gdb_from_date2, gdb_archive_oid2);

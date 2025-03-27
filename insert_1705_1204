@@ -57,6 +57,7 @@ DECLARE
 	potencia_inst_sedim_secund2 numeric(38,2); --16
 	ownedby2 smallint;	
 	
+	codigo_sistema_siss2 integer;
 	gdb_from_date2  timestamp without time zone;
 	objectid2 character varying(100);
 
@@ -174,7 +175,8 @@ if cantidad > 0 then
 			profundidad_prom_sedim_secund2 := punto.profundidad_prom_sedim_secund; --15
 			potencia_inst_sedim_secund2 := punto.potencia_inst_sedim_secund; --16
 
-			objectid2 = punto.objectid;			
+			codigo_sistema_siss2 := punto.codigo_sistema_siss;
+			objectid2 := punto.objectid;			
 			gdb_archive_oid2 := punto.gdb_archive_oid;
 			gdb_from_date2 := punto.gdb_from_date;
 			proyecto_informado_siss2 := punto.proyecto_informado_siss;	
@@ -271,6 +273,7 @@ if cantidad > 0 then
 				profundidad_prom_sedim_secund2 := punto.profundidad_prom_sedim_secund; --15
 				potencia_inst_sedim_secund2 := punto.potencia_inst_sedim_secund; --16
 
+				codigo_sistema_siss2 := punto.codigo_sistema_siss;
 				objectid2 = punto.objectid;			
 				gdb_archive_oid2 := punto.gdb_archive_oid;
 				gdb_from_date2 := punto.gdb_from_date;

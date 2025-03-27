@@ -38,6 +38,7 @@ DECLARE
 	numerotoberas2 smallint; --6
 	anchozonaproteccionlitoral2 numeric(38,2); --7
 	ownedby2 smallint;
+	codigo_sistema_siss2 character varying(100);
 
 	gdb_from_date2  timestamp without time zone;
 	objectid2 integer;
@@ -131,6 +132,8 @@ if cantidad > 0 then
 			gdb_from_date2 := punto.gdb_from_date;
 			proyecto_informado_siss2 := punto.proyecto_informado_siss;
 			ownedby2 := punto.ownedby;
+			codigo_sistema_siss2 := punto.codigo_sistema_siss;
+			
 		END IF;		
 		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN
 			
@@ -184,6 +187,7 @@ if cantidad > 0 then
 				gdb_from_date2 := punto.gdb_from_date;
 				proyecto_informado_siss2 := punto.proyecto_informado_siss;
 				ownedby2 := punto.ownedby;		
+				codigo_sistema_siss2 := punto.codigo_sistema_siss;
 				
 			END IF;
 			

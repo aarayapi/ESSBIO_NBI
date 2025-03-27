@@ -1,5 +1,20 @@
 truncate table tabla_1705;
-select * from owd.insert_1705_1207(to_date('20240415','YYYYMMDD'), to_date('20250330','YYYYMMDD'));
+select * from owd.insert_1705_1501(to_date('20240415','YYYYMMDD'), to_date('20250330','YYYYMMDD'));
+select "codigoObra", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id from tabla_1705
+
+select * from owd.func_1702(to_date('20240401','YYYYMMDD'), to_date('20250330','YYYYMMDD')) WHERE "tipoObraUrbanizacion" = 802;
+
+select * from  view_1501
+
+SELECT * FROM owd.vmt_1705_1405_atravieso
+
+
+truncate table tabla_1705;
+select * from owd.func_1705(to_date('20240415','YYYYMMDD'), to_date('20250330','YYYYMMDD'));
+select "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id from tabla_1705
+
+truncate table tabla_1705;
+select * from owd.insert_1705_601(to_date('20250117','YYYYMMDD'), to_date('20250331','YYYYMMDD'));
 select "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id from tabla_1705
 
 --WHERE "codigoAtributo" = 10
