@@ -1,0 +1,56 @@
+-- View: owd.vmt_1705_as_pretratamiento
+
+-- DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_as_pretratamiento;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_as_pretratamiento
+TABLESPACE pg_default
+AS
+ SELECT sd.ownedby,
+    sd.proyecto_informado_siss,
+    sd.codigo_sistema_siss,
+    pt.objectid,
+    pt.codigo_obra,
+    pt.identificador_unidad,
+    pt.limpieza_pretratamiento,
+    pt.paso_rejas,
+    pt.tipo_operacion,
+    pt.tipo_pretratamiento,
+    pt.assetguid,
+    pt.globalid,
+    pt.creator,
+    pt.creationdate,
+    pt.updatedby,
+    pt.lastupdate,
+    pt.created_user,
+    pt.created_date,
+    pt.last_edited_user,
+    pt.last_edited_date,
+    pt.gdb_branch_id,
+    pt.gdb_from_date,
+    pt.gdb_is_delete,
+    pt.gdb_deleted_at,
+    pt.gdb_deleted_by,
+    pt.gdb_archive_oid,
+    row_number() OVER (PARTITION BY pt.objectid ORDER BY pt.objectid, pt.gdb_from_date) AS rn,
+    cnt.cuenta
+   FROM as_pretratamiento pt
+     LEFT JOIN vmt_sewerdevice_sb sd ON pt.assetguid::text = sd.globalid::text
+     LEFT JOIN ( SELECT as_pretratamiento.objectid,
+            count(as_pretratamiento.objectid) AS cuenta
+           FROM as_pretratamiento
+          WHERE as_pretratamiento.gdb_branch_id = 0
+          GROUP BY as_pretratamiento.objectid) cnt ON pt.objectid = cnt.objectid
+  WHERE pt.gdb_branch_id = 0 AND (pt.objectid IN ( SELECT pt_1.objectid
+           FROM as_pretratamiento pt_1
+          WHERE pt_1.gdb_branch_id = 0
+          GROUP BY pt_1.objectid
+         HAVING count(pt_1.objectid) > 1)) AND sd.proyecto_informado_siss IS NOT NULL
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_1705_as_pretratamiento
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_1705_as_pretratamiento TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_as_pretratamiento TO sde;
+GRANT SELECT ON TABLE owd.vmt_1705_as_pretratamiento TO psanhueza;
+GRANT SELECT ON TABLE owd.vmt_1705_as_pretratamiento TO bd_consulta;

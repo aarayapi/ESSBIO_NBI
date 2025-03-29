@@ -1,70 +1,117 @@
+select * from owd.func_1704(to_date('20240401','YYYYMMDD'), to_date('20250330','YYYYMMDD')) where "codigoObraTipo" = 1101;
 
-SELECT  '5'::text AS codigoProceso,
-     '1702' AS codigoarchivo,
-        /*CASE wl.ownedby_narran
+select * from owd.func_1101(to_date('20240401','YYYYMMDD'), to_date('20250330','YYYYMMDD'));
+
+
+			SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wl.ownedby
             WHEN 103 THEN '76833300'::text
             WHEN 104 THEN '96963440'::text
             ELSE NULL::text
-        END AS rut,*/
-	CASE
-		WHEN wl.ownedby_narran IS NULL AND wl.ownedby_grifo IS NOT NULL THEN wl.ownedby_grifo
-		WHEN wl.ownedby_grifo IS NULL AND wl.ownedby_narran IS NULL THEN wl.ownedby_valv
-		ELSE wl.ownedby_narran
-	END AS ownedby,
-    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,			
-	CASE
-		WHEN wl.proyecto_informado_siss_narran IS NULL AND wl.proyecto_informado_siss_grifo IS NOT NULL THEN wl.proyecto_informado_siss_grifo
-		WHEN wl.proyecto_informado_siss_grifo IS NULL AND wl.proyecto_informado_siss_narran IS NULL THEN wl.proyecto_informado_siss_valv
-		ELSE wl.proyecto_informado_siss_narran
-	END AS "codigoProyecto",
-    wl.codigo_sistema_siss_narran AS codigosistema,	
-    ( SELECT a.codigo_localidad_siss
-           FROM concesionmetro_ap a
-          WHERE a.codigo_localidad = wl.codigo_localidad_narran) AS "codigoLocalidad",
-	802 AS "tipoObraUrbanizacion",
-	1 AS accion, 
-	CASE
-    	WHEN wl.codigo_sector_narran IS NULL AND wl.codigo_sector_distribucion_grifo IS NOT NULL THEN '800-' || wl.codigo_sector_distribucion_grifo
-		WHEN wl.codigo_sector_narran IS NULL AND wl.codigo_sector_distribucion_grifo IS NULL THEN '800-' || wl.codigo_sector_distribucion_valv
-		ELSE '800-' ||  wl.codigo_sector_narran		
-	END AS "codigoModificar",
-		
-    0  AS "materialTipoMedidor",
-    NULL  AS  "OtroMaterial",	
-	wl.nombre AS "NombreSectorRed",
-	narran AS "NumeroArranques",
-	NULL::integer AS "NumeroMedidores",
-    NULL::integer AS "NumeroUniones",	
-	wl.ngrifos AS "NumeroGrifos",
-	wl.nvalvulas AS "NumeroValvulas"
-	FROM ((
-	SELECT wl.ownedby as ownedby_narran, wl.proyecto_informado_siss AS proyecto_informado_siss_narran, wl.codigo_sistema_siss AS codigo_sistema_siss_narran, 
-		wl.codigo_localidad AS codigo_localidad_narran, 
-  wl.codigo_sector_distribucion AS codigo_sector_narran, count(objectid) AS narran FROM vmt_waterline_sb wl   WHERE  wl.assetgroup = 2 AND wl.assettype = 11 
-	AND wl.creationdate >= to_date('20240401','YYYYMMDD') 
-	--AND wl.creationdate <= to_date('20240415','YYYYMMDD')
-  GROUP BY wl.ownedby, wl.proyecto_informado_siss, wl.codigo_sistema_siss, wl.codigo_localidad, wl.codigo_sector_distribucion)vmwl
-   LEFT JOIN (SELECT DISTINCT nombre, codigo_sector_distribucion FROM owd.sectoresdistribucion) st
-      ON st.codigo_sector_distribucion::text =  vmwl.codigo_sector_narran
-FULL JOIN (SELECT count(wgrf.objectid) AS ngrifos, wgrf.codigo_sector_distribucion AS codigo_sector_distribucion_grifo, wgrf.proyecto_informado_siss AS proyecto_informado_siss_grifo, wgrf.ownedby AS ownedby_grifo, wgrf.proyecto_informado_siss, 
-		   wgrf.codigo_sistema_siss, wgrf.codigo_localidad FROM vmt_waterdevice_sb wgrf WHERE wgrf.assetgroup = 7 AND wgrf.assettype = 321 
-	AND wgrf.creationdate >= to_date('20240401','YYYYMMDD') 
-		--AND creationdate <= to_date('20240401','YYYYMMDD') 		
-		GROUP BY wgrf.ownedby, wgrf.proyecto_informado_siss, wgrf.codigo_sistema_siss, wgrf.codigo_localidad, wgrf.codigo_sector_distribucion ) wlgrifo
-		ON vmwl.codigo_sector_narran::text =  wlgrifo.codigo_sector_distribucion_grifo 	
-		AND vmwl.proyecto_informado_siss_narran = wlgrifo.proyecto_informado_siss_grifo
-		AND vmwl.ownedby_narran = wlgrifo.ownedby_grifo
-		AND vmwl.codigo_sistema_siss_narran = wlgrifo.codigo_sistema_siss
-		AND vmwl.codigo_localidad_narran = wlgrifo.codigo_localidad
-
-FULL JOIN (SELECT count(wgrf.objectid) AS nvalvulas, wgrf.codigo_sector_distribucion AS codigo_sector_distribucion_valv, wgrf.proyecto_informado_siss AS proyecto_informado_siss_valv, wgrf.ownedby AS ownedby_valv, wgrf.proyecto_informado_siss, 
-		   wgrf.codigo_sistema_siss, wgrf.codigo_localidad FROM vmt_waterdevice_sb wgrf WHERE wgrf.assetgroup = 2 AND wgrf.assettype in (167, 170,172,173,175)
-	AND creationdate >= to_date('20240401','YYYYMMDD') 
-   --AND creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
-	GROUP BY wgrf.ownedby, wgrf.proyecto_informado_siss, wgrf.codigo_sistema_siss, wgrf.codigo_localidad, wgrf.codigo_sector_distribucion) wlvalv
-	ON vmwl.codigo_sector_narran::text =  wlvalv.codigo_sector_distribucion_valv   
-	AND vmwl.proyecto_informado_siss_narran = wlvalv.proyecto_informado_siss_valv
-	AND vmwl.ownedby_narran = wlvalv.ownedby_valv
-	AND vmwl.codigo_sistema_siss_narran = wlvalv.codigo_sistema_siss
-	AND vmwl.codigo_localidad_narran = wlvalv.codigo_localidad) AS wl
-	  ORDER by wl.codigo_sector_narran, wl.proyecto_informado_siss_narran	
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wl.proyecto_informado_siss AS "codigoProyecto",
+    wl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1101 AS "codigoObraTipo",
+	wl.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterline_1101 wl
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wl.proyecto_informado_siss
+  WHERE wl.creationdate <= to_date('20250330','YYYYMMDD') 
+  GROUP BY (
+        CASE wl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END), wl.codigo_sistema_siss, wl.nombre_conduccion,  wl.codigo_obra, wl.tipo_obra_origen, wl.codigo_obra_origen, wl.tipo_obra_destino, wl.codigo_obra_destino, 
+		wl.proyecto_informado_siss, bi.tipo_aporte, cr.tipotrabajo, bi.tipo_aportante, bi.contratista_consultor, (CASE wl.assettype
+			WHEN 1 THEN 2
+			WHEN 3 THEN 1
+			ELSE NULL
+		END);  
+  
+  
+ SELECT '5'::text AS "codigoProceso",
+    '1101'::text AS "codigoArchivo",
+        CASE wl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+    wl.codigo_sistema_siss AS codigosistema,
+    wl.codigo_obra AS "codigoConduccion",
+    	CASE wl.assettype
+			WHEN 1 THEN 2
+			WHEN 3 THEN 1
+			ELSE NULL
+		END AS "Etapa", 
+	wl.nombre_conduccion AS "NombreObra",
+    wl.tipo_obra_origen AS "TipoObraOrigen",
+    wl.codigo_obra_origen AS "CodigoObraOrigen",
+    wl.tipo_obra_destino AS "TipoObraDestino",
+    wl.codigo_obra_destino AS "CodigoObraDestino",
+    round(sum(st_length(wl.shape))::numeric, 2)
+   FROM owd.vmt_waterline_1101 wl
+  WHERE wl.creationdate <= to_date('20250330','YYYYMMDD')   
+  --AND wl.codigo_obra || wl.ownedby::text not in (SELECT DISTINCT codigo_obra ||ownedby::text from owd.vmt_waterline_1101 where creationdate < to_date('20240401','YYYYMMDD') AND codigo_obra is not null)
+  GROUP BY (
+        CASE wl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END), wl.codigo_sistema_siss, wl.nombre_conduccion,  wl.codigo_obra, wl.tipo_obra_origen, wl.codigo_obra_origen, wl.tipo_obra_destino, wl.codigo_obra_destino, (CASE wl.assettype
+			WHEN 1 THEN 2
+			WHEN 3 THEN 1
+			ELSE NULL
+		END);
+  
