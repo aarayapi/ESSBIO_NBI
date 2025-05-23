@@ -1,0 +1,59 @@
+-- View: owd.vmt_water_sewer_recintos_dbl
+
+-- DROP MATERIALIZED VIEW IF EXISTS owd.vmt_water_sewer_recintos_dbl;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_water_sewer_recintos_dbl
+TABLESPACE pg_default
+AS
+ SELECT cm.objectid,
+ 	cm.codigo_obra,
+ 	cm.proyecto_informado_siss,
+ 	cm.ownedby,
+	cm.creationdate,
+    cm.codigo_recinto,
+    cm.gdb_branch_id,
+    cm.gdb_from_date,
+    cm.gdb_is_delete,
+    cm.gdb_deleted_at,
+    cm.gdb_deleted_by,
+    cm.gdb_archive_oid
+   FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' 
+   
+ SELECT 
+wd.objectid,
+wd.codigo_obra,			   
+wd.proyecto_informado_siss,
+wd.ownedby,
+wd.creationdate,
+wd.codigo_recinto, 
+wd.gdb_branch_id, 
+wd.gdb_from_date, 
+wd.gdb_is_delete, 
+wd.gdb_deleted_at, 
+wd.gdb_deleted_by, 
+wd.gdb_archive_oid
+   FROM owd.waterdevice wd'::text) cm(objectid integer, codigo_obra character varying(100), proyecto_informado_siss character varying(100), ownedby smallint, creationdate timestamp without time zone, codigo_recinto character varying(20), gdb_branch_id integer, gdb_from_date timestamp without time zone, gdb_is_delete smallint, gdb_deleted_at timestamp without time zone, gdb_deleted_by character varying(255), gdb_archive_oid integer)
+UNION
+
+ SELECT sd.objectid,
+ 	sd.codigo_obra,
+ 	sd.proyecto_informado_siss,
+ 	sd.ownedby,
+	sd.creationdate,
+    sd.codigo_recinto,
+    sd.gdb_branch_id,
+    sd.gdb_from_date,
+    sd.gdb_is_delete,
+    sd.gdb_deleted_at,
+    sd.gdb_deleted_by,
+    sd.gdb_archive_oid
+	FROM sewerdevice sd
+
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_water_sewer_recintos_dbl
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_water_sewer_recintos_dbl TO owd;
+GRANT SELECT ON TABLE owd.vmt_water_sewer_recintos_dbl TO psanhueza;
+GRANT SELECT ON TABLE owd.vmt_water_sewer_recintos_dbl TO bd_consulta;

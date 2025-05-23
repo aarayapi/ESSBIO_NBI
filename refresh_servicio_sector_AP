@@ -1,0 +1,3 @@
+refresh materialized view owd.vm_arranque_bckp;
+refresh materialized view owd.vm_water_main_bckp;
+refresh materialized view owd.vm_service_connection_bckp;

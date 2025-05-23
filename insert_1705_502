@@ -124,7 +124,8 @@ SELECT '5', '1705',         CASE wdsb.ownedby
         END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
 		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 502, wdsb.codigo_obra, '0', 28, round(wdsb.utm_norte_nbi,2), round(wdsb.utm_norte_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
 	FROM owd.vmt_waterdevice_sb_dbl wdsb WHERE wdsb.assettype = 607 AND wdsb.assetgroup = 15
-	AND round(wdsb.utm_norte_nbi,2) <> round(wdsb.utm_norte_sig,2) AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
+	AND ((round(wdsb.utm_norte_nbi,2) > (round(wdsb.utm_norte_sig,2) + 0.05)) OR (round(wdsb.utm_norte_nbi,2) < (round(wdsb.utm_norte_sig,2) - 0.05)))
+	AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
 	
 INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 SELECT '5', '1705',         CASE wdsb.ownedby
@@ -134,7 +135,8 @@ SELECT '5', '1705',         CASE wdsb.ownedby
         END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
 		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 502, wdsb.codigo_obra, '0', 29, round(wdsb.utm_este_nbi,2), round(wdsb.utm_este_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
 	FROM owd.vmt_waterdevice_sb_dbl wdsb WHERE wdsb.assettype = 607 AND wdsb.assetgroup = 15
-	AND (round(wdsb.utm_este_nbi,2) <> round(wdsb.utm_este_sig,2)  AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio	);	
+	AND ((round(wdsb.utm_este_nbi,2) > (round(wdsb.utm_este_sig,2) + 0.05)) OR (round(wdsb.utm_este_nbi,2) < (round(wdsb.utm_este_sig, 2) - 0.05)))
+	AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;	
 -------------------------------------------------------------------------------------------------------------------
   
 SELECT count(*) into cantidad
@@ -237,7 +239,6 @@ if cantidad > 0 then
 			gdb_archive_oid := punto.gdb_archive_oid;
 			gdb_from_date := punto.gdb_from_date;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
-
 
 		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1  AND objectid = punto.objectid THEN
 
@@ -382,8 +383,6 @@ if cantidad > 0 then
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 501, codigo_obra2, '0', 25, apmax.valorotroparametro::text, apmax.apminvalorotroparametro::text, gdb_from_date2, apmax.objectid);
 					END IF;	
 
-
-
 					IF  COALESCE(apmax.porcentaje_caudal_descarte,'0')  <>  COALESCE(apmax.porcentajecaudal2,'0') THEN
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 502, codigo_obra2, '0', 7, apmax.porcentaje_caudal_descarte::text, apmax.porcentajecaudal2::text, gdb_from_date2, apmax.objectid);
@@ -414,14 +413,12 @@ if cantidad > 0 then
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 502, codigo_obra2, '0', 14, apmax.num_unidades_osmosis_inversa::text, apmax.numunosmosisinv2::text, gdb_from_date2, apmax.objectid);
 					END IF;	
 
-
 				END LOOP;
 				
 				IF ownedby = 103 THEN rut = '76833300';
 				ELSIF ownedby = 104 THEN rut = '96963440';
 				ELSE rut = NULL;
 				END IF;				
-
 
 				IF  COALESCE(name,'0')  <>  COALESCE(name2,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
@@ -594,7 +591,7 @@ if cantidad > 0 then
 											 AND ap1.assetguid = globalid
 											 group by ap1.assetguid )	
 				 LOOP
-					raise notice 'tipo_planta', 
+
 					IF  COALESCE(apmax.turbiedad,'0')  <>  COALESCE(apmax.apminturbiedad,'0') THEN
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 501, codigo_obra2, '0', 16, apmax.turbiedad::text, apmax.apminturbiedad::text, gdb_from_date2, apmax.objectid);
@@ -636,8 +633,6 @@ if cantidad > 0 then
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 501, codigo_obra2, '0', 25, apmax.valorotroparametro::text, apmax.apminvalorotroparametro::text, gdb_from_date2, apmax.objectid);
 					END IF;	
 
-
-
 					IF  COALESCE(apmax.porcentaje_caudal_descarte,'0')  <>  COALESCE(apmax.porcentajecaudal2,'0') THEN
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 502, codigo_obra2, '0', 7, apmax.porcentaje_caudal_descarte::text, apmax.porcentajecaudal2::text, gdb_from_date2, apmax.objectid);
@@ -667,7 +662,6 @@ if cantidad > 0 then
 						INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 						VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 502, codigo_obra2, '0', 14, apmax.num_unidades_osmosis_inversa::text, apmax.numunosmosisinv2::text, gdb_from_date2, apmax.objectid);
 					END IF;	
-
 
 				END LOOP;
 
@@ -946,8 +940,6 @@ END IF;
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 501, punto.codigo_obra, '0', 25, apmax.valorotroparametro::text, apmax.apminvalorotroparametro::text, gdb_from_date2, apmax.objectid);
 				END IF;	
-
-
 
 				IF  COALESCE(apmax.porcentaje_caudal_descarte,'0')  <>  COALESCE(apmax.porcentajecaudal2,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	

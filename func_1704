@@ -1470,32 +1470,17 @@ BEGIN
 			WHEN 4 THEN bi.contratista_consultor	
             ELSE ''::text
         END AS "NombreAportante"
-   FROM owd.vmt_waterline_1101 wl
+   FROM owd.vmt_waterline_sb wl
    LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wl.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wl.proyecto_informado_siss
-  WHERE wl.creationdate <= fecha_fin AND 
-  wl.codigo_obra || wl.ownedby::text not in (SELECT DISTINCT codigo_obra ||ownedby::text from owd.vmt_waterline_1101 where creationdate < fecha_inicio AND codigo_obra is not null)
-  GROUP BY (
-        CASE wl.ownedby
-            WHEN 103 THEN '76833300'::text
-            WHEN 104 THEN '96963440'::text
-            ELSE NULL::text
-        END), wl.codigo_sistema_siss, wl.nombre_conduccion,  wl.codigo_obra, wl.tipo_obra_origen, wl.codigo_obra_origen, wl.tipo_obra_destino, wl.codigo_obra_destino, (CASE wl.assettype
-			WHEN 1 THEN 2
-			WHEN 3 THEN 1
-			ELSE NULL
-		END)
-  
-  
-  
-/*  (wl.objectid IN ( SELECT mb.objectid
+  WHERE (wl.objectid IN ( SELECT mb.objectid
            FROM (SELECT vws.objectid,
                     ROW_NUMBER() OVER (PARTITION BY vws.codigo_obra ORDER BY vws.creationdate ASC) as rn, vws.creationdate,
 				 	vws.assetgroup, vws.assettype, vws.codigo_obra
 					FROM owd.vmt_waterline_sb vws) mb
 					WHERE mb.rn = 1 AND mb.creationdate >= fecha_inicio AND mb.creationdate <= fecha_fin
-					AND	mb.assetgroup = 1 AND mb.assettype = 1 AND mb.codigo_obra is not null))*/
+					AND mb.assetgroup = 1 AND (mb.assettype = 1 OR mb.assettype = 2 OR mb.assettype = 3)))
         
     UNION
   
@@ -1562,7 +1547,7 @@ BEGIN
    LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wl.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wl.proyecto_informado_siss
-  WHERE wl.assetgroup = 1 AND wl.assettype = 3  AND wl.codigo_obra is not null
+	WHERE wl.assetgroup = 1 AND (wl.assettype = 1 OR wl.assettype = 3)
   AND   wl.creationdate >= fecha_inicio AND wl.creationdate <= fecha_fin 
   
     
@@ -1642,17 +1627,16 @@ BEGIN
 			WHEN 4 THEN bi.contratista_consultor	
             ELSE ''''::text
         END AS "NombreAportante"
-   FROM owd.vmt_sewerline_sb sl
+   FROM (SELECT sl.ownedby, sl.codigo_sistema_siss, sl.codigo_obra, sl.nombre_conduccion, sl.tipo_obra_origen, sl.codigo_obra_origen,
+		 sl.tipo_obra_destino, sl.codigo_obra_destino, sl.etapa, sl.proyecto_informado_siss
+		 FROM owd.vmt_sewerline_1151 sl
+  WHERE  sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+  AND sl.codigo_obra || sl.ownedby::text NOT IN (select distinct codigo_obra || ownedby::text FROM owd.vmt_sewerline_1151 WHERE creationdate < to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			   AND codigo_obra is not null)
+  GROUP BY sl.ownedby, sl.codigo_sistema_siss, sl.codigo_obra, sl.nombre_conduccion, sl.tipo_obra_origen, sl.codigo_obra_origen, sl.tipo_obra_destino, sl.codigo_obra_destino, sl.etapa,sl.proyecto_informado_siss) AS sl
    LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
-   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sl.proyecto_informado_siss
-  WHERE (sl.objectid IN (SELECT mb.objectid  
-			   FROM (SELECT vss.objectid, ROW_NUMBER() OVER (PARTITION BY vss.codigo_obra ORDER BY vss.creationdate ASC) as rn, vss.creationdate,
-			   vss.assetgroup, vss.assettype, vss.codigo_obra FROM owd.vmt_sewerline_sb vss) mb
-			   WHERE (mb.assetgroup = 1 OR mb.assetgroup = 2) 
-			   AND (mb.assettype = 2 OR mb.assettype = 41 OR mb.assettype = 42)  
-			   AND mb.codigo_obra is not null)) AND sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
-					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sl.proyecto_informado_siss'::text) 
 
 	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
 	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
@@ -1910,21 +1894,15 @@ UNION
 			WHEN 4 THEN bi.contratista_consultor	
             ELSE ''''::text
         END AS "NombreAportante"
-   FROM owd.as_pretratamiento pt
+   FROM owd.vmt_as_pretratamiento_sb pt
     LEFT JOIN vmt_sewerdevice_sb sd ON pt.assetguid::text = sd.globalid::text		   
 	LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss		   
 			   
-  WHERE (pt.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
-           FROM ( SELECT as_pretratamiento.gdb_archive_oid,
-                    row_number() OVER (PARTITION BY as_pretratamiento.objectid ORDER BY as_pretratamiento.gdb_from_date DESC) AS rn,
-                    as_pretratamiento.gdb_is_delete
-                   FROM as_pretratamiento
-                  WHERE as_pretratamiento.gdb_branch_id = 0 AND as_pretratamiento.gdb_from_date <= ''9999-12-31 23:59:59''::timestamp without time zone) mb_
-          WHERE mb_.rn = 1 AND mb_.gdb_is_delete = ''0''::smallint)) AND pt.codigo_obra is not null
-			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
-					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+  WHERE  pt.codigo_obra is not null
+			   AND pt.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND pt.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
 	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
 	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
 	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
@@ -2006,20 +1984,14 @@ UNION
 			WHEN 4 THEN bi.contratista_consultor	
             ELSE ''''::text
         END AS "NombreAportante"
-   FROM as_tratamientoprimario tp
+   FROM owd.vmt_as_tratamientoprimario_sb tp
      LEFT JOIN vmt_sewerdevice_sb sd ON tp.assetguid::text = sd.globalid::text
    LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss 
-  WHERE (tp.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
-           FROM ( SELECT as_tratamientoprimario.gdb_archive_oid,
-                    row_number() OVER (PARTITION BY as_tratamientoprimario.objectid ORDER BY as_tratamientoprimario.gdb_from_date DESC) AS rn,
-                    as_tratamientoprimario.gdb_is_delete
-                   FROM as_tratamientoprimario
-                  WHERE as_tratamientoprimario.gdb_branch_id = 0 AND as_tratamientoprimario.gdb_from_date <= ''9999-12-31 23:59:59''::timestamp without time zone) mb_
-          WHERE mb_.rn = 1 AND mb_.gdb_is_delete = ''0''::smallint)) AND tp.codigo_obra is not null
-			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
-					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+  WHERE tp.codigo_obra is not null
+			   AND tp.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND tp.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
 	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
 	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
 	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
@@ -2100,13 +2072,13 @@ UNION
 			WHEN 4 THEN bi.contratista_consultor	
             ELSE ''''::text
         END AS "NombreAportante"
-FROM as_tratamientosecundario ts
+FROM owd.vmt_as_tratamientosecundario_sb ts
     LEFT JOIN vmt_sewerdevice_sb sd ON ts.assetguid::text = sd.globalid::text 
    LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss	   
-			   WHERE   ts.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
-					   AND ts.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			   WHERE   ts.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ts.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
 			   AND ts.codigo_obra is not null'::text) 
 	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
 	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
@@ -2190,14 +2162,14 @@ UNION
 			WHEN 4 THEN bi.contratista_consultor	
             ELSE ''''::text
         END AS "NombreAportante"
-   FROM as_desinfecciondecloracion ds
+   FROM owd.vmt_as_desinfecciondecloracion_sb ds
     LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
 	LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss   
 			   
-			   WHERE   ds.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
-					   AND ds.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			   WHERE   ds.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ds.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
 			   AND ds.codigo_obra is not null'::text) 
 	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
 	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
@@ -2279,13 +2251,13 @@ UNION
 			WHEN 4 THEN bi.contratista_consultor	
             ELSE ''''::text
         END AS "NombreAportante"
-   FROM as_linea_lodos_ptas ds
-   LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
+   FROM owd.vmt_as_linea_lodos_ptas_sb ds
+   LEFT JOIN owd.vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
    LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss	   
-			   WHERE   ds.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
-					   AND ds.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			   WHERE   ds.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ds.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
 			   AND ds.codigo_obra is not null'::text) 
 	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
 	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
@@ -2995,13 +2967,13 @@ FROM  (SELECT '5'::text AS "codigoProceso",
 			WHEN 4 THEN bi.contratista_consultor
             ELSE ''::text
         END AS "NombreAportante"	   
-   FROM owd.ap_atraviesos atr 
+   FROM owd.vmt_ap_atraviesos_sb atr 
      LEFT JOIN owd.vmt_waterline_sb wl ON wl.globalid::text = atr.assetguid::text 
 	   
    LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wl.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wl.proyecto_informado_siss	     
-   WHERE  atr.created_date >= fecha_inicio AND atr.created_date <= fecha_fin AND wl.codigo_obra is not null
+   WHERE  atr.created_date >= fecha_inicio AND atr.created_date <= fecha_fin
   
   UNION
 	   SELECT cm."codigoProceso",
@@ -3078,13 +3050,13 @@ FROM  (SELECT '5'::text AS "codigoProceso",
 			WHEN 4 THEN bi.contratista_consultor	
             ELSE ''''::text
         END AS "NombreAportante"
-   FROM owd.as_atravieso atr 
+   FROM owd.vmt_as_atravieso_sb atr 
    LEFT JOIN owd.vmt_sewerline_sb sl on sl.globalid = atr.assetguid 				   
    LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sl.proyecto_informado_siss				   			   
    WHERE atr.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
-		    AND atr.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') AND atr.codigo_obra is not null'
+		    AND atr.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'
 	  )cm("codigoProceso" text,
 "codigoArchivo" text,
 rut text,
@@ -3128,7 +3100,7 @@ FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b
         END AS rut,
     (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
 	grp.proyecto_informado_siss AS "codigoProyecto",
-    grp.codigo_sistema_siss AS "codigoSistema",
+    0 AS "codigoSistema",
 	0 AS "codigoLocalidad",
 	1601 AS "codigoObraTipo",
 	grp.codigo_obra AS "codigoObra",
@@ -3228,7 +3200,7 @@ FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b
         END AS rut,
     (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
 	grp.proyecto_informado_siss AS "codigoProyecto",
-    grp.codigo_sistema_siss AS "codigoSistema",
+    0 AS "codigoSistema",
 	0 AS "codigoLocalidad",
 	1602 AS "codigoObraTipo",
 	grp.codigo_obra AS "codigoObra",

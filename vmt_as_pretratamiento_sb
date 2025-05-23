@@ -1,0 +1,47 @@
+-- View: owd.vmt_as_pretratamiento_sb
+
+-- DROP MATERIALIZED VIEW IF EXISTS owd.vmt_as_pretratamiento_sb;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_as_pretratamiento_sb
+TABLESPACE pg_default
+AS
+ SELECT a.objectid,
+    a.codigo_obra,
+    a.identificador_unidad,
+    a.limpieza_pretratamiento,
+    a.paso_rejas,
+    a.tipo_operacion,
+    a.tipo_pretratamiento,
+    a.assetguid,
+    a.globalid,
+    a.creator,
+    a.creationdate,
+    a.updatedby,
+    a.lastupdate,
+    a.created_user,
+    a.created_date,
+    a.last_edited_user,
+    a.last_edited_date,
+    a.gdb_branch_id,
+    a.gdb_from_date,
+    a.gdb_is_delete,
+    a.gdb_deleted_at,
+    a.gdb_deleted_by,
+    a.gdb_archive_oid,
+    a.estado_uso
+   FROM as_pretratamiento a
+  WHERE (a.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+           FROM ( SELECT b.gdb_archive_oid,
+                    row_number() OVER (PARTITION BY b.objectid ORDER BY b.gdb_from_date DESC) AS rn,
+                    b.gdb_is_delete
+                   FROM as_pretratamiento b
+                  WHERE b.gdb_branch_id = 0 AND b.gdb_from_date <= '9999-12-31 23:59:59'::timestamp without time zone) mb_
+          WHERE mb_.rn = 1 AND mb_.gdb_is_delete = '0'::smallint))
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_as_pretratamiento_sb
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_as_pretratamiento_sb TO owd;
+GRANT SELECT ON TABLE owd.vmt_as_pretratamiento_sb TO psanhueza;
+GRANT SELECT ON TABLE owd.vmt_as_pretratamiento_sb TO bd_consulta;

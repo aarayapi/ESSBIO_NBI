@@ -90,6 +90,7 @@ FOR punto IN
 		wdsb.paralelo,
 		wdsb.lifecyclestatus
 	FROM owd.vmt_1705_1101_waterline_dbl wdsb WHERE (wdsb.assetgroup = 1 OR wdsb.assettype = 1)
+	AND (wdsb.gdb_is_delete = 0 OR (wdsb.gdb_is_delete = 1 AND wdsb.proyecto_informado_siss is not NULL))
 	AND wdsb.objectid != 0
 	AND wdsb.creationdate <= fecha_fin 
 	AND wdsb.codigo_obra IN (SELECT T1.codigo_obra 
@@ -111,7 +112,7 @@ FOR punto IN
 				longitud_ant = round(tramo.longitud, 2);
 				longitud_nue = round(punto.largo::numeric, 2);	
 
-				IF longitud_ant <> longitud_nue  THEN
+				IF longitud_ant > longitud_nue + 0.05 OR longitud_ant < longitud_nue - 0.05 THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1102, punto.codigo_obra, punto.id_tramo_conectado, 11, longitud_ant::text, longitud_nue::text, punto.gdb_from_date, punto.gdb_archive_oid::integer);
 				END IF;				

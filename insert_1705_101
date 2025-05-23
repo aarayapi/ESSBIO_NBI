@@ -25,15 +25,15 @@ DECLARE
     lifecyclestatus integer;
     seccion_rio integer; 
     fuente character varying(255);
-    cota numeric(38,8);
+    cota numeric(38,2);
     desarenador integer;
-    designinfo numeric(38,8);
+    designinfo numeric(38,2);
     tipo_captacion integer;
 	tipo_captacion_ smallint;
     otro character varying(255);
-    longitud_barrera_dren_presa numeric(38,8);
-    diameter numeric(38,8);
-    capacidad_operativa numeric(38,8);
+    longitud_barrera_dren_presa numeric(38,2);
+    diameter numeric(38,2);
+    capacidad_operativa numeric(38,2);
     telemetria integer;
     telecontrol integer;
     utm_norte_nbi numeric(38,8);
@@ -50,14 +50,14 @@ DECLARE
     lifecyclestatus2 integer;
     seccion_rio2 integer; 
     fuente2 character varying(255);
-    cota2 numeric(38,8);
+    cota2 numeric(38,2);
     desarenador2 integer;
-    designinfo2 numeric(38,8);
+    designinfo2 numeric(38,2);
     tipo_captacion2 integer;
     otro2 character varying(255);
-    longitud_barrera_dren_presa2 numeric(38,8);
-    diameter2 numeric(38,8);
-    capacidad_operativa2 numeric(38,8);
+    longitud_barrera_dren_presa2 numeric(38,2);
+    diameter2 numeric(38,2);
+    capacidad_operativa2 numeric(38,2);
     telemetria2 integer;
     telecontrol2 integer;
     utm_norte_nbi2 numeric(38,8);
@@ -102,7 +102,8 @@ SELECT '5', '1705',         CASE wdsb.ownedby
         END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
 		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 101, wdsb.codigo_obra, '0', 18, round(wdsb.utm_norte_nbi,2), round(wdsb.utm_norte_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
 	FROM owd.vmt_waterdevice_sb_dbl wdsb WHERE wdsb.assetgroup = 20 AND wdsb.assettype = 567 
-	AND round(wdsb.utm_norte_nbi,2) <> round(wdsb.utm_norte_sig,2) AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
+	AND ((round(wdsb.utm_norte_nbi,2) > (round(wdsb.utm_norte_sig,2) + 0.05)) OR (round(wdsb.utm_norte_nbi,2) < (round(wdsb.utm_norte_sig,2) - 0.05)))
+	AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
 	
 INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 SELECT '5', '1705',         CASE wdsb.ownedby
@@ -112,7 +113,8 @@ SELECT '5', '1705',         CASE wdsb.ownedby
         END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
 		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 101, wdsb.codigo_obra, '0', 19, round(wdsb.utm_este_nbi,2), round(wdsb.utm_este_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
 	FROM owd.vmt_waterdevice_sb_dbl wdsb WHERE wdsb.assetgroup = 20 AND wdsb.assettype = 567 
-	AND (round(wdsb.utm_este_nbi,2) <> round(wdsb.utm_este_sig,2)  AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio	);	
+	AND ((round(wdsb.utm_este_nbi,2) > (round(wdsb.utm_este_sig,2) + 0.05)) OR (round(wdsb.utm_este_nbi,2) < (round(wdsb.utm_este_sig, 2) - 0.05)))
+	AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;	
   
   
  -- Detecta cambios en el resto de los campos 
@@ -271,7 +273,6 @@ if cantidad > 0 then
 				ELSE rut = NULL;
 				END IF;		
 
-
 				IF  COALESCE(name,'')  <>  COALESCE(punto.name,'') THEN
 											INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)		
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 101, punto.codigo_obra, '0', 3, name::text, punto.name::text, punto.gdb_from_date, punto.gdb_archive_oid);
@@ -387,7 +388,6 @@ if cantidad > 0 then
 			ELSIF ownedby = 104 THEN rut = '96963440';
 			ELSE rut = NULL;
 			END IF;	
-
 
 			IF  COALESCE(name,'')  <>  COALESCE(name2,'') THEN
 										INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)		

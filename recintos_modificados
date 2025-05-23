@@ -1,0 +1,204 @@
+-- FUNCTION: owd.recintos_modificados(date, date)
+
+-- DROP FUNCTION IF EXISTS owd.recintos_modificados(date, date);
+
+CREATE OR REPLACE FUNCTION owd.recintos_modificados(
+	fecha_inicio date,
+	fecha_fin date)
+    RETURNS TABLE("codigoProceso" smallint, "codigoArchivo" smallint, rut character varying, periodo integer, "codigoProyecto" character varying, "codigoSistema" character varying, "codigoObraTipo" integer, "codigoObra" character varying, "codigoTramo" character varying, "codigoAtributo" integer, "ValorAnterior" text, "ValorNuevo" text, fecha timestamp without time zone, gdb_archive_id integer) 
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000	
+	
+AS $BODY$
+DECLARE 
+	punto record;	
+
+	codigo_recinto  character varying(50);
+	proyecto_informado_siss character varying(100);
+	ownedby smallint;
+	codigo_sistema_siss character varying(100);
+	
+	gdb_from_date  timestamp without time zone;
+	objectid integer;
+
+	codigo_recinto2  character varying(50);
+	proyecto_informado_siss2 character varying(100);
+	ownedby2 smallint;	
+	codigo_sistema_siss2 character varying(100);
+	
+	gdb_from_date2  timestamp without time zone;
+	objectid2 integer;	
+	
+	gdb_archive_oid integer;
+	gdb_archive_oid2 integer;
+
+	codigoproceso smallint;
+	codigoarchivo smallint;
+	rut character varying(20);
+    periodo integer;
+	resultado text;
+	cantidad integer;
+	estado smallint;
+
+	cuenta integer;
+BEGIN
+
+codigoproceso :=  5;
+codigoarchivo := 1705; 
+--rut := '96963440';
+periodo := ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer;
+
+--resultado   := '';
+estado := 0;
+cantidad := 0;
+
+cuenta := 0;
+
+
+-----------------------------------------351---------------------------------------------------
+refresh materialized view owd.vmt_water_sewer_recintos_dbl;
+truncate table tabla_mod_recintos;  
+
+SELECT count(*) into cantidad
+	FROM owd.vmt_water_sewer_recintos_dbl vmt WHERE vmt.objectid  in 
+	(select distinct vmt_1.objectid from owd.vmt_water_sewer_recintos_dbl vmt_1 WHERE vmt_1.creationdate < fecha_inicio
+	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin);
+
+	 
+if cantidad > 0 then
+   	FOR punto IN SELECT * 
+	FROM owd.vmt_water_sewer_recintos_dbl vmt WHERE vmt.objectid  in 
+	(select distinct vmt_1.objectid from owd.vmt_water_sewer_recintos_dbl vmt_1 WHERE vmt_1.creationdate < fecha_inicio
+	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin) 
+	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date LOOP
+
+		cuenta := cuenta + 1;
+		
+		--resultado := resultado || '_//_cuenta_' || cuenta ;
+
+		IF cuenta = 1 THEN
+
+			estado := 1;
+
+			codigo_recinto := punto.codigo_recinto; --1
+			
+			objectid = punto.objectid;
+			codigo_sistema_siss	 = punto.codigo_obra;		
+			gdb_archive_oid := punto.gdb_archive_oid;
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;			
+			ownedby := punto.ownedby;
+			
+		ELSIF objectid = punto.objectid AND punto.gdb_from_date < fecha_inicio AND estado = 1 THEN
+
+			codigo_recinto := punto.codigo_recinto; --1
+
+			objectid = punto.objectid;
+			codigo_sistema_siss	 = punto.codigo_obra;				
+			gdb_archive_oid := punto.gdb_archive_oid;
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			ownedby := punto.ownedby;
+
+		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 AND objectid = punto.objectid THEN
+
+			estado := 2;
+
+			codigo_recinto2 := punto.codigo_recinto; --1
+
+			objectid2 = punto.objectid;
+			codigo_sistema_siss2	 = punto.codigo_obra;	
+			gdb_archive_oid2 := punto.gdb_archive_oid;
+			gdb_from_date2 := punto.gdb_from_date;
+			proyecto_informado_siss2 := punto.proyecto_informado_siss;
+			ownedby2 := punto.ownedby;
+		END IF;
+		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN
+			
+			IF cuenta = cantidad THEN
+			
+				IF ownedby = 103 THEN rut = '76833300';
+				ELSIF ownedby = 104 THEN rut = '96963440';
+				ELSE rut = NULL;
+				END IF;		
+
+				IF  COALESCE(codigo_recinto,'0')  <>  COALESCE(punto.codigo_recinto,'0') THEN
+					INSERT INTO owd.tabla_mod_recintos("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_obra, 0, punto.codigo_obra, '0', 2, lifecyclestatus::text, punto.lifecyclestatus::text, punto.gdb_from_date, punto.gdb_archive_oid::integer);
+				END IF;	
+	
+			
+			ELSE			
+			
+				codigo_recinto2 := punto.codigo_recinto; --1
+			
+				objectid2 = punto.objectid;
+				codigo_sistema_siss2 := punto.codigo_obra;
+				gdb_archive_oid2 := punto.gdb_archive_oid;
+				gdb_from_date2 := punto.gdb_from_date;
+				proyecto_informado_siss2 := punto.proyecto_informado_siss;
+				ownedby2 := punto.ownedby;	
+			
+			END IF;			
+			
+		ELSIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN		
+
+			IF ownedby = 103 THEN rut = '76833300';
+			ELSIF ownedby = 104 THEN rut = '96963440';
+			ELSE rut = NULL;
+			END IF;					
+
+			IF  COALESCE(codigo_recinto,'')  <>  COALESCE(codigo_recinto2,'') THEN
+				INSERT INTO owd.tabla_mod_recintos("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 0, codigo_sistema_siss2, '0', 2, codigo_recinto::text, codigo_recinto2::text, gdb_from_date2, gdb_archive_oid2::integer);
+			END IF;			
+
+			IF objectid = punto.objectid THEN
+
+				estado := 3;
+
+			ELSE
+				estado := 1;
+
+				codigo_recinto := punto.codigo_recinto; --1
+
+
+				objectid = punto.objectid;
+				codigo_sistema_siss := punto.codigo_obra;
+				gdb_archive_oid := punto.gdb_archive_oid;
+				gdb_from_date := punto.gdb_from_date;
+				proyecto_informado_siss := punto.proyecto_informado_siss;
+				--cuenta = punto.cuenta;
+				ownedby := punto.ownedby;
+
+			END IF;
+			
+		ELSIF (estado = 3 or estado = 1) AND punto.objectid <> objectid THEN
+
+			estado := 1;
+
+			codigo_recinto := punto.codigo_recinto; --1
+
+			objectid = punto.objectid;
+			codigo_sistema_siss := punto.codigo_obra;
+			gdb_archive_oid := punto.gdb_archive_oid;
+			gdb_from_date := punto.gdb_from_date;
+			proyecto_informado_siss := punto.proyecto_informado_siss;
+			--cuenta = punto.cuenta;
+			ownedby := punto.ownedby;
+
+		END IF;
+	END LOOP;
+END IF;			
+
+ --resultado := cantidad::text;
+	RETURN QUERY 
+SELECT * FROM owd.tabla_mod_recintos;
+
+END;
+$BODY$;
+
+ALTER FUNCTION owd.recintos_modificados(date, date)
+    OWNER TO owd;

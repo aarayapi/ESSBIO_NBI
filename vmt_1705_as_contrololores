@@ -1,0 +1,66 @@
+-- View: owd.vmt_1705_as_contrololores
+
+DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_as_contrololores;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_as_contrololores
+TABLESPACE pg_default
+AS
+ SELECT sw.codigo_sistema_siss,
+    sw.ownedby,
+    sw.proyecto_informado_siss,
+    sd.objectid,
+    sd.codigo_obra,
+    sd.mitigacion_olores,
+    sd.sistema_mitigacion,
+    sd.otro_sistema_mitigacion,
+    sd.potencia_total_instalada,
+    sd.tablero_automatico,
+    sd.aforo_afluente,
+    sd.aforo_efluente,
+    sd.bypass_general,
+    sd.bypass_pretratamiento,
+    sd.bypass_tratamiento_biologico,
+    sd.assetguid,
+    sd.globalid,
+    sd.creator,
+    sd.creationdate,
+    sd.updatedby,
+    sd.lastupdate,
+    sd.created_user,
+    sd.created_date,
+    sd.last_edited_user,
+    sd.last_edited_date,
+    sd.gdb_branch_id,
+    sd.gdb_from_date,
+    sd.gdb_is_delete,
+    sd.gdb_deleted_at,
+    sd.gdb_deleted_by,
+    sd.gdb_archive_oid
+   FROM as_contrololores sd
+     LEFT JOIN vmt_sewerdevice_sb sw ON sd.assetguid::text = sw.globalid::text	
+  WHERE sd.gdb_branch_id = 0 AND (sd.objectid IN ( SELECT DISTINCT wd1.objectid
+           FROM as_contrololores wd1
+          WHERE wd1.created_date <> wd1.last_edited_date))	
+/*    row_number() OVER (PARTITION BY sd.objectid ORDER BY sd.objectid, sd.gdb_from_date) AS rn,
+    cnt.cuenta
+   FROM as_contrololores sd
+     LEFT JOIN vmt_sewerdevice_sb sw ON sd.assetguid::text = sw.globalid::text
+     LEFT JOIN ( SELECT as_contrololores.objectid,
+            count(as_contrololores.objectid) AS cuenta
+           FROM as_contrololores
+          WHERE as_contrololores.gdb_branch_id = 0
+          GROUP BY as_contrololores.objectid) cnt ON sd.objectid = cnt.objectid
+  WHERE sd.gdb_branch_id = 0 AND (sd.objectid IN ( SELECT sd_1.objectid
+           FROM as_contrololores sd_1
+          WHERE sd_1.gdb_branch_id = 0
+          GROUP BY sd_1.objectid
+         HAVING count(sd_1.objectid) > 1)) AND sw.proyecto_informado_siss IS NOT NULL*/
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_1705_as_contrololores
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_1705_as_contrololores TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_as_contrololores TO sde;
+GRANT SELECT ON TABLE owd.vmt_1705_as_contrololores TO psanhueza;
+GRANT SELECT ON TABLE owd.vmt_1705_as_contrololores TO bd_consulta;

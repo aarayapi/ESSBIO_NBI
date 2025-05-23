@@ -1,6 +1,15 @@
 truncate table tabla_1705;
-select * from owd.insert_1705_1501(to_date('20240415','YYYYMMDD'), to_date('20250330','YYYYMMDD'));
-select "codigoObra", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id from tabla_1705
+select * from owd.func_1705(to_date('20240415','YYYYMMDD'), to_date('20250330','YYYYMMDD'));
+select "codigoObra", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id, tabla_1705."codigoProyecto", tabla_1705."codigoObraTipo" from tabla_1705
+WHERE "codigoObraTipo" in (301,302,303,304,601,701)
+
+ select con."codigoConduccion" , con."LongitudConduccion", tra."LongitudTramo" from owd.func_1151(to_date('20240402','YYYYMMDD'), to_date('20250330','YYYYMMDD')) AS con
+ LEFT JOIN  (SELECT "codigoConduccion", sum("LongitudTramo")  "LongitudTramo" FROM  owd.view_1152 AS tra WHERE creationdate > to_date('20240402','YYYYMMDD') AND creationdate < to_date('20250330','YYYYMMDD')
+group by "codigoConduccion") AS tra ON con."codigoConduccion" = tra."codigoConduccion"
+WHERE con."LongitudConduccion" <> tra."LongitudTramo"
+
+
+
 
 select * from owd.func_1702(to_date('20240401','YYYYMMDD'), to_date('20250330','YYYYMMDD')) WHERE "tipoObraUrbanizacion" = 802;
 

@@ -1,0 +1,245 @@
+-- FUNCTION: owd.func_1702_test(date, date)
+
+-- DROP FUNCTION IF EXISTS owd.func_1702_test(date, date);
+
+CREATE OR REPLACE FUNCTION owd.func_1702_test(
+	fecha_inicio date,
+	fecha_fin date)
+    RETURNS TABLE("codigoProceso" text, "codigoArchivo" text, rut text, periodo text, "codigoProyecto" character varying, "codigoSistema" integer, "codigoLocalidad" smallint, "tipoObraUrbanizacion" integer, accion integer, "codigoModificar" text, "materialTipoMedidor" integer, "OtroMaterial" text, "NombreSectorRed" character varying, "NumeroArranques" bigint, "NumeroMedidores" bigint, "NumeroUniones" numeric, "NumeroGrifos" bigint, "NumeroValvulas" bigint) 
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
+
+AS $BODY$
+
+BEGIN
+	RETURN QUERY ---------------------------------------------802---------------------------------
+
+SELECT * FROM (SELECT  cm.codigoproceso  AS "codigoProceso" , cm.codigoarchivo AS "codigoArchivo", cm.rut , cm.periodo , cm.codigoProyecto , cm.codigosistema , 
+   cm.codigoLocalidad , cm.tipoObraUrbanizacion , cm.accion , cm.codigoModificar , cm.materialTipoMedidor ,
+  cm.OtroMaterial , cm.NombreSectorRed , cm.NumeroArranques , cm.NumeroMedidores , cm.NumeroUniones , cm.NumeroGrifos, cm."NumeroValvulas" 
+FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'SELECT  ''5''::text AS codigoProceso,
+     ''1702'' AS codigoarchivo,
+        CASE wl.ownedby
+            WHEN 103 THEN ''76833300''::text
+            WHEN 104 THEN ''96963440''::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year''::text, CURRENT_DATE) - 1::double precision) || ''12''::text AS periodo,			
+	wl.proyecto_informado_siss AS "codigoProyecto",
+    wl.codigo_sistema_siss AS codigosistema,	
+    ( SELECT a.codigo_localidad_siss
+           FROM concesionmetro_ap a
+          WHERE a.codigo_localidad = wl.codigo_localidad) AS "codigoLocalidad",
+	802 AS "tipoObraUrbanizacion",
+	1 AS accion, 
+    wl.codigo_sector AS "codigoModificar",
+    0  AS "materialTipoMedidor",
+    NULL  AS  "OtroMaterial",	
+	wl.nombre AS "NombreSectorRed",
+	narran AS "NumeroArranques",
+	NULL::integer AS "NumeroMedidores",
+    NULL::integer AS "NumeroUniones",	
+	ngrifos AS "NumeroGrifos",
+	nvalvulas AS "NumeroValvulas"
+   FROM 
+  ((SELECT wl.ownedby, wl.proyecto_informado_siss, wl.codigo_sistema_siss, wl.codigo_localidad, 
+  wl.codigo_sector_distribucion AS codigo_sector, count(objectid) AS narran FROM vmt_waterline_sb wl   WHERE  wl.assetgroup = 2 AND wl.assettype = 11 
+	 AND wl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND wl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+  GROUP BY wl.ownedby, wl.proyecto_informado_siss, wl.codigo_sistema_siss, wl.codigo_localidad, wl.codigo_sector_distribucion ) vmwl
+  LEFT JOIN (SELECT DISTINCT nombre, codigo_sector_distribucion FROM owd.sectoresdistribucion) st
+   ON st.codigo_sector_distribucion::text =  vmwl.codigo_sector
+   
+  LEFT JOIN (SELECT count(objectid) AS ngrifos, codigo_sector_distribucion FROM vmt_waterdevice_sb WHERE assetgroup = 7 AND assettype = 321 
+			AND creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')			
+			GROUP BY codigo_sector_distribucion) wlgrifo
+			ON vmwl.codigo_sector::text =  wlgrifo.codigo_sector_distribucion 
+  LEFT JOIN (SELECT count(objectid) AS nvalvulas, codigo_sector_distribucion FROM vmt_waterdevice_sb WHERE assetgroup = 2 AND assettype in (167,169, 170,172,173,175)
+			AND creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			GROUP BY codigo_sector_distribucion) wlvalv
+  			ON vmwl.codigo_sector::text =  wlvalv.codigo_sector_distribucion ) wl')
+cm(codigoProceso text, codigoArchivo text, rut text, periodo text, codigoProyecto character varying(255), codigosistema integer, 
+   codigoLocalidad smallint, tipoObraUrbanizacion integer, accion integer, codigoModificar text, materialTipoMedidor integer, OtroMaterial text,
+ NombreSectorRed character varying(40), NumeroArranques bigint, NumeroMedidores integer, NumeroUniones integer, NumeroGrifos bigint, "NumeroValvulas" bigint)
+
+UNION
+----------------------------------------------902------------------------------------------------------------
+SELECT '5'::text AS "codigoProceso",
+    '1702'::text AS "codigoArchivo",
+        CASE sl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	
+	
+	
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS codigosistema,	
+    ( SELECT a.codigo_localidad_siss
+           FROM owd.concesionmetro_as a
+          WHERE a.codigo_localidad = sl.codigo_localidad) AS "codigoLocalidad",
+	902 AS "tipoObraUrbanizacion",
+	1 AS accion, 
+    '900-' || sl.cod_area AS "codigoModificar",
+	0 AS "materialTipoMedidor",
+	NULL AS "OtroMaterial",	
+	sl.nombre AS "NombreSectorRed",
+	sum(sl.cuentaar)  AS "NumeroArranques",
+	NULL::bigint AS "NumeroMedidores",
+    sum(sl.cuentau) AS "NumeroUniones",	
+	NULL::bigint AS "NumeroGrifos",
+	NULL::bigint AS "NumeroValvulas"
+ FROM  ((SELECT ownedby, proyecto_informado_siss, codigo_sistema_siss, codigo_localidad, codigo_area_tributaria AS cod_area, id_troncal, count(objectid) AS cuentau FROM owd.vmt_sewerline_sb  
+ WHERE assetgroup = 3  AND creationdate >= fecha_inicio AND creationdate <= fecha_fin GROUP BY ownedby, proyecto_informado_siss, codigo_sistema_siss, codigo_localidad, codigo_area_tributaria, id_troncal) AS nunion
+ LEFT JOIN (SELECT DISTINCT codigo_area_tributaria, nombre  FROM owd.sectorestributarias) AS namesector ON nunion.cod_area = namesector.codigo_area_tributaria::text
+ LEFT JOIN (SELECT  cm.id_troncal, cm.cuentaar
+FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'SELECT  id_troncal, count(objectid) cuentaar
+   FROM vmt_waterline_sb wl
+  WHERE  wl.assetgroup = 2 AND wl.assettype = 11 GROUP BY id_troncal') 
+cm(id_troncal character varying (40), cuentaar integer)) AS narra ON narra.id_troncal = nunion.id_troncal) AS sl 
+GROUP BY ownedby, proyecto_informado_siss, codigo_sistema_siss, codigo_localidad, cod_area, nombre
+
+UNION
+
+---------------------------------------1001----------------------------
+SELECT  cm.codigoproceso  AS "codigoProceso" , cm.codigoarchivo AS "codigoArchivo" , cm.rut , cm.periodo , cm.codigoProyecto , cm.codigosistema , 
+   cm.codigoLocalidad , cm.tipoObraUrbanizacion , cm.accion , cm.codigoModificar , cm.materialTipoMedidor ,
+  cm.OtroMaterial , cm.NombreSectorRed , cm.NumeroArranques , cm.NumeroMedidores , cm.NumeroUniones , cm.NumeroGrifos, cm."NumeroValvulas" 
+FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '  SELECT  ''5''::text AS codigoproceso,
+     ''1702'' AS codigoarchivo,
+        CASE wl.ownedby
+            WHEN 103 THEN ''76833300''::text
+            WHEN 104 THEN ''96963440''::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year''::text, CURRENT_DATE) - 1::double precision) || ''12''::text AS periodo,			
+	wl.proyecto_informado_siss AS "codigoProyecto",
+    wl.codigo_sistema_siss AS codigosistema,	
+    ( SELECT a.codigo_localidad_siss
+           FROM concesionmetro_ap a
+          WHERE a.codigo_localidad = wl.codigo_localidad) AS "codigoLocalidad",
+	1001 AS "tipoObraUrbanizacion",
+	1 AS accion, 
+    (wl.diameter::integer)::text AS "codigoModificar",
+        CASE
+            WHEN wl.material = 1 THEN 1
+            WHEN wl.material = 2 THEN 2
+            WHEN wl.material = 3 THEN 3
+            WHEN wl.material = 4 THEN 4
+            WHEN wl.material = 5 THEN 5
+            WHEN wl.material = 6 THEN 6
+            WHEN wl.material = 7 THEN 7
+            WHEN wl.material = 10 THEN 10
+            WHEN wl.material = 12 THEN 12
+            WHEN wl.material = 13 THEN 13
+            WHEN wl.material = 14 THEN 14
+            WHEN wl.material = 15 THEN 15
+            WHEN wl.material = 17 THEN 17
+            WHEN wl.material = 171 THEN 17
+            WHEN wl.material = 172 THEN 17
+            WHEN wl.material = 173 THEN 17
+            ELSE NULL::integer
+        END  AS "materialTipoMedidor",
+        CASE
+            WHEN wl.material = 171 THEN ''LZ''::text
+            WHEN wl.material = 172 THEN ''PEAD-C''::text
+            WHEN wl.material = 173 THEN ''PRFV''::text
+            ELSE NULL::text
+        END AS  "OtroMaterial",	
+	NULL AS "NombreSectorRed",
+	count(*) AS "NumeroArranques",
+	NULL AS "NumeroMedidores",
+    NULL AS "NumeroUniones",	
+	NULL AS "NumeroGrifos",
+	NULL AS "NumeroValvulas"
+   FROM vmt_waterdevice_sb wl
+  WHERE  wl.assetgroup = 2 AND wl.assettype = 11 AND creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+  GROUP BY wl.ownedby, wl.proyecto_informado_siss, wl.codigo_sistema_siss, wl.codigo_localidad,wl.diameter, "materialTipoMedidor","OtroMaterial"')
+cm(codigoProceso text, codigoArchivo text, rut text, periodo text, codigoProyecto character varying(255), codigosistema integer, 
+   codigoLocalidad smallint, tipoObraUrbanizacion integer, accion smallint, codigoModificar text, materialTipoMedidor integer, OtroMaterial text,
+ NombreSectorRed character varying(255), NumeroArranques integer, NumeroMedidores integer, NumeroUniones integer, NumeroGrifos integer, "NumeroValvulas" bigint)
+
+UNION
+-----------------------------------------------------1002-------------------
+SELECT  cm.codigoproceso  AS "codigoProceso" , cm.codigoarchivo AS "codigoArchivo", cm.rut , cm.periodo , cm.codigoProyecto , cm.codigosistema , 
+   cm.codigoLocalidad , cm.tipoObraUrbanizacion , cm.accion , cm.codigoModificar , cm.materialTipoMedidor ,
+  cm.OtroMaterial , cm.NombreSectorRed , cm.NumeroArranques , cm.NumeroMedidores , cm.NumeroUniones , cm.NumeroGrifos, cm."NumeroValvulas"
+FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' SELECT  ''5''::text AS codigoproceso,
+    ''1702''::text AS codigoarchivo,
+        CASE wd.ownedby
+            WHEN 103 THEN ''76833300''::text
+            WHEN 104 THEN ''96963440''::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year''::text, CURRENT_DATE) - 1::double precision) || ''12''::text AS periodo,			
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS codigosistema,	
+    ( SELECT a.codigo_localidad_siss
+           FROM concesionmetro_ap a
+          WHERE a.codigo_localidad = wd.codigo_localidad) AS "codigoLocalidad",
+	1002 AS "tipoObraUrbanizacion",
+	1 AS accion, 
+    (wd.diameter::integer)::text AS "codigoModificar",
+	wd.tipo  AS "materialTipoMedidor",
+	'''' AS "OtroMaterial",	
+	NULL AS "NombreSectorRed",
+	NULL AS "NumeroArranques",
+	count(*) AS "NumeroMedidores",
+    NULL AS "NumeroUniones",	
+	NULL AS "NumeroGrifos",
+	NULL AS "NumeroValvulas"
+   FROM vmt_waterdevice_sb wd
+  WHERE  wd.assetgroup = 12 AND creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+  GROUP BY wd.ownedby, wd.proyecto_informado_siss, wd.codigo_sistema_siss, wd.codigo_localidad,wd.diameter, wd.tipo')
+cm(codigoProceso text, codigoArchivo text, rut text, periodo text, codigoProyecto character varying(255), codigosistema integer, 
+   codigoLocalidad smallint, tipoObraUrbanizacion integer, accion smallint, codigoModificar text, materialTipoMedidor integer, OtroMaterial text,
+ NombreSectorRed character varying(255), NumeroArranques integer, NumeroMedidores integer, NumeroUniones integer, NumeroGrifos integer, "NumeroValvulas" bigint)
+
+UNION
+--------------------------------------1003--------------------
+ SELECT '5'::text AS "codigoProceso",
+    '1702'::text AS "codigoArchivo",
+        CASE sl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS codigosistema,	
+    ( SELECT a.codigo_localidad_siss
+           FROM owd.concesionmetro_as a
+          WHERE a.codigo_localidad = sl.codigo_localidad) AS "codigoLocalidad",
+	1003 AS "tipoObraUrbanizacion",
+	1 AS accion, 
+    (sl.diameter::integer)::text AS "codigoModificar",
+	0 AS "materialTipoMedidor",
+	'' AS "OtroMaterial",	
+	'' AS "NombreSectorRed",
+	NULL AS "NumeroArranques",
+	NULL AS "NumeroMedidores",
+    count(DISTINCT sl.objectid)::integer AS "NumeroUniones",	
+	NULL AS "NumeroGrifos",
+	NULL AS "NumeroValvulas"
+   FROM owd.vmt_sewerline_sb sl
+  WHERE sl.assetgroup = 3 AND  sl.creationdate >= fecha_inicio AND sl.creationdate <= fecha_fin
+  GROUP BY (
+        CASE sl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END), sl.proyecto_informado_siss, sl.codigo_sistema_siss, sl.codigo_localidad, codigo_area_tributaria,  sl.diameter) qr order by "codigoProyecto", "tipoObraUrbanizacion";
+
+END;
+$BODY$;
+
+ALTER FUNCTION owd.func_1702_test(date, date)
+    OWNER TO owd;

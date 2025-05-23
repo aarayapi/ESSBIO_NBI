@@ -31,7 +31,7 @@ BEGIN
     sl.codigo_obra_origen AS "CodigoObraOrigen",
     sl.tipo_obra_destino AS "TipoObraDestino",
     sl.codigo_obra_destino AS "CodigoObraDestino",
-    round(sum(st_length(sl.shape))::numeric, 2) AS "LongitudConduccion"
+    SUM(round(st_length(sl.shape)::numeric, 2)) AS "LongitudConduccion"
    FROM owd.vmt_sewerline_1151 sl
   WHERE  sl.creationdate <= fecha_fin
   AND sl.codigo_obra || sl.ownedby::text NOT IN (select distinct codigo_obra || ownedby::text FROM owd.vmt_sewerline_1151 WHERE creationdate < fecha_inicio AND codigo_obra is not null)

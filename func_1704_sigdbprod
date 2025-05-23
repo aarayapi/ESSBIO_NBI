@@ -1,0 +1,3315 @@
+-- FUNCTION: owd.func_1704(date, date)
+
+-- DROP FUNCTION IF EXISTS owd.func_1704(date, date);
+
+CREATE OR REPLACE FUNCTION owd.func_1704(
+	fecha_inicio date,
+	fecha_fin date)
+    RETURNS TABLE("codigoProceso" text, "codigoArchivo" text, rut text, periodo text, "codigoProyecto" character varying, "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying, "codigoTramo" text, "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text) 
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
+
+AS $BODY$
+
+BEGIN
+	RETURN QUERY   
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	101 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd 
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 567 AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+
+  UNION
+  
+   SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS codigoarchivo,
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	102 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd 
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 568  AND wd.codigo_obra is not null
+  AND  wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+
+ UNION
+ 
+    SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	103 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd  
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 561  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+
+  UNION
+  
+      SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	104 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 569  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+   
+  UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	201 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 15 AND wd.assettype = 605  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+  
+  UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	202 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 15 AND wd.assettype = 604  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+    
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	203 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 15 AND wd.assettype = 602  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+ 
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	204 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 15 AND wd.assettype = 606  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+     
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	301 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd 
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 5 AND wd.assettype = 283  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+      
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	302 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 5 AND wd.assettype = 284  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+      
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	303 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd 
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 5 AND wd.assettype = 285  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+      
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	304 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 5 AND wd.assettype = 286  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin  
+     
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	305 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 5 AND wd.assettype = 281  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+
+   UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5''::text AS codigoproceso,
+    ''1704''::text AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''::text
+            WHEN 104 THEN ''96963440''::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year''::text, CURRENT_DATE) - 1::double precision) || ''12''::text AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	351 AS "codigoObraTipo",
+	sd.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-'' AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+	FROM owd.vmt_sewerdevice_sb sd	
+	LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+    LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+    LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss		   
+  	WHERE sd.assettype = 61 AND sd.assetgroup = 5  AND sd.codigo_obra is not null
+			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+			   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo" character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+
+    UNION
+ 
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	401 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd 
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 564  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+    
+    UNION
+  
+        SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	402 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 20 AND wd.assettype = 563 AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+      
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	501 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 15 AND wd.assettype = 601 AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+  
+         
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	502 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 15 AND wd.assettype = 607 AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+
+        
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	601 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 19 AND wd.assettype = 401  AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+  
+        
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	701 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 19 AND wd.assettype = 402 AND wd.codigo_obra is not null
+  AND   wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin 
+  
+   
+    UNION
+  
+			SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wl.proyecto_informado_siss AS "codigoProyecto",
+    wl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1101 AS "codigoObraTipo",
+	wl.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterline_1101 wl
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wl.proyecto_informado_siss
+  WHERE wl.creationdate <= fecha_fin AND 
+  wl.codigo_obra || wl.ownedby::text not in (SELECT DISTINCT codigo_obra ||ownedby::text from owd.vmt_waterline_1101 where creationdate < fecha_inicio AND codigo_obra is not null)
+  GROUP BY (
+        CASE wl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END), wl.codigo_sistema_siss, wl.nombre_conduccion,  wl.codigo_obra, wl.tipo_obra_origen, wl.codigo_obra_origen, wl.tipo_obra_destino, wl.codigo_obra_destino, (CASE wl.assettype
+			WHEN 1 THEN 2
+			WHEN 3 THEN 1
+			ELSE NULL
+		END)
+  
+  
+  
+/*  (wl.objectid IN ( SELECT mb.objectid
+           FROM (SELECT vws.objectid,
+                    ROW_NUMBER() OVER (PARTITION BY vws.codigo_obra ORDER BY vws.creationdate ASC) as rn, vws.creationdate,
+				 	vws.assetgroup, vws.assettype, vws.codigo_obra
+					FROM owd.vmt_waterline_sb vws) mb
+					WHERE mb.rn = 1 AND mb.creationdate >= fecha_inicio AND mb.creationdate <= fecha_fin
+					AND	mb.assetgroup = 1 AND mb.assettype = 1 AND mb.codigo_obra is not null))*/
+        
+    UNION
+  
+	SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wl.proyecto_informado_siss AS "codigoProyecto",
+    wl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1102 AS "codigoObraTipo",
+	wl.codigo_obra AS "codigoObra",
+	wl.id_tramo_conectado AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterline_sb wl  
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wl.proyecto_informado_siss
+  WHERE wl.assetgroup = 1 AND wl.assettype = 3  AND wl.codigo_obra is not null
+  AND   wl.creationdate >= fecha_inicio AND wl.creationdate <= fecha_fin 
+  
+    
+  UNION
+  
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sl.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year''::text, CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1151 AS "codigoObraTipo",
+	sl.codigo_obra AS "codigoObra",
+	0 AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_sewerline_sb sl
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sl.proyecto_informado_siss
+  WHERE (sl.objectid IN (SELECT mb.objectid  
+			   FROM (SELECT vss.objectid, ROW_NUMBER() OVER (PARTITION BY vss.codigo_obra ORDER BY vss.creationdate ASC) as rn, vss.creationdate,
+			   vss.assetgroup, vss.assettype, vss.codigo_obra FROM owd.vmt_sewerline_sb vss) mb
+			   WHERE (mb.assetgroup = 1 OR mb.assetgroup = 2) 
+			   AND (mb.assettype = 2 OR mb.assettype = 41 OR mb.assettype = 42)  
+			   AND mb.codigo_obra is not null)) AND sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)   
+  
+  
+UNION  
+  
+  SELECT cm.codigoproceso As "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sl.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1152 AS "codigoObraTipo",
+	sl.codigo_obra AS "codigoObra",
+	sl.id_tramo_conectado AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_sewerline_sb sl  
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sl.proyecto_informado_siss   
+  WHERE (sl.assetgroup = 1 OR sl.assetgroup = 2) AND (sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) AND sl.codigo_obra is not null
+			    AND sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+   
+ UNION
+	 
+	   SELECT cm.codigoproceso AS  "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1201 AS "codigoObraTipo",
+	sd.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_sewerdevice_sb sd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss
+  WHERE  sd.assettype = 201 AND sd.assetgroup = 15  AND sd.codigo_obra is not null
+			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1202 AS "codigoObraTipo",
+	pt.codigo_obra AS "codigoObra",
+	round(pt.identificador_unidad,0) AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM owd.as_pretratamiento pt
+    LEFT JOIN vmt_sewerdevice_sb sd ON pt.assetguid::text = sd.globalid::text		   
+	LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss		   
+			   
+  WHERE (pt.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+           FROM ( SELECT as_pretratamiento.gdb_archive_oid,
+                    row_number() OVER (PARTITION BY as_pretratamiento.objectid ORDER BY as_pretratamiento.gdb_from_date DESC) AS rn,
+                    as_pretratamiento.gdb_is_delete
+                   FROM as_pretratamiento
+                  WHERE as_pretratamiento.gdb_branch_id = 0 AND as_pretratamiento.gdb_from_date <= ''9999-12-31 23:59:59''::timestamp without time zone) mb_
+          WHERE mb_.rn = 1 AND mb_.gdb_is_delete = ''0''::smallint)) AND pt.codigo_obra is not null
+			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+	   
+	UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo,
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1203 AS "codigoObraTipo",
+	tp.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sd .proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sd .proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sd .proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sd .proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sd .proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sd .proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sd .proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM as_tratamientoprimario tp
+     LEFT JOIN vmt_sewerdevice_sb sd ON tp.assetguid::text = sd.globalid::text
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss 
+  WHERE (tp.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+           FROM ( SELECT as_tratamientoprimario.gdb_archive_oid,
+                    row_number() OVER (PARTITION BY as_tratamientoprimario.objectid ORDER BY as_tratamientoprimario.gdb_from_date DESC) AS rn,
+                    as_tratamientoprimario.gdb_is_delete
+                   FROM as_tratamientoprimario
+                  WHERE as_tratamientoprimario.gdb_branch_id = 0 AND as_tratamientoprimario.gdb_from_date <= ''9999-12-31 23:59:59''::timestamp without time zone) mb_
+          WHERE mb_.rn = 1 AND mb_.gdb_is_delete = ''0''::smallint)) AND tp.codigo_obra is not null
+			   AND sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+ UNION
+ 
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1204 AS "codigoObraTipo",
+	ts.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+FROM as_tratamientosecundario ts
+    LEFT JOIN vmt_sewerdevice_sb sd ON ts.assetguid::text = sd.globalid::text 
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss	   
+			   WHERE   ts.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ts.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			   AND ts.codigo_obra is not null'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+ 	   
+	   
+UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1205 AS "codigoObraTipo",
+	ds.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM as_desinfecciondecloracion ds
+    LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
+	LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss   
+			   
+			   WHERE   ds.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ds.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			   AND ds.codigo_obra is not null'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1206 AS "codigoObraTipo",
+	ds.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",			   
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM as_linea_lodos_ptas ds
+   LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text 
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss	   
+			   WHERE   ds.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ds.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			   AND ds.codigo_obra is not null'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+	   UNION
+	   
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sl.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1207 AS "codigoObraTipo",
+	sl.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   
+   FROM sewerline sl
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sl.proyecto_informado_siss	   
+          WHERE sl.assetgroup = 7 AND (sl.assettype = 401 OR sl.assettype = 402) AND sl.codigo_obra is not null
+			   AND    sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+   
+UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sl.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1208 AS "codigoObraTipo",
+	sl.codigo_obra AS "codigoObra",
+	sl.assetid AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM vmt_sewerline_sb sl
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sl.proyecto_informado_siss	   
+  WHERE sl.assetgroup = 7 AND sl.assettype = 402 AND sl.codigo_obra is not null
+			   AND    sl.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sl.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+
+'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+	   
+UNION
+
+  SELECT cm.codigoproceso AS "codigoProceso",
+    cm.codigoarchivo AS "codigoArchivo",
+    cm.rut,
+    cm.periodo,
+    cm."codigoProyecto",
+    cm."codigoSistema",
+    cm."codigoLocalidad",
+    cm."codigoObraTipo",
+    cm."codigoObra",
+    cm."codigoTramo",
+    cm."ATPropio",
+    cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",	
+    cm."NombreAportante"
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, '	SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1209 AS "codigoObraTipo",
+	sd.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   
+FROM as_contrololores ds 
+	   LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text
+	   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+	   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+	   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss
+  WHERE (ds.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+           FROM ( SELECT as_contrololores.gdb_archive_oid,
+                    row_number() OVER (PARTITION BY as_contrololores.objectid ORDER BY as_contrololores.gdb_from_date DESC) AS rn,
+                    as_contrololores.gdb_is_delete
+                   FROM as_contrololores
+                  WHERE as_contrololores.gdb_branch_id = 0 AND as_contrololores.gdb_from_date <= ''9999-12-31 23:59:59''::timestamp without time zone) mb_
+          WHERE mb_.rn = 1 AND mb_.gdb_is_delete = ''0''::smallint)) AND ds.codigo_obra is not null
+			   AND    ds.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND ds.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'');
+
+'::text) 
+	cm(codigoproceso text, codigoarchivo text, rut text, periodo text, "codigoProyecto" character varying(255), 
+	   "codigoSistema" integer, "codigoLocalidad" integer, "codigoObraTipo" integer, "codigoObra" character varying(255), "codigoTramo"  character varying(255),	   
+	   "ATPropio" integer, "TipoAT" integer, "OtroTipoAT" text, "PorcentajeFinanciadoAT" integer, "NombreAportante" text)
+
+UNION
+ 
+	--SELECT "sd.codigoProceso",
+    --sd."codigoArchivo",
+    --sd.rut,
+    --sd.periodo,
+	--sd."codigoProyecto",
+    --sd."codigoSistema",
+	--sd."codigoLocalidad",
+	--sd."codigoObraTipo",
+	--sd."codigoObra",
+	--sd."codigoTramo",
+	--sd."ATPropio",
+    --sd."OtroTipoAT",
+    --sd."PorcentajeFinanciadoAT",
+    --sd."NombreAportante"
+   select *
+FROM ( SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1402 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss  
+  WHERE wd.assetgroup = 13 AND wd.assettype = 41 AND wd.codigo_obra is not null AND wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin
+UNION
+ SELECT cm."codigoProceso",
+    cm."codigoArchivo",
+    cm.rut,
+    cm.periodo,
+	cm."codigoProyecto",
+    cm."codigoSistema",
+	cm."codigoLocalidad",
+	cm."codigoObraTipo",
+	cm."codigoObra",
+	cm."codigoTramo",
+	cm."ATPropio",
+	cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",
+    cm."NombreAportante"  
+   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sd.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sd.proyecto_informado_siss AS "codigoProyecto",
+    sd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1402 AS "codigoObraTipo",
+	sd.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sd.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM owd.vmt_sewerdevice_sb  sd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sd.proyecto_informado_siss	   
+WHERE sd.assetgroup = 10 AND sd.assettype = 161  AND sd.codigo_obra is not null AND    sd.creationdate >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+					   AND sd.creationdate <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')'::text) 
+	  cm( "codigoProceso" text,
+"codigoArchivo" text,
+rut text,
+periodo text,
+"codigoProyecto" character varying(255),
+"codigoSistema" integer,
+"codigoLocalidad" integer,
+"codigoObraTipo" integer,
+"codigoObra" character varying(255),
+"codigoTramo" text,
+"ATPropio" integer,
+"TipoAT" integer,
+"OtroTipoAT" text,
+"PorcentajeFinanciadoAT" integer,
+"NombreAportante" text )
+)sd 
+
+UNION 
+
+	SELECT '5' AS "codigoProceso",
+    '1704' AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'
+            WHEN 104 THEN '96963440'
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year', CURRENT_DATE) - 1::double precision) || '12' AS periodo,
+	wd.proyecto_informado_siss AS "codigoProyecto",
+    wd.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1403 AS "codigoObraTipo",
+	wd.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wd.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"
+   
+FROM owd.vmt_waterdevice_sb wd
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wd.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wd.proyecto_informado_siss
+  WHERE wd.assetgroup = 3 AND wd.assettype = 205 AND wd.codigo_obra is not null AND wd.creationdate >= fecha_inicio AND wd.creationdate <= fecha_fin
+
+  UNION
+
+	SELECT cm."codigoProceso",
+    cm."codigoArchivo",
+    cm.rut,
+    cm.periodo,
+	cm."codigoProyecto",
+    cm."codigoSistema",
+	cm."codigoLocalidad",
+	cm."codigoObraTipo",
+	cm."codigoObra",
+	cm."codigoTramo",
+	cm."ATPropio",
+	cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",
+    cm."NombreAportante"  
+   
+FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE atr.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	atr.proyecto_informado_siss AS "codigoProyecto",
+    atr.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1404 AS "codigoObraTipo",
+	atr.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(atr.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+			
+	FROM owd.vmt_antigolpeariete_sb  atr
+   LEFT JOIN owd.btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  atr.proyecto_informado_siss
+   LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.croquis cr on cr.cro_id = atr.proyecto_informado_siss	
+			WHERE atr.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND atr.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') AND atr.codigo_obra is not null
+			'::text) 
+	cm( "codigoProceso" text,
+"codigoArchivo" text,
+rut text,
+periodo text,
+"codigoProyecto" character varying(255),
+"codigoSistema" integer,
+"codigoLocalidad" integer,
+"codigoObraTipo" integer,
+"codigoObra" character varying(255),
+"codigoTramo" text,
+"ATPropio" integer,
+"TipoAT" integer,
+"OtroTipoAT" text,
+"PorcentajeFinanciadoAT" integer,
+"NombreAportante" text )
+	      
+UNION
+
+	SELECT rq."codigoProceso",
+    rq."codigoArchivo",
+    rq.rut,
+    rq.periodo,
+	rq."codigoProyecto",
+    rq."codigoSistema",
+	rq."codigoLocalidad",
+	rq."codigoObraTipo",
+	rq."codigoObra",
+	rq."codigoTramo",
+	rq."ATPropio",
+	rq."TipoAT",	
+    rq."OtroTipoAT",
+    rq."PorcentajeFinanciadoAT",
+    rq."NombreAportante"
+   
+FROM  (SELECT '5'::text AS "codigoProceso",
+    '1704'::text AS "codigoArchivo",
+        CASE wl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+	wl.proyecto_informado_siss AS "codigoProyecto",
+    wl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1405 AS "codigoObraTipo",
+	atr.codigo_obra AS "codigoObra",
+	'0' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 1
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 2
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) != 'CR-' AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 6
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 6
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'ODS' THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OC' THEN 0
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'CTTO' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'SIG' THEN 'RECATASTRO CROQUIS'
+			WHEN SUBSTRING(wl.proyecto_informado_siss, 1, 3) = 'CR-' AND cr.tipotrabajo = 'OTRO' THEN 'RECATASTRO CROQUIS'
+			ELSE ''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor
+            ELSE ''::text
+        END AS "NombreAportante"	   
+   FROM owd.ap_atraviesos atr 
+     LEFT JOIN owd.vmt_waterline_sb wl ON wl.globalid::text = atr.assetguid::text 
+	   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  wl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = wl.proyecto_informado_siss	     
+   WHERE  atr.created_date >= fecha_inicio AND atr.created_date <= fecha_fin AND wl.codigo_obra is not null
+  
+  UNION
+	   SELECT cm."codigoProceso",
+		cm."codigoArchivo",
+		cm.rut,
+		cm.periodo,
+		cm."codigoProyecto",
+		cm."codigoSistema",
+		cm."codigoLocalidad",
+		cm."codigoObraTipo",
+		cm."codigoObra",
+		cm."codigoTramo",
+		cm."ATPropio",
+	    cm."TipoAT",
+		cm."OtroTipoAT",
+		cm."PorcentajeFinanciadoAT",
+		cm."NombreAportante"    
+	   FROM dblink('dbname=prd_as port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text,'SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE sl.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	sl.proyecto_informado_siss AS "codigoProyecto",
+    sl.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1405 AS "codigoObraTipo",
+	atr.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(sl.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+   FROM owd.as_atravieso atr 
+   LEFT JOIN owd.vmt_sewerline_sb sl on sl.globalid = atr.assetguid 				   
+   LEFT JOIN owd.vmt_btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  sl.proyecto_informado_siss
+   LEFT JOIN owd.vmt_btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.vmt_croquis cr on cr.cro_id = sl.proyecto_informado_siss				   			   
+   WHERE atr.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND atr.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') AND atr.codigo_obra is not null'
+	  )cm("codigoProceso" text,
+"codigoArchivo" text,
+rut text,
+periodo text,
+"codigoProyecto" character varying(255),
+"codigoSistema" integer,
+"codigoLocalidad" integer,
+"codigoObraTipo" integer,
+"codigoObra" character varying(255),
+"codigoTramo" text,
+"ATPropio" integer,
+"TipoAT" integer,
+"OtroTipoAT" text,
+"PorcentajeFinanciadoAT" integer,
+"NombreAportante" text ))rq
+	
+UNION
+
+	SELECT cm."codigoProceso",
+    cm."codigoArchivo",
+    cm.rut,
+    cm.periodo,
+	cm."codigoProyecto",
+    cm."codigoSistema",
+	cm."codigoLocalidad",
+	cm."codigoObraTipo",
+	cm."codigoObra",
+	cm."codigoTramo",
+	cm."ATPropio",
+	cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",
+    cm."NombreAportante" 
+   
+FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE grp.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	grp.proyecto_informado_siss AS "codigoProyecto",
+    grp.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1601 AS "codigoObraTipo",
+	grp.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+	FROM owd.vmt_gruposelectrogenos_sb  grp 
+   LEFT JOIN owd.btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  grp.proyecto_informado_siss
+   LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.croquis cr on cr.cro_id = grp.proyecto_informado_siss		
+			WHERE grp.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND grp.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			AND grp.codigo_obra is not null'::text) 
+	cm("codigoProceso" text,
+"codigoArchivo" text,
+rut text,
+periodo text,
+"codigoProyecto" character varying(255),
+"codigoSistema" integer,
+"codigoLocalidad" integer,
+"codigoObraTipo" integer,
+"codigoObra" character varying(255),
+"codigoTramo" text,
+"ATPropio" integer,
+"TipoAT" integer,
+"OtroTipoAT" text,
+"PorcentajeFinanciadoAT" integer,
+"NombreAportante" text )
+
+UNION 
+
+SELECT cm."codigoProceso",
+    cm."codigoArchivo",
+    cm.rut,
+    cm.periodo,
+	cm."codigoProyecto",
+    cm."codigoSistema",
+	cm."codigoLocalidad",
+	cm."codigoObraTipo",
+	cm."codigoObra",
+	cm."codigoTramo",
+	cm."ATPropio",
+	cm."TipoAT",
+    cm."OtroTipoAT",
+    cm."PorcentajeFinanciadoAT",
+    cm."NombreAportante"  
+   
+FROM dblink('dbname=sigdbprd port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, 'SELECT ''5'' AS codigoproceso,
+    ''1704'' AS codigoarchivo,
+        CASE grp.ownedby
+            WHEN 103 THEN ''76833300''
+            WHEN 104 THEN ''96963440''
+            ELSE NULL::text
+        END AS rut,
+    (date_part(''year'', CURRENT_DATE) - 1::double precision) || ''12'' AS periodo,
+	grp.proyecto_informado_siss AS "codigoProyecto",
+    grp.codigo_sistema_siss AS "codigoSistema",
+	0 AS "codigoLocalidad",
+	1602 AS "codigoObraTipo",
+	grp.codigo_obra AS "codigoObra",
+	''0'' AS "codigoTramo",
+		CASE
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 0 THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 1 THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 2 THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 3 THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 4 THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-'' AND bi.tipo_aporte = 5 THEN 2
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 1
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 2
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 2
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 2	
+			ELSE NULL	
+        END  AS "ATPropio",
+    	CASE
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte = 5 THEN 0
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) != ''CR-''  AND bi.tipo_aporte != 5 THEN bi.tipo_aportante - 1	
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN 6
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN 6
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''ODS'' THEN 0
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OC'' THEN 0
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''CTTO'' THEN 0	
+			ELSE NULL
+		END AS "TipoAT",
+		CASE
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''SIG'' THEN ''RECATASTRO CROQUIS''
+			WHEN SUBSTRING(grp.proyecto_informado_siss, 1, 3) = ''CR-''  AND cr.tipotrabajo = ''OTRO'' THEN ''RECATASTRO CROQUIS''
+			ELSE ''''
+		END AS "OtroTipoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN 100
+            WHEN 1 THEN 100
+			WHEN 2 THEN 100
+			WHEN 3 THEN 100
+			WHEN 4 THEN 100
+            ELSE 0
+        END  AS "PorcentajeFinanciadoAT",
+        CASE bi.tipo_aporte
+            WHEN 0 THEN bi.contratista_consultor
+            WHEN 1 THEN bi.contratista_consultor
+			WHEN 2 THEN bi.contratista_consultor
+			WHEN 3 THEN bi.contratista_consultor
+			WHEN 4 THEN bi.contratista_consultor	
+            ELSE ''''::text
+        END AS "NombreAportante"
+	FROM owd.vmt_subestaciones_sb  grp 
+   LEFT JOIN owd.btd_proyecto_nbi bpn on bpn.codigo_nbi_informado =  grp.proyecto_informado_siss
+   LEFT JOIN owd.btd_inventario bi on bi.codigo_proyecto = bpn.codigo_proyecto
+   LEFT JOIN owd.croquis cr on cr.cro_id = grp.proyecto_informado_siss		
+			WHERE grp.created_date >= to_timestamp('''||to_char(fecha_inicio, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'') 
+		    AND grp.created_date <= to_timestamp('''||to_char(fecha_fin, 'YYYYMMDD HH24:MI:SS')||''', ''YYYYMMDD HH24:MI:SS'')
+			AND grp.codigo_obra is not null'::text) 
+	cm( "codigoProceso" text,
+"codigoArchivo" text,
+rut text,
+periodo text,
+"codigoProyecto" character varying(255),
+"codigoSistema" integer,
+"codigoLocalidad" integer,
+"codigoObraTipo" integer,
+"codigoObra" character varying(255),
+"codigoTramo" text,
+"ATPropio" integer,
+"TipoAT" integer,
+"OtroTipoAT" text,
+"PorcentajeFinanciadoAT" integer,
+"NombreAportante" text );
+
+END;
+$BODY$;
+
+ALTER FUNCTION owd.func_1704(date, date)
+    OWNER TO owd;
+
+GRANT EXECUTE ON FUNCTION owd.func_1704(date, date) TO PUBLIC;
+
+GRANT EXECUTE ON FUNCTION owd.func_1704(date, date) TO bd_consulta;
+
+GRANT EXECUTE ON FUNCTION owd.func_1704(date, date) TO owd;
+

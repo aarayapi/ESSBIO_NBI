@@ -1,7 +1,3 @@
--- FUNCTION: owd.insert_1705_1202(date, date)
-
--- DROP FUNCTION IF EXISTS owd.insert_1705_1202(date, date);
-
 CREATE OR REPLACE FUNCTION owd.insert_1705_1202(
 	fecha_inicio date,
 	fecha_fin date)
@@ -25,6 +21,7 @@ DECLARE
     paso_rejas numeric(38,2); --5
 	limpieza_pretratamiento integer; --6
 	ownedby smallint;
+	estado_uso smallint;
 	
 	gdb_from_date  timestamp without time zone;
 	objectid integer;
@@ -37,6 +34,7 @@ DECLARE
     paso_rejas2 numeric(38,2); --5
     limpieza_pretratamiento2 integer; --6
 	ownedby2 smallint;	
+	estado_uso2 smallint;
 	
 	gdb_from_date2  timestamp without time zone;
 	objectid2 integer;
@@ -73,7 +71,7 @@ SELECT count(*) into cantidad
 	 
 if cantidad > 0 then
    	FOR punto IN SELECT * 
-	FROM owd.vmt_1705_as_pretratamiento vmt WHERE vmt.objectid  in 
+	FROM owd.vmt_1705_as_pretratamiento vmt WHERE vmt.objectid  in --(828, 875, 962,963,971,994,996, 1087, 1090,1091)
 	(select distinct vmt_1.objectid from owd.vmt_1705_as_pretratamiento vmt_1 WHERE vmt_1.created_date < fecha_inicio
 	AND vmt_1.gdb_from_date BETWEEN fecha_inicio AND fecha_fin) 
 	order by vmt.ownedby, vmt.objectid, vmt.gdb_from_date LOOP
@@ -97,6 +95,7 @@ if cantidad > 0 then
 			gdb_from_date := punto.gdb_from_date;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby  := punto.ownedby;
+			estado_uso := punto.estado_uso; 
 			
 			--resultado := resultado || '_IF1_';	
 			
@@ -115,8 +114,7 @@ if cantidad > 0 then
 			gdb_from_date := punto.gdb_from_date;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby  := punto.ownedby;
-
-			--resultado := resultado || '_IF2_';
+			estado_uso := punto.estado_uso; 
 
 		ELSIF punto.gdb_from_date > fecha_inicio AND estado = 1 AND objectid = punto.objectid THEN
 			
@@ -135,6 +133,7 @@ if cantidad > 0 then
 			gdb_from_date2 := punto.gdb_from_date;
 			proyecto_informado_siss2 := punto.proyecto_informado_siss;	
 			ownedby2  := punto.ownedby;
+			estado_uso2 := punto.estado_uso; 
 
 			--resultado := resultado || '_IF3_oid1_' || gdb_archive_oid;
 		END IF;
@@ -162,7 +161,12 @@ if cantidad > 0 then
 				IF  COALESCE(limpieza_pretratamiento,'0')  <>  COALESCE(punto.limpieza_pretratamiento,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad::integer, 6, limpieza_pretratamiento::text, punto.limpieza_pretratamiento::text, punto.gdb_from_date, punto.gdb_archive_oid);
+				END IF;	
+				IF  COALESCE(estado_uso,'0')  <>  COALESCE(punto.estado_uso,'0') THEN
+					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad::integer, 7, estado_uso::text, punto.estado_uso::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;						
+				
 			ELSE		
 				codigo_sistema_siss2 :=  punto.codigo_sistema_siss;
 				codigo_obra2 := punto.codigo_obra; --1	
@@ -177,6 +181,7 @@ if cantidad > 0 then
 				gdb_from_date2 := punto.gdb_from_date;
 				proyecto_informado_siss2 := punto.proyecto_informado_siss;	
 				ownedby2  := punto.ownedby;	
+				estado_uso2 := punto.estado_uso; 				
 			END IF;
 			--resultado := resultado || '_IF4_cuenta_' || cuenta || '_cantidad_' || cantidad;			
 		ELSIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN		
@@ -202,7 +207,10 @@ if cantidad > 0 then
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 1202, codigo_obra2, identificador_unidad2::integer, 6, limpieza_pretratamiento::text, limpieza_pretratamiento2::text, gdb_from_date2, gdb_archive_oid2);
 			END IF;	
-
+			IF  COALESCE(estado_uso,'0')  <>  COALESCE(estado_uso2,'0') THEN
+				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
+				VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1202, punto.codigo_obra, punto.identificador_unidad::integer, 7, estado_uso::text, estado_uso2::text, gdb_from_date2, gdb_archive_oid2);
+			END IF;	
 			IF objectid = punto.objectid THEN
 
 				estado := 3;
@@ -223,6 +231,7 @@ if cantidad > 0 then
 				gdb_from_date := punto.gdb_from_date;
 				proyecto_informado_siss := punto.proyecto_informado_siss;
 				ownedby  := punto.ownedby;
+				estado_uso := punto.estado_uso; 			
 					
 			END IF;	
 			--resultado := resultado || '_IF5_oid2_' || gdb_archive_oid2;			
@@ -241,6 +250,7 @@ if cantidad > 0 then
 			gdb_from_date := punto.gdb_from_date;
 			proyecto_informado_siss := punto.proyecto_informado_siss;
 			ownedby  := punto.ownedby;
+			estado_uso := punto.estado_uso; 
 			--resultado := resultado || '_IF6_';				
 		END IF;				
 	END LOOP;
@@ -253,3 +263,4 @@ $BODY$;
 
 ALTER FUNCTION owd.insert_1705_1202(date, date)
     OWNER TO owd;
+	

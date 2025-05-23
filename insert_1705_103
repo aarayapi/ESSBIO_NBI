@@ -106,7 +106,8 @@ SELECT '5', '1705',         CASE wdsb.ownedby
         END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
 		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 103, wdsb.codigo_obra, '0', 20, round(wdsb.utm_norte_nbi,2), round(wdsb.utm_norte_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
 	FROM owd.vmt_waterdevice_sb_dbl wdsb WHERE wdsb.assettype = 561 AND wdsb.assetgroup = 20
-	AND round(wdsb.utm_norte_nbi,2) <> round(wdsb.utm_norte_sig,2) AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
+	AND ((round(wdsb.utm_norte_nbi,2) > (round(wdsb.utm_norte_sig,2) + 0.05)) OR (round(wdsb.utm_norte_nbi,2) < (round(wdsb.utm_norte_sig,2) - 0.05)))
+	AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
 	
 INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 SELECT '5', '1705',         CASE wdsb.ownedby
@@ -116,7 +117,8 @@ SELECT '5', '1705',         CASE wdsb.ownedby
         END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
 		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 103, wdsb.codigo_obra, '0', 21, round(wdsb.utm_este_nbi,2), round(wdsb.utm_este_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
 	FROM owd.vmt_waterdevice_sb_dbl wdsb WHERE wdsb.assettype = 561 AND wdsb.assetgroup = 20
-	AND (round(wdsb.utm_este_nbi,2) <> round(wdsb.utm_este_sig,2)  AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio	);	
+	AND ((round(wdsb.utm_este_nbi,2) > (round(wdsb.utm_este_sig,2) + 0.05)) OR (round(wdsb.utm_este_nbi,2) < (round(wdsb.utm_este_sig, 2) - 0.05)))
+	AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio	;	
   -------------------------------------------------------------------------------------------------------------------
   
 SELECT count(*) into cantidad
@@ -149,7 +151,7 @@ if cantidad > 0 then
     		designinfo:= round(punto.designinfo,2);
     		capacidad_embalse_explotacion:= round(punto.capacidad_embalse_explotacion,2);
 			longitud_barrera_dren_presa:= round(punto.longitud_barrera_dren_presa,2);
-			ancho_presa:= punto.ancho_presa; 
+			ancho_presa:= punto.ancho_presa_double; 
 			material_marcopartidor_presa:= punto.material_marcopartidor_presa; 
 			
 			
@@ -193,7 +195,7 @@ if cantidad > 0 then
     		designinfo:= round(punto.designinfo,2);
     		capacidad_embalse_explotacion:= round(punto.capacidad_embalse_explotacion,2);
 			longitud_barrera_dren_presa:= round(punto.longitud_barrera_dren_presa,2);
-			ancho_presa:= punto.ancho_presa; 
+			ancho_presa:= punto.ancho_presa_double; 
 			material_marcopartidor_presa:= punto.material_marcopartidor_presa; 
 			
 			
@@ -239,7 +241,7 @@ if cantidad > 0 then
 			designinfo2:= round(punto.designinfo,2);
 			capacidad_embalse_explotacion2:= round(punto.capacidad_embalse_explotacion,2);
 			longitud_barrera_dren_presa2:= round(punto.longitud_barrera_dren_presa,2);
-			ancho_presa2:= punto.ancho_presa; 
+			ancho_presa2:= punto.ancho_presa_double; 
 			material_marcopartidor_presa2:= punto.material_marcopartidor_presa; --17
 			IF punto.tipo_captacion = 4 THEN tipo_captacion2:= 1;
 			ELSIF punto.tipo_captacion = 2 THEN  tipo_captacion2:= 2;
@@ -320,9 +322,9 @@ if cantidad > 0 then
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 103, punto.codigo_obra, '0', 11, round( longitud_barrera_dren_presa ,2)::text, round( punto.longitud_barrera_dren_presa ,2)::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;	
-				IF  COALESCE(ancho_presa,'0')  <>  COALESCE(punto.ancho_presa,'0') THEN
+				IF  COALESCE(ancho_presa,'0')  <>  COALESCE(punto.ancho_presa_double,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
-					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 103, punto.codigo_obra, '0', 12, (round(ancho_presa,2))::text, (round(punto.ancho_presa,2))::text, punto.gdb_from_date, punto.gdb_archive_oid);
+					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 103, punto.codigo_obra, '0', 12, (round(ancho_presa,2))::text, (round(punto.ancho_presa_double,2))::text, punto.gdb_from_date, punto.gdb_archive_oid);
 				END IF;
 				IF  COALESCE(material_marcopartidor_presa,'0')  <>  COALESCE(punto.material_marcopartidor_presa,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
@@ -393,7 +395,7 @@ if cantidad > 0 then
 				designinfo2:= round(punto.designinfo,2);
 				capacidad_embalse_explotacion2:= round(punto.capacidad_embalse_explotacion,2);
 				longitud_barrera_dren_presa2:= round(punto.longitud_barrera_dren_presa,2);
-				ancho_presa2:= punto.ancho_presa; 
+				ancho_presa2:= punto.ancho_presa_double; 
 				material_marcopartidor_presa2:= punto.material_marcopartidor_presa; --17
 				IF punto.tipo_captacion = 4 THEN tipo_captacion2:= 1;
 				ELSIF punto.tipo_captacion = 2 THEN  tipo_captacion2:= 2;
@@ -535,7 +537,7 @@ if cantidad > 0 then
 				designinfo:= round(punto.designinfo,2);
 				capacidad_embalse_explotacion:= round(punto.capacidad_embalse_explotacion,2);
 				longitud_barrera_dren_presa:= round(punto.longitud_barrera_dren_presa,2);
-				ancho_presa:= punto.ancho_presa; 
+				ancho_presa:= punto.ancho_presa_double; 
 				material_marcopartidor_presa:= punto.material_marcopartidor_presa; 
 
 				IF punto.tipo_captacion = 4 THEN tipo_captacion:= 1;
@@ -582,7 +584,7 @@ if cantidad > 0 then
     		designinfo:= round(punto.designinfo,2);
     		capacidad_embalse_explotacion:= round(punto.capacidad_embalse_explotacion,2);
 			longitud_barrera_dren_presa:= round(punto.longitud_barrera_dren_presa,2);
-			ancho_presa:= punto.ancho_presa; 
+			ancho_presa:= punto.ancho_presa_double; 
 			material_marcopartidor_presa:= punto.material_marcopartidor_presa; 
 			
 			

@@ -1,0 +1,47 @@
+-- View: owd.view_303
+
+-- DROP VIEW owd.view_303;
+
+CREATE OR REPLACE VIEW owd.view_303
+ AS
+ SELECT '5'::text AS "codigoProceso",
+    '303'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+    wd.codigo_sistema_siss AS "codigoSistema",
+    wd.codigo_obra AS "codigoObra",
+    wd.name AS "NombreObra",
+    wd.anio_construccion AS "AnioConstruccion",
+        CASE
+            WHEN wd.lifecyclestatus = 8 THEN 1
+            WHEN wd.lifecyclestatus = 256 THEN 2
+            WHEN wd.lifecyclestatus = 32 THEN 3
+            WHEN wd.lifecyclestatus = 260 THEN 4
+            WHEN wd.lifecyclestatus = 259 THEN 5
+            WHEN wd.lifecyclestatus = 261 THEN 6
+            ELSE NULL::integer
+        END AS "EstadoUso",
+    wd.tipo_captacion AS "TipoCaptacionSubterranea",
+    wd.codigo_obra_asociada AS "CodigoCaptacionSubterranea",
+    round(wd.designinfo, 2) AS "Caudal",
+    round(wd.diameter, 2) AS "AlturaElevacionGeometrica",
+    round(wd.secondarydiameter, 2) AS "AlturaElevacionManometrica",
+    round(wd.potencia_instalada, 2) AS "PotenciaInstalada",
+    wd.telemetria AS "Telemetria",
+    wd.telecontrol AS "Telecontrol",
+    wd.creationdate,
+    wd.codigo_recinto
+   FROM vmt_waterdevice_sb wd
+  WHERE wd.assetgroup = 5 AND wd.assettype = 285;
+
+ALTER TABLE owd.view_303
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.view_303 TO owd;
+GRANT SELECT ON TABLE owd.view_303 TO psanhueza;
+GRANT SELECT ON TABLE owd.view_303 TO bd_consulta;
+

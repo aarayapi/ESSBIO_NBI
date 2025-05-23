@@ -83,7 +83,8 @@ SELECT '5', '1705',         CASE wdsb.ownedby
         END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
 		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 601, wdsb.codigo_obra, '0', 11, round(wdsb.utm_norte_nbi,2), round(wdsb.utm_norte_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
 	FROM owd.vmt_waterdevice_sb_dbl wdsb WHERE  wdsb.assettype = 401 AND wdsb.assetgroup = 19
-	AND round(wdsb.utm_norte_nbi,2) <> round(wdsb.utm_norte_sig,2) AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
+	AND ((round(wdsb.utm_norte_nbi,2) > (round(wdsb.utm_norte_sig,2) + 0.05)) OR (round(wdsb.utm_norte_nbi,2) < (round(wdsb.utm_norte_sig,2) - 0.05)))
+	AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;
 	
 INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 SELECT '5', '1705',         CASE wdsb.ownedby
@@ -93,7 +94,8 @@ SELECT '5', '1705',         CASE wdsb.ownedby
         END AS rut1, ((date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12')::integer AS periodo,
 		wdsb.proyecto_informado_siss, wdsb.codigo_sistema_siss, 601, wdsb.codigo_obra, '0', 12, round(wdsb.utm_este_nbi,2), round(wdsb.utm_este_sig,2) , wdsb.gdb_from_date, wdsb.gdb_archive_oid
 	FROM owd.vmt_waterdevice_sb_dbl wdsb WHERE  wdsb.assettype = 401 AND wdsb.assetgroup = 19
-	AND (round(wdsb.utm_este_nbi,2) <> round(wdsb.utm_este_sig,2)  AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio	);	
+	AND ((round(wdsb.utm_este_nbi,2) > (round(wdsb.utm_este_sig,2) + 0.05)) OR (round(wdsb.utm_este_nbi,2) < (round(wdsb.utm_este_sig, 2) - 0.05)))
+	AND wdsb.creationdate < fecha_inicio AND wdsb.lastupdate > fecha_inicio;	
 -------------------------------------------------------------------------------------------------------------------
   
 SELECT count(*) into cantidad
@@ -186,7 +188,7 @@ if cantidad > 0 then
 			gdb_from_date2 := punto.gdb_from_date;
 			proyecto_informado_siss2 := punto.proyecto_informado_siss;	
 		END IF;
-		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 THEN
+		IF punto.gdb_from_date < fecha_fin AND objectid = punto.objectid AND estado = 2 AND punto.proyecto_informado_siss IS NOT NULL THEN
 			
 			IF cuenta = cantidad THEN
 			
@@ -195,10 +197,10 @@ if cantidad > 0 then
 				ELSE rut = NULL;
 				END IF;		
 
-				IF  COALESCE(name,'0')  <>  COALESCE(punto.name,'0') THEN
+				/*IF  COALESCE(name,'0')  <>  COALESCE(punto.name,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 601, punto.codigo_obra, '0', 3, name::text, punto.name::text, punto.gdb_from_date, punto.gdb_archive_oid);
-				END IF;	
+				END IF;	*/
 				IF  COALESCE(etapa,'0')  <>  COALESCE(punto.etapa,'0') THEN
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 601, punto.codigo_obra, '0', 4, etapa::text, punto.etapa::text, punto.gdb_from_date, punto.gdb_archive_oid);
@@ -260,17 +262,17 @@ if cantidad > 0 then
 				--cuenta = punto.cuenta;	
 				
 			END IF;
-		ELSIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 THEN				
+		ELSIF (punto.gdb_from_date > fecha_fin OR objectid <> punto.objectid)  AND estado = 2 AND punto.proyecto_informado_siss IS NOT NULL  THEN				
 			
 			IF ownedby = 103 THEN rut = '76833300';
 			ELSIF ownedby = 104 THEN rut = '96963440';
 			ELSE rut = NULL;
 			END IF;				
 
-			IF  COALESCE(name,'0')  <>  COALESCE(name2,'0') THEN
+			/*IF  COALESCE(name,'0')  <>  COALESCE(name2,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 601, codigo_obra2, '0', 3, name::text, name2::text, gdb_from_date2, gdb_archive_oid2);
-			END IF;	
+			END IF;	*/
 			IF  COALESCE(etapa,'0')  <>  COALESCE(etapa2,'0') THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss2, codigo_sistema_siss2, 601, codigo_obra2, '0', 4, etapa::text, etapa2::text, gdb_from_date2, gdb_archive_oid2);

@@ -1,0 +1,71 @@
+-- View: owd.view_1102
+
+-- DROP VIEW owd.view_1102;
+
+CREATE OR REPLACE VIEW owd.view_1102
+ AS
+ SELECT '5'::text AS "codigoProceso",
+    '1102'::text AS "codigoArchivo",
+        CASE wl.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+    wl.codigo_sistema_siss AS "codigoSistema",
+    wl.codigo_obra AS "codigoConduccion",
+    wl.id_tramo_conectado AS "codigoTramo",
+    wl.anio_instalacion AS "AnioConstruccion",
+        CASE
+            WHEN wl.lifecyclestatus = 8 THEN 1
+            WHEN wl.lifecyclestatus = 256 THEN 2
+            WHEN wl.lifecyclestatus = 32 THEN 3
+            WHEN wl.lifecyclestatus = 260 THEN 4
+            WHEN wl.lifecyclestatus = 259 THEN 5
+            WHEN wl.lifecyclestatus = 261 THEN 6
+            ELSE NULL::integer
+        END AS "EstadoUso",
+    wl.tipo_operacion AS "TipoOperacion",
+    wl.diameter::integer AS "DiametroConduccion",
+        CASE
+            WHEN wl.material = 1 THEN 1
+            WHEN wl.material = 2 THEN 2
+            WHEN wl.material = 3 THEN 3
+            WHEN wl.material = 4 THEN 4
+            WHEN wl.material = 5 THEN 5
+            WHEN wl.material = 6 THEN 6
+            WHEN wl.material = 7 THEN 7
+            WHEN wl.material = 10 THEN 10
+            WHEN wl.material = 12 THEN 12
+            WHEN wl.material = 13 THEN 13
+            WHEN wl.material = 14 THEN 14
+            WHEN wl.material = 15 THEN 15
+            WHEN wl.material = 17 THEN 17
+            WHEN wl.material = 171 THEN 17
+            WHEN wl.material = 172 THEN 17
+            WHEN wl.material = 173 THEN 17
+            ELSE NULL::integer
+        END AS "Material",
+        CASE
+            WHEN wl.material = 171 THEN 'LZ'::text
+            WHEN wl.material = 172 THEN 'PEAD-C'::text
+            WHEN wl.material = 173 THEN 'PRFV'::text
+            ELSE NULL::text
+        END AS "OtroMaterial",
+    round(wl.presion_maxima_trabajo, 2) AS "PresionMaximaTrabajo",
+    round(st_length(wl.shape)::numeric, 2) AS "LongitudTramo",
+    round(wl.profundidad_media_tramo, 2) AS "ProfundidadMediaTramo",
+    wl.tipo_terreno AS "TipoTerreno",
+    round(wl.porcentaje_napa, 2) AS "PorcentajeNapa",
+    wl.paralelo AS "Paralelo",
+    wl.creationdate
+   FROM vmt_waterline_sb wl
+  WHERE wl.assetgroup = 1 AND (wl.assettype = 1 OR wl.assettype = 3);
+
+ALTER TABLE owd.view_1102
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.view_1102 TO owd;
+GRANT SELECT ON TABLE owd.view_1102 TO psanhueza;
+GRANT SELECT ON TABLE owd.view_1102 TO bd_consulta;
+

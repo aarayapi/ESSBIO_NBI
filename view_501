@@ -1,0 +1,63 @@
+-- View: owd.view_501
+
+-- DROP VIEW owd.view_501;
+
+CREATE OR REPLACE VIEW owd.view_501
+ AS
+ SELECT '5'::text AS "codigoProceso",
+    '501'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+    wd.codigo_sistema_siss AS "codigoSistema",
+    wd.codigo_obra AS "codigoObra",
+    wd.name AS "NombreObra",
+    wd.anio_construccion AS "AnioConstruccion",
+        CASE
+            WHEN wd.lifecyclestatus = 8 THEN 1
+            WHEN wd.lifecyclestatus = 256 THEN 2
+            WHEN wd.lifecyclestatus = 32 THEN 3
+            WHEN wd.lifecyclestatus = 260 THEN 4
+            WHEN wd.lifecyclestatus = 259 THEN 5
+            WHEN wd.lifecyclestatus = 261 THEN 6
+            ELSE NULL::integer
+        END AS "EstadoUso",
+    round(wd.cota, 2) AS "CotaTerreno",
+    wd.desarenador AS "Desarenador",
+    wd.coagulacion_floculacion AS "CoagulacionFloculacion",
+    wd.sedimentador AS "Sedimentador",
+    wd.sistema_filtracion AS "SistemaFiltracion",
+    wd.tipo_unidad AS "TipoUnidad",
+    wd.otro AS "OtraUnidad",
+    round(wd.potencia_instalada, 2) AS "PotenciaInstalada",
+    round(wd.designinfo, 2) AS "Caudal",
+    round(ap.turbiedad, 2) AS "Turbiedad",
+    round(ap.valor_as, 2) AS "ValorAs",
+    round(ap.valor_mn, 2) AS "ValorMn",
+    round(ap.valor_fe, 2) AS "ValorFe",
+    round(ap.valor_color, 2) AS "ValorColor",
+    round(ap.solidos_disueltos_totales, 2) AS "SolidosDisueltosTotales",
+    round(ap.sulfatos, 2) AS "Sulfatos",
+    round(ap.cloruros, 2) AS "Cloruros",
+    ap.otro_parametro AS "OtroParametro",
+    round(ap.valor_otro_parametro, 2) AS "ValorOtroParametro",
+    wd.telemetria AS "Telemetria",
+    wd.telecontrol AS "Telecontrol",
+    round(wd.utm_norte_sig, 2) AS "UTMNorte",
+    round(wd.utm_este_sig, 2) AS "UTMEste",
+    wd.creationdate,
+    wd.codigo_recinto
+   FROM vmt_waterdevice_sb wd
+     LEFT JOIN vmt_ap_plantatratamiento_sb ap ON wd.globalid::text = ap.assetguid::text
+  WHERE wd.assetgroup = 15 AND wd.assettype = 601;
+
+ALTER TABLE owd.view_501
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.view_501 TO owd;
+GRANT SELECT ON TABLE owd.view_501 TO psanhueza;
+GRANT SELECT ON TABLE owd.view_501 TO bd_consulta;
+

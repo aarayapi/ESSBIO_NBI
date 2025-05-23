@@ -1,0 +1,33 @@
+-- View: owd.view_1202
+
+-- DROP VIEW owd.view_1202;
+
+CREATE OR REPLACE VIEW owd.view_1202
+ AS
+ SELECT '5'::text AS "codigoProceso",
+    '1202'::text AS "codigoArchivo",
+        CASE sd.ownedby
+            WHEN 103 THEN 76833300::text
+            WHEN 104 THEN 96963440::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+    pt.codigo_obra AS "codigoObra",
+    round(pt.identificador_unidad, 0) AS "identificadorUnidad",
+    pt.tipo_pretratamiento AS "tipoPretratamiento",
+    pt.tipo_operacion AS "tipoOperacion",
+    round(pt.paso_rejas, 2) AS "PasoRejas",
+    pt.limpieza_pretratamiento AS "LimpiezaPretratamiento",
+	pt.estado_uso AS "EstadoUso",
+    pt.created_date AS creationdate
+   FROM vmt_as_pretratamiento_sb pt
+     LEFT JOIN vmt_sewerdevice_sb sd ON pt.assetguid::text = sd.globalid::text
+  WHERE sd.proyecto_informado_siss IS NOT NULL;
+
+ALTER TABLE owd.view_1202
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.view_1202 TO owd;
+GRANT SELECT ON TABLE owd.view_1202 TO psanhueza;
+GRANT SELECT ON TABLE owd.view_1202 TO bd_consulta;
+

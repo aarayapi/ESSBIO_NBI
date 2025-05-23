@@ -1,0 +1,71 @@
+-- View: owd.vmt_1705_as_tratamientosecundario
+DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_as_tratamientosecundario;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_as_tratamientosecundario
+TABLESPACE pg_default
+AS
+ SELECT sd.ownedby,
+    ts.objectid,
+    sd.proyecto_informado_siss,
+    sd.codigo_sistema_siss,
+    ts.area_lagunas,
+    ts.area_sedim_secundario,
+    ts.codigo_obra,
+    ts.n_aireadores_superficiales,
+    ts.numero_sedim_primarios,
+    ts.numero_unidades_aireacion,
+    ts.numero_lagunas,
+    ts.otra_tecnologia_lodos_activados,
+    ts.otro_tipo_aireacion,
+    ts.potencia_aireacion,
+    ts.potencia_inst_sedim_secund,
+    ts.profundidad_media_lagunas,
+    ts.profundidad_prom_sedim_secund,
+    ts.tecnologia_lodos_activados,
+    ts.tipo_aireacion,
+    ts.tipo_carga_lodos_activados,
+    ts.assetguid,
+    ts.globalid,
+    ts.creator,
+    ts.creationdate,
+    ts.updatedby,
+    ts.lastupdate,
+    ts.created_user,
+    ts.created_date,
+    ts.last_edited_user,
+    ts.last_edited_date,
+    ts.gdb_branch_id,
+    ts.gdb_from_date,
+    ts.gdb_is_delete,
+    ts.gdb_deleted_at,
+    ts.gdb_deleted_by,
+    ts.gdb_archive_oid
+   FROM as_tratamientosecundario ts
+     LEFT JOIN vmt_sewerdevice_sb sd ON ts.assetguid::text = sd.globalid::text	
+  WHERE ts.gdb_branch_id = 0 AND (ts.objectid IN ( SELECT DISTINCT wd1.objectid
+           FROM as_tratamientosecundario wd1
+          WHERE wd1.created_date <> wd1.last_edited_date))	 
+	 
+ /*   row_number() OVER (PARTITION BY ts.objectid ORDER BY ts.objectid, ts.gdb_from_date) AS rn,
+    cnt.cuenta
+   FROM as_tratamientosecundario ts
+     LEFT JOIN vmt_sewerdevice_sb sd ON ts.assetguid::text = sd.globalid::text
+     LEFT JOIN ( SELECT as_tratamientosecundario.objectid,
+            count(as_tratamientosecundario.objectid) AS cuenta
+           FROM as_tratamientosecundario
+          WHERE as_tratamientosecundario.gdb_branch_id = 0
+          GROUP BY as_tratamientosecundario.objectid) cnt ON ts.objectid = cnt.objectid
+  WHERE ts.gdb_branch_id = 0 AND (ts.objectid IN ( SELECT ts_1.objectid
+           FROM as_tratamientosecundario ts_1
+          WHERE ts_1.gdb_branch_id = 0
+          GROUP BY ts_1.objectid
+         HAVING count(ts_1.objectid) > 1)) AND sd.proyecto_informado_siss IS NOT NULL*/
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_1705_as_tratamientosecundario
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_1705_as_tratamientosecundario TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_as_tratamientosecundario TO sde;
+GRANT SELECT ON TABLE owd.vmt_1705_as_tratamientosecundario TO psanhueza;
+GRANT SELECT ON TABLE owd.vmt_1705_as_tratamientosecundario TO bd_consulta;

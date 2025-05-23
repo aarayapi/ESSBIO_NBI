@@ -1,13 +1,13 @@
 -- View: owd.vmt_1705_SEWER_DEVICE
 
--- DROP MATERIALIZED VIEW IF EXISTS owd."vmt_1705_SEWER_DEVICE";
+DROP MATERIALIZED VIEW IF EXISTS owd."vmt_1705_SEWER_DEVICE";
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS owd."vmt_1705_SEWER_DEVICE"
 TABLESPACE pg_default
 AS
  SELECT wd.objectid,
     wd.creationdate,
-	wd.lastupdate,
+    wd.lastupdate,
     wd.assetgroup,
     wd.assettype,
     wd.associationstatus,
@@ -136,8 +136,9 @@ AS
     wd.gdb_deleted_at,
     wd.gdb_archive_oid
    FROM owd.sewerdevice wd
-	WHERE wd.objectid in (SELECT DISTINCT wd1.objectid FROM owd.sewerdevice wd1 WHERE  wd1.creationdate != wd1.lastupdate)
-	AND wd.objectid  not in (SELECT DISTINCT wd2.objectid FROM owd.sewerdevice wd2 WHERE wd2.gdb_is_delete = 1)
+  WHERE (wd.objectid IN ( SELECT DISTINCT wd1.objectid
+           FROM owd.sewerdevice wd1
+          WHERE wd1.creationdate <> wd1.lastupdate AND ((wd1.gdb_is_delete = 1 AND wd1.lifecyclestatus= 32) OR wd1.gdb_is_delete = 0))) 
 WITH DATA;
 
 ALTER TABLE IF EXISTS owd."vmt_1705_SEWER_DEVICE"
@@ -145,4 +146,5 @@ ALTER TABLE IF EXISTS owd."vmt_1705_SEWER_DEVICE"
 
 GRANT ALL ON TABLE owd."vmt_1705_SEWER_DEVICE" TO owd;
 GRANT SELECT ON TABLE owd."vmt_1705_SEWER_DEVICE" TO sde;
+GRANT SELECT ON TABLE owd."vmt_1705_SEWER_DEVICE" TO psanhueza;
 GRANT SELECT ON TABLE owd."vmt_1705_SEWER_DEVICE" TO bd_consulta;

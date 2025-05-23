@@ -106,7 +106,7 @@ FROM owd.vmt_1705_1101_waterline_dbl wl WHERE
 				SELECT longitud into largo_cond_hist FROM owd.tbl_1101_hist WHERE codigo_conduccion = codigo_obra AND rut_empresa = rut;
 				largo_cond_hist = round(largo_cond_hist, 2);
 				largo_total = round(largo_total, 2);				
-				IF largo_total <> largo_cond_hist AND largo_total IS NOT NULL  THEN
+				IF (largo_total > largo_cond_hist + 0.05 OR largo_total < largo_cond_hist - 0.05) AND largo_total IS NOT NULL AND largo_cond_hist <> 0 THEN
 
 					INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 					VALUES (codigoproceso, codigoarchivo, rut, periodo, proyecto_informado_siss, codigo_sistema_siss, 1101, codigo_obra, 0, 9, largo_cond_hist::text, largo_total::text, gdb_from_date, objectid::integer);

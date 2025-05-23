@@ -1,0 +1,56 @@
+-- View: owd.view_402
+
+-- DROP VIEW owd.view_402;
+
+CREATE OR REPLACE VIEW owd.view_402
+ AS
+ SELECT '5'::text AS "codigoProceso",
+    '402'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+    wd.codigo_sistema_siss AS "codigoSistema",
+    wd.codigo_obra AS "codigoObra",
+    wd.name AS "NombreObra",
+    wd.etapa AS "Etapa",
+    wd.anio_construccion AS "AnioConstruccion",
+        CASE
+            WHEN wd.lifecyclestatus = 8 THEN 1
+            WHEN wd.lifecyclestatus = 256 THEN 2
+            WHEN wd.lifecyclestatus = 32 THEN 3
+            WHEN wd.lifecyclestatus = 260 THEN 4
+            WHEN wd.lifecyclestatus = 259 THEN 5
+            WHEN wd.lifecyclestatus = 261 THEN 6
+            ELSE NULL::integer
+        END AS "EstadoUso",
+    wd.tipo_terreno AS "TerrenoFundacion",
+    round(wd.cota, 2) AS "CotaFondoRadier",
+    round(wd.secondarydiameter, 2) AS "CotaRebalse",
+        CASE
+            WHEN wd.material_estanque = 1 THEN 1
+            WHEN wd.material_estanque = 21 THEN 2
+            WHEN wd.material_estanque = 4 THEN 3
+            ELSE NULL::integer
+        END AS "Material",
+    wd.otro AS "OtroMaterial",
+    round(wd.diameter, 2) AS "AlturaTorreEstanque",
+    round(wd.volumen, 2) AS "VolumenDisenoEstanque",
+    wd.telemetria AS "Telemetria",
+    wd.telecontrol AS "Telecontrol",
+    round(wd.utm_norte_sig, 2) AS "UTMNorte",
+    round(wd.utm_este_sig, 2) AS "UTMEste",
+    wd.creationdate,
+    wd.codigo_recinto
+   FROM vmt_waterdevice_sb wd
+  WHERE wd.assetgroup = 20 AND wd.assettype = 563;
+
+ALTER TABLE owd.view_402
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.view_402 TO owd;
+GRANT SELECT ON TABLE owd.view_402 TO psanhueza;
+GRANT SELECT ON TABLE owd.view_402 TO bd_consulta;
+

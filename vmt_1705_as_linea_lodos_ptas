@@ -1,0 +1,68 @@
+-- View: owd.vmt_1705_as_linea_lodos_ptas
+DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_as_linea_lodos_ptas;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_as_linea_lodos_ptas
+TABLESPACE pg_default
+AS
+ SELECT sd.ownedby,
+    sd.proyecto_informado_siss,
+    sd.codigo_sistema_siss,
+    ds.objectid,
+    ds.area_canchas_secado,
+    ds.area_lechos_secado,
+    ds.canchas_secado,
+    ds.codigo_obra,
+    ds.deshidratacion,
+    ds.digestor,
+    ds.disposicion_final,
+    ds.espesador,
+    ds.estabilizador_cal,
+    ds.lechos_secado,
+    ds.nombre_vertedero,
+    ds.otra_disposicion_final,
+    ds.uso_polimero,
+    ds.uso_gas_digestor_anaerobio,
+    ds.assetguid,
+    ds.globalid,
+    ds.creator,
+    ds.creationdate,
+    ds.updatedby,
+    ds.lastupdate,
+    ds.created_user,
+    ds.created_date,
+    ds.last_edited_user,
+    ds.last_edited_date,
+    ds.gdb_branch_id,
+    ds.gdb_from_date,
+    ds.gdb_is_delete,
+    ds.gdb_deleted_at,
+    ds.gdb_deleted_by,
+    ds.gdb_archive_oid
+   FROM as_linea_lodos_ptas ds
+     LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text
+  WHERE ds.gdb_branch_id = 0 AND (ds.objectid IN ( SELECT DISTINCT wd1.objectid
+           FROM as_linea_lodos_ptas wd1
+          WHERE wd1.created_date <> wd1.last_edited_date))	 
+    /*row_number() OVER (PARTITION BY ds.objectid ORDER BY ds.objectid, ds.gdb_from_date) AS rn,
+    cnt.cuenta
+   FROM as_linea_lodos_ptas ds
+     LEFT JOIN vmt_sewerdevice_sb sd ON ds.assetguid::text = sd.globalid::text
+     LEFT JOIN ( SELECT as_linea_lodos_ptas.objectid,
+            count(as_linea_lodos_ptas.objectid) AS cuenta
+           FROM as_linea_lodos_ptas
+          WHERE as_linea_lodos_ptas.gdb_branch_id = 0
+          GROUP BY as_linea_lodos_ptas.objectid) cnt ON ds.objectid = cnt.objectid
+  WHERE ds.gdb_branch_id = 0 AND (ds.objectid IN ( SELECT ds_1.objectid
+           FROM as_linea_lodos_ptas ds_1
+          WHERE ds_1.gdb_branch_id = 0
+          GROUP BY ds_1.objectid
+         HAVING count(ds_1.objectid) > 1)) AND sd.proyecto_informado_siss IS NOT NULL*/
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_1705_as_linea_lodos_ptas
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_1705_as_linea_lodos_ptas TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_as_linea_lodos_ptas TO sde;
+GRANT SELECT ON TABLE owd.vmt_1705_as_linea_lodos_ptas TO psanhueza;
+GRANT SELECT ON TABLE owd.vmt_1705_as_linea_lodos_ptas TO bd_consulta;

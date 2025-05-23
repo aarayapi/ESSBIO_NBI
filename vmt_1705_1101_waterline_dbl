@@ -5,7 +5,7 @@ DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_1101_waterline_dbl;
 CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_1101_waterline_dbl
 TABLESPACE pg_default
 AS
- SELECT 	cm.proyecto_informado_siss,
+ SELECT cm.proyecto_informado_siss,
     cm.codigo_obra,
     cm.id_tramo_conectado,
     cm.creationdate,
@@ -23,18 +23,17 @@ AS
     cm.assetgroup,
     cm.assettype,
     cm.lastupdate,
-	cm.nombre_conduccion,
-	cm.anio_instalacion,
-
-	cm.tipo_operacion,
-	cm.diameter,
-	cm.material,
-	cm.presion_maxima_trabajo,
-	cm.profundidad_media_tramo,
-	cm.tipo_terreno,
-	cm.porcentaje_napa,
-	cm.paralelo	
-	
+    cm.nombre_conduccion,
+    cm.anio_instalacion,
+    cm.tipo_operacion,
+    cm.diameter,
+    cm.material,
+    cm.presion_maxima_trabajo,
+    cm.profundidad_media_tramo,
+    cm.tipo_terreno,
+    cm.porcentaje_napa,
+    cm.paralelo,
+	cm.gdb_is_delete
    FROM dblink('dbname=prd_ap port=5432 host=10.56.209.135 user=owd password=E55b10$2021'::text, ' 
      SELECT
 	wl.proyecto_informado_siss,
@@ -62,30 +61,17 @@ AS
    wl.profundidad_media_tramo,
 	wl.tipo_terreno,
    wl.porcentaje_napa,
-   wl.paralelo  
-			   
-	FROM waterline wl
-  WHERE wl.measuredlength is not null AND (wl.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
+   wl.paralelo,
+   wl.gdb_is_delete			   
+   FROM waterline wl
+  WHERE wl.gdb_archive_oid IN ( SELECT mb_.gdb_archive_oid
            FROM ( SELECT waterline.gdb_archive_oid,
                     row_number() OVER (PARTITION BY waterline.objectid ORDER BY waterline.gdb_from_date DESC) AS rn,
-                    waterline.gdb_is_delete
+                    waterline.gdb_is_delete, waterline.lifecyclestatus
                    FROM waterline
                   WHERE waterline.gdb_branch_id = 0 AND waterline.gdb_from_date <= ''9999-12-31 23:59:59''::timestamp without time zone) mb_
-          WHERE mb_.rn = 1))'::text) cm(proyecto_informado_siss character varying(100), codigo_obra character varying(100), id_tramo_conectado character varying(100), creationdate  timestamp without time zone, ownedby smallint, 
-										measuredlength numeric, objectid integer, gdb_from_date timestamp without time zone, gdb_archive_oid integer, 
-										lifecyclestatus smallint, codigo_sistema_siss integer, assetgroup integer, 
-										assettype smallint, lastupdate timestamp without time zone,  nombre_conduccion character varying(60),
-	anio_instalacion smallint,
-
-	tipo_operacion integer,
-	diameter numeric,
-	material smallint ,
-	presion_maxima_trabajo numeric,
-	profundidad_media_tramo numeric,
-	tipo_terreno integer,
-	porcentaje_napa numeric,
-	paralelo integer) 
-	UNION
+          WHERE mb_.rn = 1 AND (mb_.gdb_is_delete = ''0''::smallint OR (mb_.gdb_is_delete =''1'' AND mb_.lifecyclestatus = 32)))'::text) cm(proyecto_informado_siss character varying(100), codigo_obra character varying(100), id_tramo_conectado character varying(100), creationdate timestamp without time zone, ownedby smallint, measuredlength numeric, objectid integer, gdb_from_date timestamp without time zone, gdb_archive_oid integer, lifecyclestatus smallint, codigo_sistema_siss integer, assetgroup integer, assettype smallint, lastupdate timestamp without time zone, nombre_conduccion character varying(60), anio_instalacion smallint, tipo_operacion integer, diameter numeric, material smallint, presion_maxima_trabajo numeric, profundidad_media_tramo numeric, tipo_terreno integer, porcentaje_napa numeric, paralelo integer, gdb_is_delete smallint)
+UNION
  SELECT 'conduccion histórica'::character varying AS proyecto_informado_siss,
     ch.codigo_conduccion AS codigo_obra,
     '0'::character varying AS id_tramo_conectado,
@@ -100,24 +86,24 @@ AS
     1 AS assetgroup,
     1 AS assettype,
     to_date('YYYYMMDD'::text, '20000101'::text) AS lastupdate,
-	'' AS nombre_conduccion,
-	0 AS anio_instalacion,
-
-	0 AS tipo_operacion,
-	0 AS diameter,
-	0 AS material,
-	0 AS presion_maxima_trabajo,
-	0 AS profundidad_media_tramo,
-	0 AS tipo_terreno,
-	0 AS porcentaje_napa,
-	0 AS paralelo	
-   FROM cunduccion_elim_hist ch	WHERE ch.tabla = 1102
-	
-	
+    ''::character varying AS nombre_conduccion,
+    0 AS anio_instalacion,
+    0 AS tipo_operacion,
+    0 AS diameter,
+    0 AS material,
+    0 AS presion_maxima_trabajo,
+    0 AS profundidad_media_tramo,
+    0 AS tipo_terreno,
+    0 AS porcentaje_napa,
+    0 AS paralelo,
+	0 AS gdb_is_delete
+   FROM cunduccion_elim_hist ch
+  WHERE ch.tabla = 1102
 WITH DATA;
 
 ALTER TABLE IF EXISTS owd.vmt_1705_1101_waterline_dbl
     OWNER TO owd;
 
 GRANT ALL ON TABLE owd.vmt_1705_1101_waterline_dbl TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_1101_waterline_dbl TO psanhueza;
 GRANT SELECT ON TABLE owd.vmt_1705_1101_waterline_dbl TO bd_consulta;

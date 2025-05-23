@@ -1,0 +1,178 @@
+-- View: owd.vmt_waterline_rep
+
+-- DROP MATERIALIZED VIEW IF EXISTS owd.vmt_waterline_rep;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_waterline_rep
+TABLESPACE pg_default
+AS
+ SELECT
+        CASE
+            WHEN wl.ownedby = 103 THEN 'ESSBIO'::text
+            WHEN wl.ownedby = 104 THEN 'NUEVOSUR'::text
+            ELSE NULL::text
+        END AS empresa,
+    co.codigo_region,
+    'REDAP'::text AS tipo,
+    co.nombre_region,
+    wl.codigo_localidad AS cod_localidad,
+    st.nombre_localidad AS localidad,
+    co.nombre_comuna,
+    co.nombre_zonal AS zonal,
+        CASE
+            WHEN wl.installdate >= to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) THEN to_char(wl.installdate, 'mm'::text)
+            WHEN wl.installdate < to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) OR wl.installdate IS NULL THEN 'LINEA BASE'::text
+            ELSE NULL::text
+        END AS mes,
+    COALESCE(to_char(wl.installdate, 'yyyy'::text), '1900'::text) AS anio,
+    to_char(COALESCE(wl.installdate, to_date('1900'::text, 'YYYY'::text)::timestamp without time zone), 'DD-MM-YYYY'::text) AS fechainstalacion,
+    trunc(sum(st_length(wl.shape) / 1000::double precision)::numeric, 4) AS cantidad,
+    'KM_LINEALES'::text AS unidad
+   FROM vmt_waterline_sb wl
+     LEFT JOIN concesionmetro_ap st ON wl.codigo_localidad = st.codigo_localidad
+     LEFT JOIN comunas_ap co ON wl.codigo_comuna = co.codigo_comuna
+  WHERE wl.assettype = 2 AND wl.codigo_obra IS NULL AND (wl.lifecyclestatus <> 32 OR wl.lifecyclestatus IS NULL) AND (wl.ownedby = ANY (ARRAY[103, 104]))
+  GROUP BY (
+        CASE
+            WHEN wl.installdate >= to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) THEN to_char(wl.installdate, 'mm'::text)
+            WHEN wl.installdate < to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) OR wl.installdate IS NULL THEN 'LINEA BASE'::text
+            ELSE NULL::text
+        END), (COALESCE(to_char(wl.installdate, 'yyyy'::text), '1900'::text)), wl.ownedby, co.codigo_region, co.nombre_region, wl.codigo_localidad, st.nombre_localidad, co.nombre_comuna, co.nombre_zonal, wl.installdate
+UNION ALL
+ SELECT
+        CASE
+            WHEN wl.ownedby = 103 THEN 'ESSBIO'::text
+            WHEN wl.ownedby = 104 THEN 'NUEVOSUR'::text
+            ELSE NULL::text
+        END AS empresa,
+    co.codigo_region,
+    'CONDUCCION_AP'::text AS tipo,
+    co.nombre_region,
+    wl.codigo_localidad AS cod_localidad,
+    st.nombre_localidad AS localidad,
+    co.nombre_comuna,
+    co.nombre_zonal AS zonal,
+        CASE
+            WHEN wl.installdate >= to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) THEN to_char(wl.installdate, 'mm'::text)
+            WHEN wl.installdate < to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) OR wl.installdate IS NULL THEN 'LINEA BASE'::text
+            ELSE NULL::text
+        END AS mes,
+    COALESCE(to_char(wl.installdate, 'yyyy'::text), '1900'::text) AS anio,
+    to_char(COALESCE(wl.installdate, to_date('1900'::text, 'YYYY'::text)::timestamp without time zone), 'DD-MM-YYYY'::text) AS fechainstalacion,
+    trunc(sum(st_length(wl.shape) / 1000::double precision)::numeric, 4) AS cantidad,
+    'KM_LINEALES'::text AS unidad
+   FROM vmt_waterline_sb wl
+     LEFT JOIN concesionmetro_ap st ON wl.codigo_localidad = st.codigo_localidad
+     LEFT JOIN comunas_ap co ON wl.codigo_comuna = co.codigo_comuna
+  WHERE (wl.assettype = ANY (ARRAY[1, 3])) AND wl.codigo_obra IS NOT NULL AND (wl.lifecyclestatus <> 32 OR wl.lifecyclestatus IS NULL) AND (wl.ownedby = ANY (ARRAY[103, 104]))
+  GROUP BY (
+        CASE
+            WHEN wl.installdate >= to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) THEN to_char(wl.installdate, 'mm'::text)
+            WHEN wl.installdate < to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) OR wl.installdate IS NULL THEN 'LINEA BASE'::text
+            ELSE NULL::text
+        END), (COALESCE(to_char(wl.installdate, 'yyyy'::text), '1900'::text)), wl.ownedby, co.codigo_region, co.nombre_region, wl.codigo_localidad, st.nombre_localidad, co.nombre_comuna, co.nombre_zonal, wl.installdate
+UNION ALL
+ SELECT
+        CASE
+            WHEN wd.ownedby = 103 THEN 'ESSBIO'::text
+            WHEN wd.ownedby = 104 THEN 'NUEVOSUR'::text
+            ELSE NULL::text
+        END AS empresa,
+    co.codigo_region,
+    'GRIFOS'::text AS tipo,
+    co.nombre_region,
+    wd.codigo_localidad AS cod_localidad,
+    st.nombre_localidad AS localidad,
+    co.nombre_comuna,
+    co.nombre_zonal AS zonal,
+        CASE
+            WHEN wd.installdate >= to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) THEN to_char(wd.installdate, 'mm'::text)
+            WHEN wd.installdate < to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) OR wd.installdate IS NULL THEN 'LINEA BASE'::text
+            ELSE NULL::text
+        END AS mes,
+    COALESCE(to_char(wd.installdate, 'yyyy'::text), '1900'::text) AS anio,
+    to_char(COALESCE(wd.installdate, to_date('1900'::text, 'YYYY'::text)::timestamp without time zone), 'DD-MM-YYYY'::text) AS fechainstalacion,
+    count(wd.assetid) AS cantidad,
+    'Unidades'::text AS unidad
+   FROM vmt_waterdevice_sb wd
+     LEFT JOIN concesionmetro_ap st ON wd.codigo_localidad = st.codigo_localidad
+     LEFT JOIN comunas_ap co ON wd.codigo_comuna = co.codigo_comuna
+  WHERE wd.assettype = 321 AND (wd.lifecyclestatus = ANY (ARRAY[8, 256, 260])) AND wd.lifecyclestatus IS NOT NULL AND (wd.ownedby = ANY (ARRAY[103, 104]))
+  GROUP BY (
+        CASE
+            WHEN wd.installdate >= to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) THEN to_char(wd.installdate, 'mm'::text)
+            WHEN wd.installdate < to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) OR wd.installdate IS NULL THEN 'LINEA BASE'::text
+            ELSE NULL::text
+        END), (COALESCE(to_char(wd.installdate, 'yyyy'::text), '1900'::text)), wd.ownedby, co.codigo_region, co.nombre_region, wd.codigo_localidad, st.nombre_localidad, co.nombre_comuna, co.nombre_zonal, wd.installdate
+UNION ALL
+ SELECT
+        CASE
+            WHEN wd.ownedby = 103 THEN 'ESSBIO'::text
+            WHEN wd.ownedby = 104 THEN 'NUEVOSUR'::text
+            ELSE NULL::text
+        END AS empresa,
+    co.codigo_region,
+    'VALVULAS'::text AS tipo,
+    co.nombre_region,
+    wd.codigo_localidad AS cod_localidad,
+    st.nombre_localidad AS localidad,
+    co.nombre_comuna,
+    co.nombre_zonal AS zonal,
+        CASE
+            WHEN wd.installdate >= to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) THEN to_char(wd.installdate, 'mm'::text)
+            WHEN wd.installdate < to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) OR wd.installdate IS NULL THEN 'LINEA BASE'::text
+            ELSE NULL::text
+        END AS mes,
+    COALESCE(to_char(wd.installdate, 'yyyy'::text), '1900'::text) AS anio,
+    to_char(COALESCE(wd.installdate, to_date('1900'::text, 'YYYY'::text)::timestamp without time zone), 'DD-MM-YYYY'::text) AS fechainstalacion,
+    count(wd.assetid) AS cantidad,
+    'Unidades'::text AS unidad
+   FROM vmt_waterdevice_sb wd
+     LEFT JOIN concesionmetro_ap st ON wd.codigo_localidad = st.codigo_localidad
+     LEFT JOIN comunas_ap co ON wd.codigo_comuna = co.codigo_comuna
+  WHERE (wd.assettype = ANY (ARRAY[161, 164, 167, 169, 170, 172, 173, 175, 176])) AND (wd.lifecyclestatus = ANY (ARRAY[8, 256, 260])) AND wd.lifecyclestatus IS NOT NULL AND (wd.ownedby = ANY (ARRAY[103, 104]))
+  GROUP BY (
+        CASE
+            WHEN wd.installdate >= to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) THEN to_char(wd.installdate, 'mm'::text)
+            WHEN wd.installdate < to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) OR wd.installdate IS NULL THEN 'LINEA BASE'::text
+            ELSE NULL::text
+        END), (COALESCE(to_char(wd.installdate, 'yyyy'::text), '1900'::text)), wd.ownedby, co.codigo_region, co.nombre_region, wd.codigo_localidad, st.nombre_localidad, co.nombre_comuna, co.nombre_zonal, wd.installdate
+UNION ALL
+ SELECT
+        CASE
+            WHEN wd.ownedby = 103 THEN 'ESSBIO'::text
+            WHEN wd.ownedby = 104 THEN 'NUEVOSUR'::text
+            ELSE NULL::text
+        END AS empresa,
+    co.codigo_region,
+    'PEAP'::text AS tipo,
+    co.nombre_region,
+    wd.codigo_localidad AS cod_localidad,
+    st.nombre_localidad AS localidad,
+    co.nombre_comuna,
+    co.nombre_zonal AS zonal,
+        CASE
+            WHEN wd.installdate >= to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) THEN to_char(wd.installdate, 'mm'::text)
+            WHEN wd.installdate < to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) OR wd.installdate IS NULL THEN 'LINEA BASE'::text
+            ELSE NULL::text
+        END AS mes,
+    COALESCE(to_char(wd.installdate, 'yyyy'::text), '1900'::text) AS anio,
+    to_char(COALESCE(wd.installdate, to_date('1900'::text, 'YYYY'::text)::timestamp without time zone), 'DD-MM-YYYY'::text) AS fechainstalacion,
+    count(wd.assetid) AS cantidad,
+    'Unidades'::text AS unidad
+   FROM vmt_waterdevice_sb wd
+     LEFT JOIN concesionmetro_ap st ON wd.codigo_localidad = st.codigo_localidad
+     LEFT JOIN comunas_ap co ON wd.codigo_comuna = co.codigo_comuna
+  WHERE (wd.assettype = ANY (ARRAY[281, 283, 284, 285, 286])) AND (wd.lifecyclestatus = ANY (ARRAY[8, 256, 260])) AND wd.lifecyclestatus IS NOT NULL AND (wd.ownedby = ANY (ARRAY[103, 104]))
+  GROUP BY (
+        CASE
+            WHEN wd.installdate >= to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) THEN to_char(wd.installdate, 'mm'::text)
+            WHEN wd.installdate < to_date('01/01/2017'::text, 'dd/mm/yyyy'::text) OR wd.installdate IS NULL THEN 'LINEA BASE'::text
+            ELSE NULL::text
+        END), (COALESCE(to_char(wd.installdate, 'yyyy'::text), '1900'::text)), wd.ownedby, co.codigo_region, co.nombre_region, wd.codigo_localidad, st.nombre_localidad, co.nombre_comuna, co.nombre_zonal, wd.installdate
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_waterline_rep
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_waterline_rep TO owd;
+GRANT SELECT ON TABLE owd.vmt_waterline_rep TO bd_consulta;

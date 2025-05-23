@@ -1,0 +1,59 @@
+-- View: owd.vmt_1705_as_tratamientoprimario
+
+ DROP MATERIALIZED VIEW IF EXISTS owd.vmt_1705_as_tratamientoprimario;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS owd.vmt_1705_as_tratamientoprimario
+TABLESPACE pg_default
+AS
+ SELECT sd.ownedby,
+    sd.proyecto_informado_siss,
+    sd.codigo_sistema_siss,
+    tr.objectid,
+    tr.area_sedimentacion_primaria,
+    tr.codigo_obra,
+    tr.numero_sedim_primarios,
+    tr.profundidad_prom_sedimentador,
+    tr.assetguid,
+    tr.globalid,
+    tr.creator,
+    tr.creationdate,
+    tr.updatedby,
+    tr.lastupdate,
+    tr.created_user,
+    tr.created_date,
+    tr.last_edited_user,
+    tr.last_edited_date,
+    tr.gdb_branch_id,
+    tr.gdb_from_date,
+    tr.gdb_is_delete,
+    tr.gdb_deleted_at,
+    tr.gdb_deleted_by,
+    tr.gdb_archive_oid
+   FROM as_tratamientoprimario tr
+ LEFT JOIN vmt_sewerdevice_sb sd ON tr.assetguid::text = sd.globalid::text
+  WHERE tr.gdb_branch_id = 0 AND (tr.objectid IN ( SELECT DISTINCT wd1.objectid
+           FROM as_tratamientoprimario wd1
+          WHERE wd1.created_date <> wd1.last_edited_date))   
+   
+   
+   /*FROM as_tratamientoprimario tr
+     LEFT JOIN vmt_sewerdevice_sb sd ON tr.assetguid::text = sd.globalid::text
+     LEFT JOIN ( SELECT as_tratamientoprimario.objectid,
+            count(as_tratamientoprimario.objectid) AS cuenta
+           FROM as_tratamientoprimario
+          WHERE as_tratamientoprimario.gdb_branch_id = 0
+          GROUP BY as_tratamientoprimario.objectid) cnt ON tr.objectid = cnt.objectid
+  WHERE tr.gdb_branch_id = 0 AND (tr.objectid IN ( SELECT tr_1.objectid
+           FROM as_tratamientoprimario tr_1
+          WHERE tr_1.gdb_branch_id = 0
+          GROUP BY tr_1.objectid
+         HAVING count(tr_1.objectid) > 1)) AND sd.proyecto_informado_siss IS NOT NULL*/
+WITH DATA;
+
+ALTER TABLE IF EXISTS owd.vmt_1705_as_tratamientoprimario
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.vmt_1705_as_tratamientoprimario TO owd;
+GRANT SELECT ON TABLE owd.vmt_1705_as_tratamientoprimario TO sde;
+GRANT SELECT ON TABLE owd.vmt_1705_as_tratamientoprimario TO psanhueza;
+GRANT SELECT ON TABLE owd.vmt_1705_as_tratamientoprimario TO bd_consulta;

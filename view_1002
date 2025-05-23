@@ -1,0 +1,31 @@
+-- View: owd.view_1002
+
+-- DROP VIEW owd.view_1002; 
+
+CREATE OR REPLACE VIEW owd.view_1002
+ AS
+ SELECT '5'::text AS "codigoProceso",
+    '1002'::text AS "codigoArchivo",
+        CASE wd.ownedby
+            WHEN 103 THEN '76833300'::text
+            WHEN 104 THEN '96963440'::text
+            ELSE NULL::text
+        END AS rut,
+    (date_part('year'::text, CURRENT_DATE) - 1::double precision) || '12'::text AS periodo,
+    wd.codigo_sistema_siss AS "codigoSistema",
+    cm.codigo_localidad_siss AS "codigoLocalidad",
+    wd.tipo AS "tipoMedidor",
+    wd.diameter::integer AS "diametroConexiones",
+    count(*) AS "Cantidad"
+   FROM vmt_waterdevice_sb wd
+     LEFT JOIN concesionmetro_ap cm ON wd.codigo_localidad = cm.codigo_localidad
+  WHERE wd.assetgroup = 13 AND wd.assettype = 41
+  GROUP BY wd.ownedby, wd.codigo_sistema_siss, cm.codigo_localidad_siss, wd.tipo, wd.diameter;
+
+ALTER TABLE owd.view_1002
+    OWNER TO owd;
+
+GRANT ALL ON TABLE owd.view_1002 TO owd;
+GRANT SELECT ON TABLE owd.view_1002 TO psanhueza;
+GRANT SELECT ON TABLE owd.view_1002 TO bd_consulta;
+

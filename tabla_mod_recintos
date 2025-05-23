@@ -1,0 +1,36 @@
+-- Table: owd.tabla_mod_recintos
+
+-- DROP TABLE IF EXISTS owd.tabla_mod_recintos;
+
+CREATE TABLE IF NOT EXISTS owd.tabla_mod_recintos
+(
+    "codigoProceso" smallint,
+    "codigoArchivo" smallint,
+    rut character varying(20) COLLATE pg_catalog."default",
+    periodo integer,
+    "codigoProyecto" character varying(100) COLLATE pg_catalog."default",
+    "codigoSistema" character varying(100) COLLATE pg_catalog."default",
+    "codigoObraTipo" integer,
+    "codigoObra" character varying(100) COLLATE pg_catalog."default",
+    "codigoTramo" character varying(100) COLLATE pg_catalog."default",
+    "codigoAtributo" integer,
+    "ValorAnterior" text COLLATE pg_catalog."default",
+    "ValorNuevo" text COLLATE pg_catalog."default",
+    fecha timestamp without time zone,
+    gdb_archive_id integer
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS owd.tabla_mod_recintos
+    OWNER to owd;
+
+REVOKE ALL ON TABLE owd.tabla_mod_recintos FROM psanhueza;
+
+GRANT DELETE, SELECT, INSERT, TRUNCATE ON TABLE owd.tabla_mod_recintos TO bd_consulta;
+
+GRANT ALL ON TABLE owd.tabla_mod_recintos TO owd;
+
+GRANT SELECT ON TABLE owd.tabla_mod_recintos TO psanhueza;

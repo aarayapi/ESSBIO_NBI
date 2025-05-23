@@ -34,7 +34,7 @@ BEGIN
     wl.codigo_obra_origen AS "CodigoObraOrigen",
     wl.tipo_obra_destino AS "TipoObraDestino",
     wl.codigo_obra_destino AS "CodigoObraDestino",
-    round(sum(st_length(wl.shape))::numeric, 2)
+    sum(round(st_length(wl.shape)::numeric, 2))
    FROM owd.vmt_waterline_1101 wl
   WHERE wl.creationdate <= fecha_fin AND 
   wl.codigo_obra || wl.ownedby::text not in (SELECT DISTINCT codigo_obra ||ownedby::text from owd.vmt_waterline_1101 where creationdate < fecha_inicio AND codigo_obra is not null)

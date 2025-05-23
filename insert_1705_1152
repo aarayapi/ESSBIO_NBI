@@ -50,8 +50,8 @@ FOR punto IN
 	sl.anio_instalacion, sl.tipo_tramo, sl.tipo_operacion, sl.diameter, sl.material, sl.presion_maxima_trabajo, sl.profundidad_media_tramo, sl.slope,
 	sl.tipo_terreno, sl.porcentaje_napa, sl.paralelo	   
 	FROM owd.vmt_1705_1151_sewerline sl WHERE 
-	--(sl.assetgroup = 1 OR sl.assettype = 2 OR sl.assettype = 41 OR sl.assettype = 42) 
-	sl.assetgroup = 1 AND sl.assettype = 2 OR sl.assetgroup = 2 AND (sl.assettype = 41 OR sl.assettype = 42)
+	((sl.assetgroup = 1 AND sl.assettype = 2) OR (sl.assetgroup = 2 AND (sl.assettype = 41 OR sl.assettype = 42)))
+	AND (sl.gdb_is_delete = 0 OR (sl.gdb_is_delete = 1 AND sl.proyecto_informado_siss is not NULL))
 	AND sl.objectid != 0
 	AND sl.creationdate <= fecha_fin 
 	AND sl.codigo_obra IN (SELECT T1.codigo_obra 
@@ -70,7 +70,7 @@ FOR punto IN
 			longitud_ant = round(tramo.longitud, 2);
 			longitud_nue = round(punto.largo::numeric, 2);
 
-			IF longitud_ant <> longitud_nue  THEN
+			IF longitud_ant > longitud_nue + 0.05 OR longitud_ant < longitud_nue - 0.05 THEN
 				INSERT INTO owd.tabla_1705("codigoProceso", "codigoArchivo", rut, periodo, "codigoProyecto", "codigoSistema", "codigoObraTipo", "codigoObra", "codigoTramo", "codigoAtributo", "ValorAnterior", "ValorNuevo", fecha, gdb_archive_id)	
 				VALUES (codigoproceso, codigoarchivo, punto.rut, periodo, punto.proyecto_informado_siss, punto.codigo_sistema_siss, 1152, punto.codigo_obra, punto.id_tramo_conectado, 12, longitud_ant::text, longitud_nue::text, punto.gdb_from_date, punto.objectid::integer);
 			END IF;			
